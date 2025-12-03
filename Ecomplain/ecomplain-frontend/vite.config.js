@@ -11,27 +11,46 @@ export default defineConfig({
       ext: '.gz',
     }),
   ],
+
   server: {
     port: 5173,
   },
+
   build: {
+    // ✅ Force esbuild and prevent terser usage
     minify: 'esbuild',
+
+    // ✅ Drop console + debugger in production
     esbuild: {
       drop: ['console', 'debugger'],
     },
+
     rollupOptions: {
       output: {
         manualChunks: {
           'react-vendor': ['react', 'react-dom', 'react-router-dom'],
-          'mui-vendor': ['@mui/material', '@mui/icons-material', '@emotion/react', '@emotion/styled'],
+          'mui-vendor': [
+            '@mui/material',
+            '@mui/icons-material',
+            '@emotion/react',
+            '@emotion/styled'
+          ],
           'chart-vendor': ['recharts'],
           'utils-vendor': ['axios', 'xlsx'],
         },
       },
     },
+
     chunkSizeWarningLimit: 1000,
   },
+
   optimizeDeps: {
-    include: ['react', 'react-dom', 'react-router-dom', '@mui/material', '@mui/icons-material']
-  }
+    include: [
+      'react',
+      'react-dom',
+      'react-router-dom',
+      '@mui/material',
+      '@mui/icons-material',
+    ],
+  },
 })
