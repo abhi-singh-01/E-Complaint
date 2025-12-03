@@ -30,9 +30,17 @@ const ensureAllAdmins = async () => {
     const departments = ['MCA', 'MBA', 'CSE', 'Electronics', 'Mechanical', 'Civil', 'Electrical', 'General'];
     const roles = ['coordinator', 'additional_hod', 'dean'];
     
+    // External departments
+    const externalDepartments = [
+      { role: 'accounts', department: 'Accounts', password: 'accounts123456' },
+      { role: 'librarian', department: 'Librarian', password: 'librarian123456' },
+      { role: 'maintenance', department: 'Maintenance', password: 'maintenance123456' }
+    ];
+    
     let createdCount = 0;
     let existingCount = 0;
 
+    // Create academic department admins
     for (const dept of departments) {
       console.log(`\n🏢 ${dept} Department:`);
       
@@ -78,6 +86,45 @@ const ensureAllAdmins = async () => {
       }
     }
 
+    // Create external department admins
+    console.log(`\n🏢 External Departments:`);
+    for (const extDept of externalDepartments) {
+      let admin = await Admin.findOne({
+        role: extDept.role,
+        department: extDept.department,
+        isActive: true
+      });
+
+      if (!admin) {
+        const adminData = defaultAdmins.find(
+          a => a.role === extDept.role && a.department === extDept.department
+        );
+
+        if (adminData) {
+          admin = new Admin({
+            ...adminData,
+            createdBy: superAdminAccount._id
+          });
+          await admin.save();
+          
+          const roleName = extDept.role === 'accounts' ? 'Accounts Department' :
+                          extDept.role === 'librarian' ? 'Librarian' :
+                          extDept.role === 'maintenance' ? 'Maintenance Department' : extDept.role;
+          
+          console.log(`   ✅ Created ${roleName}: ${admin.email} / Password: ${extDept.password}`);
+          createdCount++;
+        } else {
+          console.log(`   ⚠️  No seed data found for ${extDept.role} in ${extDept.department}`);
+        }
+      } else {
+        const roleName = extDept.role === 'accounts' ? 'Accounts Department' :
+                        extDept.role === 'librarian' ? 'Librarian' :
+                        extDept.role === 'maintenance' ? 'Maintenance Department' : extDept.role;
+        console.log(`   ✓ ${roleName} already exists: ${admin.email}`);
+        existingCount++;
+      }
+    }
+
     console.log('\n' + '='.repeat(60));
     console.log('📊 Summary:');
     console.log(`   Existing Admins: ${existingCount}`);
@@ -115,6 +162,23 @@ const ensureAllAdmins = async () => {
           const password = dept.toLowerCase() + '123456';
           console.log(`   ${roleName}: ${admin.email} / Password: ${password}`);
         }
+      }
+    }
+
+    // Print external department credentials
+    console.log(`\n🏢 External Departments:`);
+    for (const extDept of externalDepartments) {
+      const admin = await Admin.findOne({
+        role: extDept.role,
+        department: extDept.department,
+        isActive: true
+      });
+      
+      if (admin) {
+        const roleName = extDept.role === 'accounts' ? 'Accounts Department' :
+                        extDept.role === 'librarian' ? 'Librarian' :
+                        extDept.role === 'maintenance' ? 'Maintenance Department' : extDept.role;
+        console.log(`   ${roleName}: ${admin.email} / Password: ${extDept.password}`);
       }
     }
     

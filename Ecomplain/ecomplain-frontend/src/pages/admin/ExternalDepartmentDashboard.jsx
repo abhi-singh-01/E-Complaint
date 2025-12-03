@@ -60,8 +60,14 @@ export default function ExternalDepartmentDashboard() {
 
   // Get department name based on role and department field
   const getDepartmentName = () => {
-    // For external role, use the department field
-    if (user.role === 'external' && user.department) {
+    // Check for external department roles
+    const externalRoles = ['accounts', 'librarian', 'maintenance', 'external']
+    if (externalRoles.includes(user?.role) && user?.department) {
+      // Capitalize first letter
+      return user.department.charAt(0).toUpperCase() + user.department.slice(1)
+    }
+    // Fallback to user department if available
+    if (user?.department) {
       return user.department.charAt(0).toUpperCase() + user.department.slice(1)
     }
     // Default fallback
@@ -83,24 +89,27 @@ export default function ExternalDepartmentDashboard() {
       setLoading(true)
       setError('')
       
+      // Validate user and department before making request
+      if (!user || !user.department) {
+        setError('User department information is missing. Please log out and log in again.')
+        setLoading(false)
+        return
+      }
+      
       const { data } = await api.get('/api/complaints', {
         params: {
-          limit: 1000 // Get all complaints to filter by externalForward
+          limit: 1000 // Get all complaints forwarded to this external department
         },
         cancelToken: cancelTokenRef.current.token
       })
       
-      // Filter complaints forwarded to this department
+      // Backend now filters by externalForward.forwardedTo, so we just need to apply status filter
       const allComplaints = data.complaints || []
-      const forwardedComplaints = allComplaints.filter(complaint => 
-        complaint.externalForward?.isForwarded && 
-        complaint.externalForward?.forwardedTo === departmentName
-      )
       
       // Apply status filter
       const filtered = filterStatus === 'all' 
-        ? forwardedComplaints
-        : forwardedComplaints.filter(c => 
+        ? allComplaints
+        : allComplaints.filter(c => 
             c.status.toLowerCase() === filterStatus.toLowerCase()
           )
       
@@ -109,31 +118,36 @@ export default function ExternalDepartmentDashboard() {
       if (axios.isCancel(err)) {
         return // Ignore cancelled requests
       }
+      console.error('Error fetching complaints:', err)
+      console.error('User object:', user)
+      console.error('Department name:', departmentName)
       if (err.__CACHED__) {
         const allComplaints = err.data?.complaints || []
-        const forwardedComplaints = allComplaints.filter(complaint => 
-          complaint.externalForward?.isForwarded && 
-          complaint.externalForward?.forwardedTo === departmentName
-        )
+        // Backend now filters by externalForward.forwardedTo, so we just need to apply status filter
         const filtered = filterStatus === 'all' 
-          ? forwardedComplaints
-          : forwardedComplaints.filter(c => 
+          ? allComplaints
+          : allComplaints.filter(c => 
               c.status.toLowerCase() === filterStatus.toLowerCase()
             )
         setComplaints(filtered)
         setLoading(false)
         return
       }
-      setError('Failed to fetch complaints')
+      const errorMessage = err.response?.data?.message || err.message || 'Failed to fetch complaints'
+      setError(errorMessage)
       console.error('Error fetching complaints:', err)
+      console.error('Error response:', err.response?.data)
     } finally {
       setLoading(false)
     }
-  }, [departmentName, filterStatus])
+  }, [filterStatus])
 
   useEffect(() => {
-    if (user) {
+    if (user && user.department) {
       fetchComplaints()
+    } else if (user && !user.department) {
+      setError('User department not found. Please contact administrator.')
+      setLoading(false)
     }
     
     // Cleanup: cancel pending requests on unmount
@@ -198,14 +212,13 @@ export default function ExternalDepartmentDashboard() {
     total: complaints.length,
     pending: complaints.filter(c => c.status.toLowerCase() === 'pending').length,
     inProgress: complaints.filter(c => c.status.toLowerCase() === 'in progress').length,
-    acknowledged: complaints.filter(c => c.externalForward?.acknowledged).length,
-    notAcknowledged: complaints.filter(c => !c.externalForward?.acknowledged).length
+    resolved: complaints.filter(c => c.status.toLowerCase() === 'resolved').length
   }
 
   return (
     <Box sx={{ minHeight: '100vh', backgroundColor: isDarkMode ? '#121212' : '#f5f5f5' }}>
       <AdminNavbar />
-      <Container maxWidth="xl" sx={{ py: 4, mt: 8 }}>
+      <Container maxWidth="xl" sx={{ py: 2, pt: 2 }}>
         <Box sx={{ mb: 4 }}>
           <Typography variant="h4" sx={{ fontWeight: 'bold', mb: 1 }}>
             {departmentName} Department Dashboard
@@ -238,11 +251,11 @@ export default function ExternalDepartmentDashboard() {
           <Grid item xs={12} sm={6} md={3}>
             <Card>
               <CardContent>
-                <Typography variant="h4" sx={{ fontWeight: 'bold', color: 'warning.main' }}>
-                  {stats.notAcknowledged}
+                <Typography variant="h4" sx={{ fontWeight: 'bold', color: 'info.main' }}>
+                  {stats.inProgress}
                 </Typography>
                 <Typography variant="body2" color="text.secondary">
-                  Pending Acknowledgement
+                  In Progress
                 </Typography>
               </CardContent>
             </Card>
@@ -251,22 +264,10 @@ export default function ExternalDepartmentDashboard() {
             <Card>
               <CardContent>
                 <Typography variant="h4" sx={{ fontWeight: 'bold', color: 'success.main' }}>
-                  {stats.acknowledged}
+                  {stats.resolved}
                 </Typography>
                 <Typography variant="body2" color="text.secondary">
-                  Acknowledged
-                </Typography>
-              </CardContent>
-            </Card>
-          </Grid>
-          <Grid item xs={12} sm={6} md={3}>
-            <Card>
-              <CardContent>
-                <Typography variant="h4" sx={{ fontWeight: 'bold', color: 'info.main' }}>
-                  {stats.inProgress}
-                </Typography>
-                <Typography variant="body2" color="text.secondary">
-                  In Progress
+                  Resolved
                 </Typography>
               </CardContent>
             </Card>
@@ -512,9 +513,6 @@ export default function ExternalDepartmentDashboard() {
         <Dialog open={acknowledgeDialogOpen} onClose={() => setAcknowledgeDialogOpen(false)} maxWidth="sm" fullWidth>
           <DialogTitle>Acknowledge Complaint</DialogTitle>
           <DialogContent>
-            <Alert severity="info" sx={{ mb: 2 }}>
-              By acknowledging this complaint, you confirm that {departmentName} Department has received and will handle this complaint.
-            </Alert>
             {selectedComplaint && (
               <Box sx={{ mb: 2 }}>
                 <Typography variant="body2" color="text.secondary">Complaint:</Typography>
@@ -539,7 +537,7 @@ export default function ExternalDepartmentDashboard() {
               setAcknowledgementComment('')
             }}>Cancel</Button>
             <Button onClick={handleAcknowledge} variant="contained" color="success">
-              Acknowledge Complaint
+              Submit Acknowledgement
             </Button>
           </DialogActions>
         </Dialog>

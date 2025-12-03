@@ -94,75 +94,8 @@ function About() {
       minHeight: '100vh', 
       margin: 0,
       padding: 0,
-      background: `linear-gradient(135deg, ${alpha(theme.palette.primary.main, 0.1)} 0%, ${alpha(theme.palette.secondary.main, 0.1)} 100%)` 
+      background: '#ffffff'
     }}>
-      {/* Hero Section */}
-      <Box sx={{ 
-        width: '100%',
-        background: `linear-gradient(135deg, ${theme.palette.primary.main} 0%, ${theme.palette.secondary.main} 100%)`,
-        color: 'white',
-        py: 12,
-        textAlign: 'center',
-        position: 'relative',
-        overflow: 'hidden'
-      }}>
-        <Box sx={{
-          position: 'absolute',
-          top: 0,
-          left: 0,
-          right: 0,
-          bottom: 0,
-          background: 'url("data:image/svg+xml,%3Csvg width="60" height="60" viewBox="0 0 60 60" xmlns="http://www.w3.org/2000/svg"%3E%3Cg fill="none" fill-rule="evenodd"%3E%3Cg fill="%23ffffff" fill-opacity="0.1"%3E%3Ccircle cx="30" cy="30" r="2"/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")',
-          opacity: 0.3
-        }} />
-        <Box sx={{ 
-          position: 'relative', 
-          zIndex: 1,
-          width: '100%',
-          px: { xs: 2, sm: 4, md: 6, lg: 8, xl: 12 }
-        }}>
-          <Typography 
-            variant="h2" 
-            component="h1" 
-            gutterBottom 
-            sx={{ 
-              fontWeight: 700,
-              mb: 3,
-              background: 'linear-gradient(45deg, #ffffff 30%, #e3f2fd 90%)',
-              backgroundClip: 'text',
-              WebkitBackgroundClip: 'text',
-              WebkitTextFillColor: 'transparent'
-            }}
-          >
-            About E-Complaint System
-          </Typography>
-          <Typography 
-            variant="h5" 
-            sx={{ 
-              mb: 4, 
-              opacity: 0.9,
-              maxWidth: '800px',
-              mx: 'auto',
-              lineHeight: 1.6
-            }}
-          >
-            Revolutionizing complaint management in educational institutions with modern technology, 
-            transparent processes, and user-centric design.
-          </Typography>
-          <Chip 
-            label="Trusted by 500+ Educational Institutions" 
-            sx={{ 
-              bgcolor: alpha('#ffffff', 0.2),
-              color: 'white',
-              fontSize: '1.1rem',
-              py: 2,
-              px: 3,
-              '& .MuiChip-label': { px: 2 }
-            }} 
-          />
-        </Box>
-      </Box>
-
       <Box sx={{ 
         width: '100%', 
         py: 8,
@@ -196,7 +129,7 @@ function About() {
           <Typography 
             variant="h6" 
             sx={{ 
-              textAlign: 'center', 
+              textAlign: 'justify', 
               lineHeight: 1.8, 
               color: theme.palette.text.secondary,
               maxWidth: '900px',

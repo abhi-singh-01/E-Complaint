@@ -26,64 +26,104 @@ const generateRefreshToken = (userId, userType) => {
 // @route   POST /api/auth/register
 // @access  Public
 const registerStudent = asyncHandler(async (req, res) => {
-  // console.log('Registration attempt - Request body:', JSON.stringify(req.body, null, 2));
-  const { firstName, lastName, email, libraryId, rollNo, department, year, password } = req.body;
+  try {
+    const { firstName, lastName, email, libraryId, rollNo, department, year, password } = req.body;
 
-  // Check if student already exists
-  const existingStudent = await Student.findOne({
-    $or: [{ email }, { libraryId }, { rollNo }]
-  });
-
-  if (existingStudent) {
-    let message = 'Student already exists with ';
-    if (existingStudent.email === email) message += 'this email';
-    else if (existingStudent.libraryId === libraryId) message += 'this library ID';
-    else if (existingStudent.rollNo === rollNo) message += 'this roll number';
-    
-    return res.status(400).json({
-      success: false,
-      message
+    // Check if student already exists
+    const existingStudent = await Student.findOne({
+      $or: [{ email }, { libraryId }, { rollNo }]
     });
-  }
 
-  // Create student
-  const student = await Student.create({
-    firstName,
-    lastName,
-    email,
-    libraryId,
-    rollNo,
-    department,
-    year,
-    password
-  });
-
-  // Generate tokens
-  const token = generateToken(student._id, 'student');
-  const refreshToken = generateRefreshToken(student._id, 'student');
-
-  // Update last login
-  student.lastLogin = new Date();
-  await student.save();
-
-  res.status(201).json({
-    success: true,
-    message: 'Student registered successfully',
-    token,
-    refreshToken,
-    redirectUrl: '/student-dashboard',
-    student: {
-      id: student._id,
-      firstName: student.firstName,
-      lastName: student.lastName,
-      email: student.email,
-      libraryId: student.libraryId,
-      rollNo: student.rollNo,
-      department: student.department,
-      year: student.year,
-      fullName: student.fullName
+    if (existingStudent) {
+      let message = 'Student already exists with ';
+      if (existingStudent.email === email) message += 'this email';
+      else if (existingStudent.libraryId === libraryId) message += 'this library ID';
+      else if (existingStudent.rollNo === rollNo) message += 'this roll number';
+      
+      return res.status(400).json({
+        success: false,
+        message
+      });
     }
-  });
+
+    // Create student
+    const student = await Student.create({
+      firstName,
+      lastName,
+      email,
+      libraryId,
+      rollNo,
+      department,
+      year,
+      password
+    });
+
+    // Generate tokens
+    const token = generateToken(student._id, 'student');
+    const refreshToken = generateRefreshToken(student._id, 'student');
+
+    // Update last login
+    student.lastLogin = new Date();
+    await student.save();
+
+    res.status(201).json({
+      success: true,
+      message: 'Student registered successfully',
+      token,
+      refreshToken,
+      redirectUrl: '/student-dashboard',
+      student: {
+        id: student._id,
+        firstName: student.firstName,
+        lastName: student.lastName,
+        email: student.email,
+        libraryId: student.libraryId,
+        rollNo: student.rollNo,
+        department: student.department,
+        year: student.year,
+        fullName: student.fullName
+      }
+    });
+  } catch (error) {
+    console.error('\n❌ Registration error:', error);
+    console.error('Error name:', error.name);
+    console.error('Error message:', error.message);
+    console.error('Request body:', JSON.stringify(req.body, null, 2));
+    
+    // Handle MongoDB connection errors
+    if (error.name === 'MongoServerError' || error.name === 'MongoNetworkError' || error.name === 'MongoTimeoutError') {
+      console.error('💡 MongoDB connection issue detected');
+      return res.status(503).json({
+        success: false,
+        message: 'Database connection error. Please try again later.'
+      });
+    }
+    
+    // Handle duplicate key errors (email, libraryId, rollNo already exists)
+    if (error.name === 'MongoServerError' && error.code === 11000) {
+      const field = Object.keys(error.keyPattern)[0];
+      console.error(`💡 Duplicate ${field} detected`);
+      return res.status(400).json({
+        success: false,
+        message: `Student already exists with this ${field === 'email' ? 'email' : field === 'libraryId' ? 'library ID' : 'roll number'}`
+      });
+    }
+    
+    // Handle validation errors
+    if (error.name === 'ValidationError') {
+      const messages = Object.values(error.errors).map(err => err.message).join(', ');
+      console.error('💡 Validation error:', messages);
+      return res.status(400).json({
+        success: false,
+        message: messages || 'Validation error'
+      });
+    }
+    
+    // Handle other errors
+    console.error('💡 Unknown error type, re-throwing to asyncHandler');
+    // Re-throw to be handled by asyncHandler
+    throw error;
+  }
 });
 
 // @desc    Login student
@@ -385,13 +425,36 @@ const forgotPassword = asyncHandler(async (req, res) => {
   const resetToken = user.generatePasswordResetToken();
   await user.save({ validateBeforeSave: false });
 
-  // In a real application, you would send this token via email
-  // For now, we'll return it in the response (remove this in production)
-  res.json({
-    success: true,
-    message: 'Password reset token generated',
-    resetToken // Remove this in production
-  });
+  try {
+    // Create reset URL
+    const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:5173';
+    const resetUrl = `${frontendUrl}/reset-password/${resetToken}?userType=${userType}`;
+
+    // Send password reset email
+    const { sendPasswordResetEmail } = require('../utils/emailService');
+    await sendPasswordResetEmail({
+      email: user.email,
+      name: user.firstName || user.name || 'User',
+      resetToken,
+      resetUrl
+    });
+
+    res.json({
+      success: true,
+      message: 'Password reset link has been sent to your email. Please check your inbox.'
+    });
+  } catch (error) {
+    // If email fails, still clear the reset token for security
+    user.passwordResetToken = undefined;
+    user.passwordResetExpires = undefined;
+    await user.save({ validateBeforeSave: false });
+
+    console.error('Error sending password reset email:', error);
+    return res.status(500).json({
+      success: false,
+      message: 'Failed to send password reset email. Please try again later.'
+    });
+  }
 });
 
 // @desc    Reset password
@@ -401,8 +464,24 @@ const resetPassword = asyncHandler(async (req, res) => {
   const { token } = req.params;
   const { password, userType } = req.body;
 
-  // Hash the token
-  const hashedToken = crypto.createHash('sha256').update(token).digest('hex');
+  if (!token) {
+    return res.status(400).json({
+      success: false,
+      message: 'Reset token is required'
+    });
+  }
+
+  // Decode URL-encoded token if needed (handles URL encoding from email links)
+  let decodedToken;
+  try {
+    decodedToken = decodeURIComponent(token);
+  } catch (e) {
+    // If decoding fails, use original token
+    decodedToken = token;
+  }
+
+  // Hash the token to compare with stored hash
+  const hashedToken = crypto.createHash('sha256').update(decodedToken).digest('hex');
 
   let user;
   if (userType === 'student') {
@@ -423,9 +502,25 @@ const resetPassword = asyncHandler(async (req, res) => {
   }
 
   if (!user) {
+    // Check if token exists but expired
+    const expiredUser = userType === 'student' 
+      ? await Student.findOne({ passwordResetToken: hashedToken })
+      : await Admin.findOne({ passwordResetToken: hashedToken });
+    
+    if (expiredUser) {
+      const now = Date.now();
+      const expires = expiredUser.passwordResetExpires?.getTime() || 0;
+      if (expires <= now) {
+        return res.status(400).json({
+          success: false,
+          message: 'Reset token has expired. Please request a new password reset link. Tokens expire after 10 minutes.'
+        });
+      }
+    }
+    
     return res.status(400).json({
       success: false,
-      message: 'Invalid or expired reset token'
+      message: 'Invalid reset token. Please use the link from your email or request a new one.'
     });
   }
 

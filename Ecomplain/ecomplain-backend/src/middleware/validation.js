@@ -4,8 +4,10 @@ const { body, param, query, validationResult } = require('express-validator');
 const handleValidationErrors = (req, res, next) => {
   const errors = validationResult(req);
   if (!errors.isEmpty()) {
-    console.log('Validation errors:', errors.array());
-    console.log('Request body:', req.body);
+    console.log('Validation errors:', JSON.stringify(errors.array(), null, 2));
+    console.log('Request body:', JSON.stringify(req.body, null, 2));
+    console.log('Request URL:', req.originalUrl);
+    console.log('Request method:', req.method);
     return res.status(400).json({
       success: false,
       message: 'Validation failed',
@@ -140,15 +142,56 @@ const validateAdminLogin = [
   body('role')
     .notEmpty()
     .withMessage('Role is required')
-    .isIn(['coordinator', 'additional_hod', 'dean', 'super_admin'])
+    .isIn(['coordinator', 'additional_hod', 'dean', 'super_admin', 'accounts', 'librarian', 'maintenance'])
     .withMessage('Please select a valid role'),
   
   body('department')
-    .if(body('role').not().equals('super_admin'))
-    .notEmpty()
-    .withMessage('Department is required for this role')
-    .isIn(['MCA', 'MBA', 'CSE', 'Electronics', 'Mechanical', 'Civil', 'Electrical', 'General'])
-    .withMessage('Please select a valid department'),
+    .custom((value, { req }) => {
+      const role = req.body.role;
+      
+      // Super admin doesn't need a department
+      if (role === 'super_admin') {
+        return true;
+      }
+      
+      // Department is required for all other roles
+      if (!value || (typeof value === 'string' && value.trim() === '')) {
+        throw new Error('Department is required for this role');
+      }
+      
+      // Normalize the value (trim and handle null/undefined)
+      const normalizedValue = typeof value === 'string' ? value.trim() : String(value || '').trim();
+      
+      const externalRoles = ['accounts', 'librarian', 'maintenance'];
+      const externalDepartments = ['Accounts', 'Librarian', 'Maintenance'];
+      const academicDepartments = ['MCA', 'MBA', 'CSE', 'Electronics', 'Mechanical', 'Civil', 'Electrical', 'General'];
+      const allValidDepartments = [...academicDepartments, ...externalDepartments];
+      
+      // Check if department is in the valid list (case-sensitive)
+      if (!allValidDepartments.includes(normalizedValue)) {
+        throw new Error('Please select a valid department');
+      }
+      
+      // External departments must match their role
+      if (externalRoles.includes(role)) {
+        if (role === 'accounts' && normalizedValue !== 'Accounts') {
+          throw new Error('Accounts role must have Accounts department');
+        }
+        if (role === 'librarian' && normalizedValue !== 'Librarian') {
+          throw new Error('Librarian role must have Librarian department');
+        }
+        if (role === 'maintenance' && normalizedValue !== 'Maintenance') {
+          throw new Error('Maintenance role must have Maintenance department');
+        }
+      } else {
+        // Academic roles must have academic departments
+        if (!academicDepartments.includes(normalizedValue)) {
+          throw new Error('Academic roles must have academic departments');
+        }
+      }
+      
+      return true;
+    }),
   
   handleValidationErrors
 ];
@@ -271,9 +314,8 @@ const validatePasswordReset = [
 
 // New password validation
 const validateNewPassword = [
-  body('token')
-    .notEmpty()
-    .withMessage('Reset token is required'),
+  // Token is in URL params, not body
+  // body('token') - removed, token comes from URL params
   
   body('password')
     .notEmpty()
@@ -283,13 +325,14 @@ const validateNewPassword = [
     .matches(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/)
     .withMessage('Password must contain at least one lowercase letter, one uppercase letter, and one number'),
   
-  body('confirmPassword')
-    .custom((value, { req }) => {
-      if (value !== req.body.password) {
-        throw new Error('Passwords do not match');
-      }
-      return true;
-    }),
+  body('userType')
+    .notEmpty()
+    .withMessage('User type is required')
+    .isIn(['student', 'admin'])
+    .withMessage('User type must be either student or admin'),
+  
+  // confirmPassword validation removed - handled on frontend
+  // body('confirmPassword') - removed, frontend handles this
   
   handleValidationErrors
 ];
@@ -312,8 +355,8 @@ const validateQueryParams = [
   
   query('limit')
     .optional()
-    .isInt({ min: 1, max: 100 })
-    .withMessage('Limit must be between 1 and 100'),
+    .isInt({ min: 1, max: 10000 })
+    .withMessage('Limit must be between 1 and 10000'),
   
   query('sort')
     .optional()

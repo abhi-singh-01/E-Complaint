@@ -35,6 +35,9 @@ export default function AdminDashboard() {
     case 'super_admin':
       return <SuperAdminDashboard />
     
+    case 'accounts':
+    case 'librarian':
+    case 'maintenance':
     case 'external':
       return <ExternalDepartmentDashboard />
     

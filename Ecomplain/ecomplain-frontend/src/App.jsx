@@ -13,6 +13,8 @@ import Footer from './components/Footer.jsx'
 // Lazy load heavy components
 const StudentRegister = lazy(() => import('./pages/student/StudentRegister.jsx'))
 const StudentLogin = lazy(() => import('./pages/student/StudentLogin.jsx'))
+const StudentForgotPassword = lazy(() => import('./pages/student/StudentForgotPassword.jsx'))
+const StudentResetPassword = lazy(() => import('./pages/student/StudentResetPassword.jsx'))
 const StudentDashboard = lazy(() => import('./pages/student/StudentDashboard.jsx'))
 const AdminLogin = lazy(() => import('./pages/admin/AdminLogin.jsx'))
 const AdminDashboard = lazy(() => import('./pages/admin/AdminDashboard.jsx'))
@@ -109,6 +111,21 @@ function App() {
           <Route path="/login" element={
             <Suspense fallback={<Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '50vh' }}><CircularProgress /></Box>}>
               <StudentLogin />
+            </Suspense>
+          } />
+          <Route path="/forgot-password" element={
+            <Suspense fallback={<Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '50vh' }}><CircularProgress /></Box>}>
+              <StudentForgotPassword />
+            </Suspense>
+          } />
+          <Route path="/forgot" element={
+            <Suspense fallback={<Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '50vh' }}><CircularProgress /></Box>}>
+              <StudentForgotPassword />
+            </Suspense>
+          } />
+          <Route path="/reset-password/:token" element={
+            <Suspense fallback={<Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '50vh' }}><CircularProgress /></Box>}>
+              <StudentResetPassword />
             </Suspense>
           } />
           <Route path="/dashboard" element={

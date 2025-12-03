@@ -267,7 +267,14 @@ const defaultAdmins = [
     role: 'accounts',
     department: 'Accounts',
     isEmailVerified: true,
-    isActive: true
+    isActive: true,
+    permissions: {
+      canManageComplaints: true,
+      canManageStudents: false,
+      canManageAdmins: false,
+      canViewReports: true,
+      canExportData: false
+    }
   },
   {
     firstName: 'Library',
@@ -277,7 +284,14 @@ const defaultAdmins = [
     role: 'librarian',
     department: 'Librarian',
     isEmailVerified: true,
-    isActive: true
+    isActive: true,
+    permissions: {
+      canManageComplaints: true,
+      canManageStudents: false,
+      canManageAdmins: false,
+      canViewReports: true,
+      canExportData: false
+    }
   },
   {
     firstName: 'Maintenance',
@@ -287,7 +301,14 @@ const defaultAdmins = [
     role: 'maintenance',
     department: 'Maintenance',
     isEmailVerified: true,
-    isActive: true
+    isActive: true,
+    permissions: {
+      canManageComplaints: true,
+      canManageStudents: false,
+      canManageAdmins: false,
+      canViewReports: true,
+      canExportData: false
+    }
   }
 ];
 

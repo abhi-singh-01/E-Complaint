@@ -288,7 +288,10 @@ export default function StudentRegister() {
         nav('/dashboard')
       }, 1500)
     } catch (err) {
-      setError(err.response?.data?.message || 'Failed to register. Please try again.')
+      console.error('Registration error:', err)
+      console.error('Error response:', err.response?.data)
+      const errorMessage = err.response?.data?.message || err.message || 'Failed to register. Please try again.'
+      setError(errorMessage)
     } finally {
       setLoading(false)
     }
@@ -334,9 +337,6 @@ export default function StudentRegister() {
             <Box sx={{ textAlign: 'center', mb: 4 }}>
               <Typography variant="h5" component="h2" gutterBottom sx={{ fontWeight: 'bold', color: '#1976d2' }}>
                 Create Your Account
-              </Typography>
-              <Typography variant="body2" color="text.secondary">
-                Join our E-Complaint System to submit and track your complaints efficiently
               </Typography>
             </Box>
 

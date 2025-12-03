@@ -240,8 +240,8 @@ export default function StudentLogin() {
                 {/* Forgot Password Link */}
                 <Box sx={{ textAlign: 'left', mb: 3 }}>
                   <Link 
-                    as={RouterLink} 
-                    to="/forgot" 
+                    component={RouterLink} 
+                    to="/forgot-password" 
                     sx={{ 
                       color: '#1976d2',
                       textDecoration: 'none',
@@ -329,14 +329,14 @@ export default function StudentLogin() {
           }}>
             Need help? Contact support at{' '}
             <Link 
-              href="mailto:support@kiet.edu" 
+              href="mailto:support@university.edu" 
               sx={{ 
                 color: isDarkMode ? '#e0e0e0' : 'white', 
                 textDecoration: 'underline',
                 '&:hover': { opacity: 0.7 }
               }}
             >
-              support@kiet.edu
+              support@university.edu
             </Link>
           </Typography>
         </Box>

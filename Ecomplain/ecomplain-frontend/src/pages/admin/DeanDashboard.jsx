@@ -86,6 +86,7 @@ export default function DeanDashboard() {
   const [externalForwardDialogOpen, setExternalForwardDialogOpen] = useState(false)
   const [comment, setComment] = useState('')
   const [forwardReason, setForwardReason] = useState('')
+  const [selectedExternalDepartment, setSelectedExternalDepartment] = useState('')
   const [filterStatus, setFilterStatus] = useState('all')
   const [anchorEl, setAnchorEl] = useState(null)
   const [closeDialogOpen, setCloseDialogOpen] = useState(false)
@@ -182,15 +183,20 @@ export default function DeanDashboard() {
 
   // Handle forwarding complaint to external department
   const handleForwardToExternal = async () => {
-    if (!selectedComplaint) return
+    if (!selectedComplaint || !selectedExternalDepartment) {
+      setError('Please select a department to forward the complaint to')
+      return
+    }
 
     try {
       await api.put(`/api/complaints/${selectedComplaint._id}/forward-external`, {
+        forwardedTo: selectedExternalDepartment,
         forwardReason: forwardReason.trim() || undefined
       })
       setExternalForwardDialogOpen(false)
       setSelectedComplaint(null)
       setForwardReason('')
+      setSelectedExternalDepartment('')
       fetchComplaints()
     } catch (err) {
       setError(err.response?.data?.message || 'Failed to forward complaint to external department')
@@ -232,7 +238,7 @@ export default function DeanDashboard() {
         ['In Progress', stats.inProgress],
         ['Resolved', stats.resolved],
         ['Rejected', stats.rejected],
-        ['Escalated', stats.escalated],
+        ['Forwarded', stats.escalated],
         ['Dean Level', stats.deanLevel],
         ['Resolution Rate', `${stats.total > 0 ? ((stats.resolved / stats.total) * 100).toFixed(1) : 0}%`],
         [''],
@@ -260,8 +266,8 @@ export default function DeanDashboard() {
           'Created Date': new Date(complaint.createdAt).toLocaleDateString(),
           'Updated Date': new Date(complaint.updatedAt).toLocaleDateString(),
           'Workflow Level': complaint.workflow?.currentLevel || 'N/A',
-          'Escalated By': complaint.workflow?.escalatedBy ? 'Yes' : 'No',
-          'Escalation Reason': complaint.workflow?.escalationReason || 'N/A'
+          'Forwarded By': complaint.workflow?.escalatedBy ? 'Yes' : 'No',
+          'Forwarding Reason': complaint.workflow?.escalationReason || 'N/A'
         }))
 
         const complaintsWS = XLSX.utils.json_to_sheet(complaintsData)
@@ -353,9 +359,9 @@ export default function DeanDashboard() {
   return (
     <>
       <AdminNavbar />
-      <Container maxWidth="xl" sx={{ py: 4, mt: 8 }}>
+      <Container maxWidth="xl" sx={{ py: 2, pt: 2 }}>
         {/* Header */}
-        <Box sx={{ mb: 4 }}>
+        <Box sx={{ mb: 3 }}>
           <Typography variant="h3" gutterBottom sx={{ fontWeight: 'bold', color: '#1976d2', fontSize: '2.5rem' }}>
             Dean Dashboard
           </Typography>
@@ -371,85 +377,166 @@ export default function DeanDashboard() {
       )}
 
       {/* Statistics Cards */}
-      <Grid container spacing={3} sx={{ mb: 4 }}>
-        <Grid item xs={12} sm={6} md={2}>
-          <Card>
-            <CardContent sx={{ textAlign: 'center', p: 3 }}>
-              <Assignment sx={{ fontSize: 60, color: '#1976d2', mb: 2 }} />
-              <Typography variant="h2" sx={{ fontWeight: 'bold', color: '#1976d2', fontSize: '3rem' }}>
+      <Grid container spacing={2} sx={{ mb: 4 }}>
+        <Grid item xs={12} sm={6} md={2.4} sx={{ display: 'flex', minHeight: 0 }}>
+          <Card sx={{ 
+            borderRadius: '16px',
+            boxShadow: '0 4px 12px rgba(0, 0, 0, 0.1)',
+            transition: 'transform 0.2s ease',
+            width: '100%',
+            minHeight: '200px',
+            aspectRatio: '1',
+            display: 'flex',
+            flexDirection: 'column',
+            '&:hover': { transform: 'translateY(-4px)' }
+          }}>
+            <CardContent sx={{ 
+              textAlign: 'center', 
+              p: 2, 
+              display: 'flex', 
+              flexDirection: 'column', 
+              justifyContent: 'center', 
+              alignItems: 'center',
+              flexGrow: 1,
+              height: '100%'
+            }}>
+              <Assignment sx={{ fontSize: 40, color: '#1976d2', mb: 1 }} />
+              <Typography variant="h2" sx={{ fontWeight: 'bold', color: '#1976d2', fontSize: '2rem' }}>
                 {stats.total}
               </Typography>
-              <Typography variant="h6" color="text.secondary" sx={{ fontSize: '1.2rem', fontWeight: '600' }}>
+              <Typography variant="h6" color="text.secondary" sx={{ fontSize: '1rem', fontWeight: '600' }}>
                 Total Complaints
               </Typography>
             </CardContent>
           </Card>
         </Grid>
 
-        <Grid item xs={12} sm={6} md={2}>
-          <Card>
-            <CardContent sx={{ textAlign: 'center', p: 3 }}>
-              <Forward sx={{ fontSize: 60, color: '#f57c00', mb: 2 }} />
-              <Typography variant="h2" sx={{ fontWeight: 'bold', color: '#f57c00', fontSize: '3rem' }}>
+        <Grid item xs={12} sm={6} md={2.4} sx={{ display: 'flex', minHeight: 0 }}>
+          <Card sx={{ 
+            borderRadius: '16px',
+            boxShadow: '0 4px 12px rgba(0, 0, 0, 0.1)',
+            transition: 'transform 0.2s ease',
+            width: '100%',
+            minHeight: '200px',
+            aspectRatio: '1',
+            display: 'flex',
+            flexDirection: 'column',
+            '&:hover': { transform: 'translateY(-4px)' }
+          }}>
+            <CardContent sx={{ 
+              textAlign: 'center', 
+              p: 2, 
+              display: 'flex', 
+              flexDirection: 'column', 
+              justifyContent: 'center', 
+              alignItems: 'center',
+              flexGrow: 1,
+              height: '100%'
+            }}>
+              <Forward sx={{ fontSize: 40, color: '#f57c00', mb: 1 }} />
+              <Typography variant="h2" sx={{ fontWeight: 'bold', color: '#f57c00', fontSize: '2rem' }}>
                 {stats.escalated}
               </Typography>
-              <Typography variant="h6" color="text.secondary" sx={{ fontSize: '1.2rem', fontWeight: '600' }}>
-                Escalated
+              <Typography variant="h6" color="text.secondary" sx={{ fontSize: '1rem', fontWeight: '600' }}>
+                Forwarded
               </Typography>
             </CardContent>
           </Card>
         </Grid>
 
-        <Grid item xs={12} sm={6} md={2}>
-          <Card>
-            <CardContent sx={{ textAlign: 'center', p: 3 }}>
-              <SupervisorAccount sx={{ fontSize: 60, color: '#7b1fa2', mb: 2 }} />
-              <Typography variant="h2" sx={{ fontWeight: 'bold', color: '#7b1fa2', fontSize: '3rem' }}>
-                {stats.deanLevel}
-              </Typography>
-              <Typography variant="h6" color="text.secondary" sx={{ fontSize: '1.2rem', fontWeight: '600' }}>
-                Dean Level
-              </Typography>
-            </CardContent>
-          </Card>
-        </Grid>
-
-        <Grid item xs={12} sm={6} md={2}>
-          <Card>
-            <CardContent sx={{ textAlign: 'center', p: 3 }}>
-              <CheckCircle sx={{ fontSize: 60, color: '#2e7d32', mb: 2 }} />
-              <Typography variant="h2" sx={{ fontWeight: 'bold', color: '#2e7d32', fontSize: '3rem' }}>
+        <Grid item xs={12} sm={6} md={2.4} sx={{ display: 'flex', minHeight: 0 }}>
+          <Card sx={{ 
+            borderRadius: '16px',
+            boxShadow: '0 4px 12px rgba(0, 0, 0, 0.1)',
+            transition: 'transform 0.2s ease',
+            width: '100%',
+            minHeight: '200px',
+            aspectRatio: '1',
+            display: 'flex',
+            flexDirection: 'column',
+            '&:hover': { transform: 'translateY(-4px)' }
+          }}>
+            <CardContent sx={{ 
+              textAlign: 'center', 
+              p: 2, 
+              display: 'flex', 
+              flexDirection: 'column', 
+              justifyContent: 'center', 
+              alignItems: 'center',
+              flexGrow: 1,
+              height: '100%'
+            }}>
+              <CheckCircle sx={{ fontSize: 40, color: '#2e7d32', mb: 1 }} />
+              <Typography variant="h2" sx={{ fontWeight: 'bold', color: '#2e7d32', fontSize: '2rem' }}>
                 {stats.resolved}
               </Typography>
-              <Typography variant="h6" color="text.secondary" sx={{ fontSize: '1.2rem', fontWeight: '600' }}>
+              <Typography variant="h6" color="text.secondary" sx={{ fontSize: '1rem', fontWeight: '600' }}>
                 Resolved
               </Typography>
             </CardContent>
           </Card>
         </Grid>
 
-        <Grid item xs={12} sm={6} md={2}>
-          <Card>
-            <CardContent sx={{ textAlign: 'center', p: 3 }}>
-              <TrendingUp sx={{ fontSize: 60, color: '#00acc1', mb: 2 }} />
-              <Typography variant="h2" sx={{ fontWeight: 'bold', color: '#00acc1', fontSize: '3rem' }}>
+        <Grid item xs={12} sm={6} md={2.4} sx={{ display: 'flex', minHeight: 0 }}>
+          <Card sx={{ 
+            borderRadius: '16px',
+            boxShadow: '0 4px 12px rgba(0, 0, 0, 0.1)',
+            transition: 'transform 0.2s ease',
+            width: '100%',
+            minHeight: '200px',
+            aspectRatio: '1',
+            display: 'flex',
+            flexDirection: 'column',
+            '&:hover': { transform: 'translateY(-4px)' }
+          }}>
+            <CardContent sx={{ 
+              textAlign: 'center', 
+              p: 2, 
+              display: 'flex', 
+              flexDirection: 'column', 
+              justifyContent: 'center', 
+              alignItems: 'center',
+              flexGrow: 1,
+              height: '100%'
+            }}>
+              <TrendingUp sx={{ fontSize: 40, color: '#00acc1', mb: 1 }} />
+              <Typography variant="h2" sx={{ fontWeight: 'bold', color: '#00acc1', fontSize: '2rem' }}>
                 {stats.inProgress}
               </Typography>
-              <Typography variant="h6" color="text.secondary" sx={{ fontSize: '1.2rem', fontWeight: '600' }}>
+              <Typography variant="h6" color="text.secondary" sx={{ fontSize: '1rem', fontWeight: '600' }}>
                 In Progress
               </Typography>
             </CardContent>
           </Card>
         </Grid>
 
-        <Grid item xs={12} sm={6} md={2}>
-          <Card>
-            <CardContent sx={{ textAlign: 'center', p: 3 }}>
-              <Cancel sx={{ fontSize: 60, color: '#d32f2f', mb: 2 }} />
-              <Typography variant="h2" sx={{ fontWeight: 'bold', color: '#d32f2f', fontSize: '3rem' }}>
+        <Grid item xs={12} sm={6} md={2.4} sx={{ display: 'flex', minHeight: 0 }}>
+          <Card sx={{ 
+            borderRadius: '16px',
+            boxShadow: '0 4px 12px rgba(0, 0, 0, 0.1)',
+            transition: 'transform 0.2s ease',
+            width: '100%',
+            minHeight: '200px',
+            aspectRatio: '1',
+            display: 'flex',
+            flexDirection: 'column',
+            '&:hover': { transform: 'translateY(-4px)' }
+          }}>
+            <CardContent sx={{ 
+              textAlign: 'center', 
+              p: 2, 
+              display: 'flex', 
+              flexDirection: 'column', 
+              justifyContent: 'center', 
+              alignItems: 'center',
+              flexGrow: 1,
+              height: '100%'
+            }}>
+              <Cancel sx={{ fontSize: 40, color: '#d32f2f', mb: 1 }} />
+              <Typography variant="h2" sx={{ fontWeight: 'bold', color: '#d32f2f', fontSize: '2rem' }}>
                 {stats.rejected}
               </Typography>
-              <Typography variant="h6" color="text.secondary" sx={{ fontSize: '1.2rem', fontWeight: '600' }}>
+              <Typography variant="h6" color="text.secondary" sx={{ fontSize: '1rem', fontWeight: '600' }}>
                 Rejected
               </Typography>
             </CardContent>
@@ -490,7 +577,7 @@ export default function DeanDashboard() {
           }}
         >
           <Tab label="Dean Level Complaints" />
-          <Tab label="Escalated Complaints" />
+          <Tab label="Forwarded Complaints" />
           <Tab label="All Complaints" />
           <Tab label="Completed" />
           <Tab label="Analytics & Reports" />
@@ -594,7 +681,7 @@ export default function DeanDashboard() {
                                 />
                                 {complaint.workflow?.escalatedAt && (
                                   <Chip
-                                    label="Escalated"
+                                    label="Forwarded"
                                     color="warning"
                                     size="small"
                                     variant="outlined"
@@ -644,36 +731,36 @@ export default function DeanDashboard() {
                                 <Visibility />
                               </IconButton>
                             </Tooltip>
-                            <Tooltip title="Add Comment">
-                              <IconButton
-                                onClick={() => {
-                                  setSelectedComplaint(complaint)
-                                  setCommentDialogOpen(true)
-                                }}
-                                sx={{
-                                  '&:focus': {
-                                    outline: 'none',
-                                    boxShadow: 'none'
-                                  },
-                                  '&:hover': {
-                                    backgroundColor: isDarkMode ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.04)'
-                                  }
-                                }}
-                              >
-                                <Comment />
-                              </IconButton>
-                            </Tooltip>
-                            {/* Show Forward to External button only for Fee, Library, and Infrastructure categories */}
-                            {(complaint.category === 'Fee' || complaint.category === 'Library' || complaint.category === 'Infrastructure') && 
-                             !complaint.externalForward?.isForwarded && (
-                              <Tooltip title={
-                                complaint.category === 'Fee' ? 'Forward to Accounts Department' : 
-                                complaint.category === 'Library' ? 'Forward to Librarian' : 
-                                'Forward to Maintenance Department'
-                              }>
+                            <Tooltip title={complaint.status.toLowerCase() === 'resolved' || complaint.status.toLowerCase() === 'closed' ? 'Cannot comment on resolved complaints' : 'Add Comment'}>
+                              <span>
                                 <IconButton
                                   onClick={() => {
                                     setSelectedComplaint(complaint)
+                                    setCommentDialogOpen(true)
+                                  }}
+                                  disabled={complaint.status.toLowerCase() === 'resolved' || complaint.status.toLowerCase() === 'closed'}
+                                  sx={{
+                                    '&:focus': {
+                                      outline: 'none',
+                                      boxShadow: 'none'
+                                    },
+                                    '&:hover': {
+                                      backgroundColor: isDarkMode ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.04)'
+                                    }
+                                  }}
+                                >
+                                  <Comment />
+                                </IconButton>
+                              </span>
+                            </Tooltip>
+                            {/* Show Forward to External button for all complaints */}
+                            {!complaint.externalForward?.isForwarded && (
+                              <Tooltip title="Forward to External Department">
+                                <IconButton
+                                  onClick={() => {
+                                    setSelectedComplaint(complaint)
+                                    setSelectedExternalDepartment('')
+                                    setForwardReason('')
                                     setExternalForwardDialogOpen(true)
                                   }}
                                   disabled={complaint.status.toLowerCase() === 'resolved' || complaint.status.toLowerCase() === 'rejected'}
@@ -746,7 +833,7 @@ export default function DeanDashboard() {
       {activeTab === 1 && (
         <Box>
           <Typography variant="h6" gutterBottom sx={{ fontWeight: 'bold', mb: 3 }}>
-            Escalated Complaints
+            Forwarded Complaints
           </Typography>
           <Card>
             <CardContent sx={{ p: 0 }}>
@@ -754,7 +841,7 @@ export default function DeanDashboard() {
                 <Box sx={{ p: 4, textAlign: 'center' }}>
                   <Forward sx={{ fontSize: 64, color: 'text.secondary', mb: 2 }} />
                   <Typography variant="h6" color="text.secondary" gutterBottom>
-                    No escalated complaints
+                    No forwarded complaints
                   </Typography>
                   <Typography variant="body2" color="text.secondary">
                     All complaints are being handled at the appropriate level.
@@ -799,7 +886,7 @@ export default function DeanDashboard() {
                                   variant="outlined"
                                 />
                                 <Chip
-                                  label="Escalated"
+                                  label="Forwarded"
                                   color="warning"
                                   size="small"
                                   variant="outlined"
@@ -821,7 +908,7 @@ export default function DeanDashboard() {
                                   />
                                 )}
                                 <Typography variant="caption" color="text.secondary">
-                                  Escalated: {new Date(complaint.workflow?.escalatedAt).toLocaleDateString()}
+                                  Forwarded: {new Date(complaint.workflow?.escalatedAt).toLocaleDateString()}
                                 </Typography>
                               </Box>
                             </Box>
@@ -848,17 +935,14 @@ export default function DeanDashboard() {
                                 <Visibility />
                               </IconButton>
                             </Tooltip>
-                            {/* Show Forward to External button only for Fee, Library, and Infrastructure categories */}
-                            {(complaint.category === 'Fee' || complaint.category === 'Library' || complaint.category === 'Infrastructure') && 
-                             !complaint.externalForward?.isForwarded && (
-                              <Tooltip title={
-                                complaint.category === 'Fee' ? 'Forward to Accounts Department' : 
-                                complaint.category === 'Library' ? 'Forward to Librarian' : 
-                                'Forward to Maintenance Department'
-                              }>
+                            {/* Show Forward to External button for all complaints */}
+                            {!complaint.externalForward?.isForwarded && (
+                              <Tooltip title="Forward to External Department">
                                 <IconButton
                                   onClick={() => {
                                     setSelectedComplaint(complaint)
+                                    setSelectedExternalDepartment('')
+                                    setForwardReason('')
                                     setExternalForwardDialogOpen(true)
                                   }}
                                   disabled={complaint.status.toLowerCase() === 'resolved' || complaint.status.toLowerCase() === 'rejected'}
@@ -997,13 +1081,14 @@ export default function DeanDashboard() {
                         >
                           <Visibility />
                         </IconButton>
-                        {/* Show Forward to External button only for Fee and Library categories */}
-                        {(complaint.category === 'Fee' || complaint.category === 'Library') && 
-                         !complaint.externalForward?.isForwarded && (
-                          <Tooltip title={complaint.category === 'Fee' ? 'Forward to Accounts Department' : 'Forward to Librarian'}>
+                        {/* Show Forward to External button for all complaints */}
+                        {!complaint.externalForward?.isForwarded && (
+                          <Tooltip title="Forward to External Department">
                             <IconButton
                               onClick={() => {
                                 setSelectedComplaint(complaint)
+                                setSelectedExternalDepartment('')
+                                setForwardReason('')
                                 setExternalForwardDialogOpen(true)
                               }}
                               disabled={complaint.status.toLowerCase() === 'resolved' || complaint.status.toLowerCase() === 'rejected'}
@@ -1371,18 +1456,7 @@ export default function DeanDashboard() {
                           {stats.escalated}
                         </Typography>
                         <Typography variant="body2" color="text.secondary" sx={{ fontSize: '0.9rem' }}>
-                          Escalated
-                        </Typography>
-                      </Box>
-                      <Box sx={{ flex: 1, textAlign: 'center', p: 2, backgroundColor: isDarkMode ? 'rgba(123, 31, 162, 0.1)' : 'rgba(123, 31, 162, 0.05)' }}>
-                        <Typography variant="h4" sx={{ 
-                          fontWeight: 'bold', 
-                          color: isDarkMode ? '#7b1fa2' : '#7b1fa2' 
-                        }}>
-                          {stats.deanLevel}
-                        </Typography>
-                        <Typography variant="body2" color="text.secondary" sx={{ fontSize: '0.9rem' }}>
-                          Dean Level
+                          Forwarded
                         </Typography>
                       </Box>
                     </Box>
@@ -1474,6 +1548,78 @@ export default function DeanDashboard() {
                   </Grid>
                 )}
               </Grid>
+
+              {/* Comments Section */}
+              {selectedComplaint.comments && selectedComplaint.comments.length > 0 && (
+                <Box sx={{ mt: 4 }}>
+                  <Typography variant="h6" gutterBottom sx={{ fontWeight: 'bold', mb: 2 }}>
+                    Comments
+                  </Typography>
+                  <List sx={{ maxHeight: 400, overflow: 'auto' }}>
+                    {selectedComplaint.comments
+                      .filter(comment => {
+                        // Show comments based on workflow level
+                        const currentLevel = selectedComplaint.workflow?.currentLevel || 'coordinator'
+                        const commentRole = comment.commentedBy?.role || ''
+                        
+                        // Coordinator level: show coordinator comments
+                        if (currentLevel === 'coordinator') {
+                          return commentRole === 'coordinator'
+                        }
+                        // Additional HOD level: show coordinator + additional_hod comments
+                        if (currentLevel === 'additional_hod') {
+                          return commentRole === 'coordinator' || commentRole === 'additional_hod'
+                        }
+                        // Dean level: show all admin comments (coordinator + additional_hod + dean)
+                        if (currentLevel === 'dean') {
+                          return commentRole === 'coordinator' || commentRole === 'additional_hod' || commentRole === 'dean'
+                        }
+                        return false
+                      })
+                      .map((comment, index) => (
+                        <React.Fragment key={index}>
+                          <ListItem alignItems="flex-start" sx={{ px: 0 }}>
+                            <ListItemIcon sx={{ minWidth: 40 }}>
+                              <Avatar sx={{ bgcolor: 'primary.main', width: 32, height: 32 }}>
+                                {comment.commentedBy?.firstName?.[0] || 'A'}
+                              </Avatar>
+                            </ListItemIcon>
+                            <ListItemText
+                              primary={
+                                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 0.5 }}>
+                                  <Typography variant="subtitle2" sx={{ fontWeight: 'bold' }}>
+                                    {comment.commentedBy?.firstName} {comment.commentedBy?.lastName}
+                                  </Typography>
+                                  <Chip 
+                                    label={comment.commentedBy?.role || 'Admin'} 
+                                    size="small" 
+                                    sx={{ fontSize: '0.7rem', height: 20 }}
+                                  />
+                                  <Typography variant="caption" color="text.secondary" sx={{ ml: 'auto' }}>
+                                    {new Date(comment.createdAt).toLocaleString()}
+                                  </Typography>
+                                </Box>
+                              }
+                              secondary={
+                                <Typography variant="body2" sx={{ mt: 0.5 }}>
+                                  {comment.comment}
+                                </Typography>
+                              }
+                            />
+                          </ListItem>
+                          {index < selectedComplaint.comments.filter(c => {
+                            const currentLevel = selectedComplaint.workflow?.currentLevel || 'coordinator'
+                            const commentRole = c.commentedBy?.role || ''
+                            if (currentLevel === 'coordinator') return commentRole === 'coordinator'
+                            if (currentLevel === 'additional_hod') return commentRole === 'coordinator' || commentRole === 'additional_hod'
+                            if (currentLevel === 'dean') return commentRole === 'coordinator' || commentRole === 'additional_hod' || commentRole === 'dean'
+                            return false
+                          }).length - 1 && <Divider component="li" />}
+                        </React.Fragment>
+                      ))}
+                  </List>
+                </Box>
+              )}
             </Box>
           )}
         </DialogContent>
@@ -1503,47 +1649,54 @@ export default function DeanDashboard() {
       </Dialog>
 
       {/* Forward to External Department Dialog */}
-      <Dialog open={externalForwardDialogOpen} onClose={() => setExternalForwardDialogOpen(false)} maxWidth="sm" fullWidth>
+      <Dialog open={externalForwardDialogOpen} onClose={() => {
+        setExternalForwardDialogOpen(false)
+        setSelectedExternalDepartment('')
+        setForwardReason('')
+      }} maxWidth="sm" fullWidth>
         <DialogTitle>
-          Forward to {
-            selectedComplaint?.category === 'Fee' ? 'Accounts Department' : 
-            selectedComplaint?.category === 'Library' ? 'Librarian' : 
-            'Maintenance Department'
-          }
+          Forward to External Department
         </DialogTitle>
         <DialogContent>
           <Alert severity="info" sx={{ mb: 2 }}>
-            This complaint will be forwarded to {
-              selectedComplaint?.category === 'Fee' ? 'Accounts Department' : 
-              selectedComplaint?.category === 'Library' ? 'Librarian' : 
-              'Maintenance Department'
-            } for handling.
+            Select the external department to forward this complaint to for handling.
           </Alert>
+          <FormControl fullWidth sx={{ mt: 2, mb: 2 }}>
+            <InputLabel>Select Department</InputLabel>
+            <Select
+              value={selectedExternalDepartment}
+              label="Select Department"
+              onChange={(e) => setSelectedExternalDepartment(e.target.value)}
+              required
+            >
+              <MenuItem value="Librarian">Librarian</MenuItem>
+              <MenuItem value="Accounts">Accounts</MenuItem>
+              <MenuItem value="Maintenance">Maintenance</MenuItem>
+            </Select>
+          </FormControl>
           <TextField
             fullWidth
             multiline
             rows={4}
             value={forwardReason}
             onChange={(e) => setForwardReason(e.target.value)}
-            placeholder={`Optional: Add a reason for forwarding to ${
-              selectedComplaint?.category === 'Fee' ? 'Accounts Department' : 
-              selectedComplaint?.category === 'Library' ? 'Librarian' : 
-              'Maintenance Department'
-            }...`}
+            placeholder="Optional: Add a reason for forwarding this complaint..."
             sx={{ mt: 2 }}
           />
         </DialogContent>
         <DialogActions>
           <Button onClick={() => {
             setExternalForwardDialogOpen(false)
+            setSelectedExternalDepartment('')
             setForwardReason('')
           }}>Cancel</Button>
-          <Button onClick={handleForwardToExternal} variant="contained" color="primary">
-            Forward to {
-              selectedComplaint?.category === 'Fee' ? 'Accounts' : 
-              selectedComplaint?.category === 'Library' ? 'Librarian' : 
-              'Maintenance'
-            }
+          <Button 
+            onClick={handleForwardToExternal} 
+            variant="contained" 
+            color="primary"
+            disabled={!selectedExternalDepartment}
+          >
+            Forward to {selectedExternalDepartment || 'Department'}
           </Button>
         </DialogActions>
       </Dialog>

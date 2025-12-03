@@ -52,7 +52,7 @@ function Footer() {
               <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
                 <Email sx={{ color: '#1976d2', fontSize: 24 }} />
                 <Typography variant="body2" sx={{ color: '#b0b0b0', fontSize: '1.1rem' }}>
-                  support@kiet.edu
+                  support@university.edu
                 </Typography>
               </Box>
               <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
@@ -220,7 +220,7 @@ function Footer() {
           }}
         >
           <Typography variant="body2" sx={{ color: '#999', fontSize: '1rem' }}>
-            © 2025 KIET Group of Institutions. All rights reserved.
+            © 2025 Abhijeet singh. All rights reserved.
           </Typography>
           <Box sx={{ display: 'flex', gap: 4, flexWrap: 'wrap' }}>
             <Button 

@@ -16,7 +16,8 @@ const getComplaints = asyncHandler(async (req, res) => {
     category,
     department,
     search,
-    assignedTo
+    assignedTo,
+    coordinatorAssigned
   } = req.query;
 
   // Build filter object
@@ -27,9 +28,26 @@ const getComplaints = asyncHandler(async (req, res) => {
     filter.student = req.user._id;
   }
 
-  // Admins can filter by department (if not super admin)
-  if (req.userType === 'admin' && req.user.role !== 'super_admin') {
+  // Admins can filter by department (if not super admin and not external department)
+  const externalRoles = ['accounts', 'librarian', 'maintenance', 'external'];
+  if (req.userType === 'admin' && req.user.role !== 'super_admin' && !externalRoles.includes(req.user.role)) {
     filter.department = req.user.department;
+  }
+
+  // For external departments, filter by externalForward.forwardedTo
+  if (req.userType === 'admin' && externalRoles.includes(req.user.role)) {
+    // Ensure department is capitalized to match enum values
+    const userDepartment = req.user.department 
+      ? req.user.department.charAt(0).toUpperCase() + req.user.department.slice(1)
+      : null;
+    
+    if (userDepartment) {
+      filter['externalForward.isForwarded'] = true;
+      filter['externalForward.forwardedTo'] = userDepartment;
+    } else {
+      // If no department, return empty results
+      filter['externalForward.isForwarded'] = false; // This will return no results
+    }
   }
 
   // Apply filters
@@ -38,6 +56,7 @@ const getComplaints = asyncHandler(async (req, res) => {
   if (category) filter.category = category;
   if (department && req.userType === 'admin') filter.department = department;
   if (assignedTo) filter.assignedTo = assignedTo;
+  if (coordinatorAssigned) filter['workflow.coordinatorAssigned'] = coordinatorAssigned;
 
   // Search functionality
   if (search) {
@@ -371,6 +390,14 @@ const addComment = asyncHandler(async (req, res) => {
     return res.status(404).json({
       success: false,
       message: 'Complaint not found'
+    });
+  }
+
+  // Check if complaint is resolved - no one can comment on resolved or closed complaints
+  if (complaint.status === 'Resolved' || complaint.status === 'Closed') {
+    return res.status(400).json({
+      success: false,
+      message: 'Cannot add comment to a resolved or closed complaint'
     });
   }
 
@@ -729,12 +756,12 @@ const forwardComplaint = asyncHandler(async (req, res) => {
   res.json({ success: true, message: 'Complaint forwarded successfully', complaint: populated });
 });
 
-// @desc    Forward complaint to external department (Dean -> Accounts/Librarian)
+// @desc    Forward complaint to external department (Dean -> Accounts/Librarian/Maintenance)
 // @route   PUT /api/complaints/:id/forward-external
 // @access  Private (Dean only)
 const forwardToExternal = asyncHandler(async (req, res) => {
   const { id } = req.params;
-  const { forwardReason } = req.body;
+  const { forwardReason, forwardedTo } = req.body;
   const { user } = req;
 
   // Only Deans can forward to external departments
@@ -758,18 +785,12 @@ const forwardToExternal = asyncHandler(async (req, res) => {
     });
   }
 
-  // Determine target based on category
-  let forwardedTo = null;
-  if (complaint.category === 'Fee') {
-    forwardedTo = 'Accounts';
-  } else if (complaint.category === 'Library') {
-    forwardedTo = 'Librarian';
-  } else if (complaint.category === 'Infrastructure') {
-    forwardedTo = 'Maintenance';
-  } else {
+  // Validate forwardedTo parameter
+  const validDepartments = ['Accounts', 'Librarian', 'Maintenance'];
+  if (!forwardedTo || !validDepartments.includes(forwardedTo)) {
     return res.status(400).json({ 
       success: false, 
-      message: 'This complaint category cannot be forwarded to external departments. Only Fee, Library, and Infrastructure categories can be forwarded.' 
+      message: 'Invalid department. Please select Accounts, Librarian, or Maintenance.' 
     });
   }
 

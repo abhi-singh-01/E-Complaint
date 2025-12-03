@@ -77,13 +77,13 @@ export default function AdminLogin() {
       newErrors.department = 'Please select your department'
     }
     
-    // Auto-set department for external roles
+    // Auto-set department for external roles (capitalized)
     if (form.role === 'accounts') {
-      form.department = 'accounts';
+      form.department = 'Accounts';
     } else if (form.role === 'librarian') {
-      form.department = 'librarian';
+      form.department = 'Librarian';
     } else if (form.role === 'maintenance') {
-      form.department = 'maintenance';
+      form.department = 'Maintenance';
     }
 
     setErrors(newErrors)
@@ -92,7 +92,6 @@ export default function AdminLogin() {
 
   const handleInputChange = (field) => (e) => {
     const value = e.target.value
-    setForm({ ...form, [field]: value })
     
     // Clear error when user starts typing
     if (errors[field]) {
@@ -101,18 +100,22 @@ export default function AdminLogin() {
     
     // If role changes to super_admin or external department, handle department
     if (field === 'role') {
+      let departmentValue = form.department
       if (value === 'super_admin') {
-        setForm(prev => ({ ...prev, department: '' }))
+        departmentValue = ''
       } else if (value === 'accounts') {
-        setForm(prev => ({ ...prev, department: 'accounts' }))
+        departmentValue = 'Accounts'
       } else if (value === 'librarian') {
-        setForm(prev => ({ ...prev, department: 'librarian' }))
+        departmentValue = 'Librarian'
       } else if (value === 'maintenance') {
-        setForm(prev => ({ ...prev, department: 'maintenance' }))
+        departmentValue = 'Maintenance'
       }
+      setForm({ ...form, [field]: value, department: departmentValue })
       if (errors.department) {
         setErrors({ ...errors, department: '' })
       }
+    } else {
+      setForm({ ...form, [field]: value })
     }
   }
 
@@ -132,16 +135,41 @@ export default function AdminLogin() {
     
     console.log('Validation passed. Proceeding with login...')
 
+    // Ensure role is set
+    if (!form.role || form.role.trim() === '') {
+      setError('Please select a role')
+      setLoading(false)
+      return
+    }
+
     setLoading(true)
     try {
-      // For external departments, send role as 'external' and department as lowercase
+      // For external departments, send the actual role and capitalized department
       const isExternalRole = ['accounts', 'librarian', 'maintenance'].includes(form.role)
-      const loginData = {
-        email: form.email,
-        password: form.password,
-        role: isExternalRole ? 'external' : form.role,
-        department: isExternalRole ? form.role.toLowerCase() : form.department
+      const departmentValue = isExternalRole 
+        ? form.role.charAt(0).toUpperCase() + form.role.slice(1) // Capitalize: 'Accounts', 'Librarian', 'Maintenance'
+        : (form.department || '')
+
+      // Ensure department is set for non-super-admin roles
+      if (form.role !== 'super_admin' && (!departmentValue || departmentValue.trim() === '')) {
+        setError('Please select a department')
+        setLoading(false)
+        return
       }
+
+      const loginData = {
+        email: form.email.trim(),
+        password: form.password,
+        role: form.role.trim()
+      }
+
+      // Only add department if not super_admin
+      if (form.role !== 'super_admin') {
+        loginData.department = departmentValue.trim()
+      }
+
+      console.log('Login data being sent:', loginData)
+      console.log('Form state:', form)
 
       const { data } = await api.post('/api/auth/admin/login', loginData)
       
@@ -373,11 +401,11 @@ export default function AdminLogin() {
                 <FormControl fullWidth sx={{ mb: 3 }}>
                   <InputLabel>Department</InputLabel>
                   <Select
-                    value="accounts"
+                    value="Accounts"
                     label="Department"
                     disabled
                   >
-                    <MenuItem value="accounts">Accounts</MenuItem>
+                    <MenuItem value="Accounts">Accounts</MenuItem>
                   </Select>
                 </FormControl>
               )}
@@ -385,11 +413,11 @@ export default function AdminLogin() {
                 <FormControl fullWidth sx={{ mb: 3 }}>
                   <InputLabel>Department</InputLabel>
                   <Select
-                    value="librarian"
+                    value="Librarian"
                     label="Department"
                     disabled
                   >
-                    <MenuItem value="librarian">Librarian</MenuItem>
+                    <MenuItem value="Librarian">Librarian</MenuItem>
                   </Select>
                 </FormControl>
               )}
@@ -397,11 +425,11 @@ export default function AdminLogin() {
                 <FormControl fullWidth sx={{ mb: 3 }}>
                   <InputLabel>Department</InputLabel>
                   <Select
-                    value="maintenance"
+                    value="Maintenance"
                     label="Department"
                     disabled
                   >
-                    <MenuItem value="maintenance">Maintenance</MenuItem>
+                    <MenuItem value="Maintenance">Maintenance</MenuItem>
                   </Select>
                 </FormControl>
               )}

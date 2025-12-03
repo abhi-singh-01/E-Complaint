@@ -135,7 +135,8 @@ export default function CoordinatorDashboard() {
       
       const userId = user._id || user.id
       
-      const { data } = await api.get('/api/complaints', {
+      // Fetch complaints currently assigned to coordinator
+      const { data: assignedData } = await api.get('/api/complaints', {
         params: {
           department: user.department,
           assignedTo: userId,
@@ -143,7 +144,38 @@ export default function CoordinatorDashboard() {
         }
       })
       
-      setComplaints(data.complaints || [])
+      // Fetch resolved complaints that were originally assigned to this coordinator
+      // (even if they were resolved at dean, additional_hod, or panel levels)
+      const { data: coordinatorAssignedData } = await api.get('/api/complaints', {
+        params: {
+          department: user.department,
+          coordinatorAssigned: userId,
+          status: 'Resolved',
+          limit: 100
+        }
+      })
+      
+      // Merge the two lists and remove duplicates
+      const assignedComplaints = assignedData.complaints || []
+      const coordinatorResolvedComplaints = coordinatorAssignedData.complaints || []
+      
+      // Create a map to avoid duplicates
+      const complaintMap = new Map()
+      
+      // Add currently assigned complaints
+      assignedComplaints.forEach(complaint => {
+        complaintMap.set(complaint._id, complaint)
+      })
+      
+      // Add resolved complaints originally assigned to coordinator
+      coordinatorResolvedComplaints.forEach(complaint => {
+        if (!complaintMap.has(complaint._id)) {
+          complaintMap.set(complaint._id, complaint)
+        }
+      })
+      
+      // Convert map back to array
+      setComplaints(Array.from(complaintMap.values()))
     } catch (err) {
       console.error('Error fetching all complaints:', err)
       setError(`Failed to fetch complaints: ${err.response?.data?.message || err.message}`)
@@ -743,15 +775,18 @@ export default function CoordinatorDashboard() {
                                   <Visibility />
                                 </IconButton>
                               </Tooltip>
-                              <Tooltip title="Add Comment">
-                                <IconButton
-                                  onClick={() => {
-                                    setSelectedComplaint(complaint)
-                                    setCommentDialogOpen(true)
-                                  }}
-                                >
-                                  <Comment />
-                                </IconButton>
+                              <Tooltip title={complaint.status.toLowerCase() === 'resolved' || complaint.status.toLowerCase() === 'closed' ? 'Cannot comment on resolved complaints' : 'Add Comment'}>
+                                <span>
+                                  <IconButton
+                                    onClick={() => {
+                                      setSelectedComplaint(complaint)
+                                      setCommentDialogOpen(true)
+                                    }}
+                                    disabled={complaint.status.toLowerCase() === 'resolved' || complaint.status.toLowerCase() === 'closed'}
+                                  >
+                                    <Comment />
+                                  </IconButton>
+                                </span>
                               </Tooltip>
                               <Tooltip title="Forward Complaint">
                                 <IconButton
@@ -800,13 +835,21 @@ export default function CoordinatorDashboard() {
                       .filter(c => c.status.toLowerCase() === 'resolved')
                       .map((complaint, index) => (
                         <React.Fragment key={complaint._id}>
-                          <ListItem sx={{ py: 3, px: 3 }}>
-                            <ListItemIcon sx={{ minWidth: 48 }}>
+                          <ListItem 
+                            sx={{ 
+                              py: 3, 
+                              px: 3,
+                              pr: 10, // Add right padding to make room for the View Details button
+                              alignItems: 'flex-start'
+                            }}
+                          >
+                            <ListItemIcon sx={{ minWidth: 48, mt: 1 }}>
                               <Avatar sx={{ bgcolor: 'success.light' }}>
                                 <CheckCircle sx={{ color: '#2e7d32' }} />
                               </Avatar>
                             </ListItemIcon>
                             <ListItemText
+                              sx={{ pr: 2 }} // Add padding-right to prevent overlap
                               primary={
                                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
                                   <Typography variant="h6" sx={{ fontWeight: 'bold', fontSize: '1.3rem' }}>
@@ -821,7 +864,7 @@ export default function CoordinatorDashboard() {
                                 </Box>
                               }
                               secondary={
-                                <Box>
+                                <Box sx={{ pr: 1 }}>
                                   <Typography variant="body1" sx={{ mb: 2, color: 'text.secondary', fontSize: '1rem', lineHeight: 1.6 }}>
                                     {complaint.description}
                                   </Typography>
@@ -852,9 +895,9 @@ export default function CoordinatorDashboard() {
                                     </Box>
                                   </Box>
 
-                                  <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap', alignItems: 'center', mb: 1 }}>
-                                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                                      <Category sx={{ fontSize: '1rem', color: 'text.secondary' }} />
+                                  <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap', alignItems: 'center', mb: 1, mt: 1 }}>
+                                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, flexShrink: 0 }}>
+                                      <Category sx={{ fontSize: '1rem', color: 'text.secondary', flexShrink: 0 }} />
                                       <Chip
                                         label={complaint.category}
                                         size="small"
@@ -862,8 +905,8 @@ export default function CoordinatorDashboard() {
                                         sx={{ fontSize: '0.8rem' }}
                                       />
                                     </Box>
-                                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                                      <PriorityHigh sx={{ fontSize: '1rem', color: 'text.secondary' }} />
+                                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, flexShrink: 0 }}>
+                                      <PriorityHigh sx={{ fontSize: '1rem', color: 'text.secondary', flexShrink: 0 }} />
                                       <Chip
                                         label={complaint.priority}
                                         color={getPriorityColor(complaint.priority)}
@@ -872,23 +915,34 @@ export default function CoordinatorDashboard() {
                                         sx={{ fontSize: '0.8rem' }}
                                       />
                                     </Box>
-                                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                                      <CalendarToday sx={{ fontSize: '1rem', color: 'text.secondary' }} />
-                                      <Typography variant="caption" color="text.secondary" sx={{ fontSize: '0.8rem' }}>
+                                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, flexShrink: 0 }}>
+                                      <CalendarToday sx={{ fontSize: '1rem', color: 'text.secondary', flexShrink: 0 }} />
+                                      <Typography variant="caption" color="text.secondary" sx={{ fontSize: '0.8rem', whiteSpace: 'nowrap' }}>
                                         Created: {new Date(complaint.createdAt).toLocaleDateString()}
                                       </Typography>
                                     </Box>
-                                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                                      <CheckCircle sx={{ fontSize: '1rem', color: '#2e7d32' }} />
-                                      <Typography variant="caption" color="text.secondary" sx={{ fontSize: '0.8rem', color: '#2e7d32', fontWeight: '600' }}>
+                                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, flexShrink: 0 }}>
+                                      <CheckCircle sx={{ fontSize: '1rem', color: '#2e7d32', flexShrink: 0 }} />
+                                      <Typography variant="caption" color="text.secondary" sx={{ fontSize: '0.8rem', color: '#2e7d32', fontWeight: '600', whiteSpace: 'nowrap' }}>
                                         Resolved: {new Date(complaint.updatedAt).toLocaleDateString()}
                                       </Typography>
                                     </Box>
+                                    {complaint.workflow?.currentLevel && complaint.workflow.currentLevel !== 'coordinator' && (
+                                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, flexShrink: 0 }}>
+                                        <Chip
+                                          label={`Resolved at ${complaint.workflow.currentLevel === 'dean' ? 'Dean' : complaint.workflow.currentLevel === 'additional_hod' ? 'Additional HOD' : complaint.workflow.currentLevel}`}
+                                          size="small"
+                                          color="info"
+                                          variant="outlined"
+                                          sx={{ fontSize: '0.75rem' }}
+                                        />
+                                      </Box>
+                                    )}
                                   </Box>
                                 </Box>
                               }
                             />
-                            <ListItemSecondaryAction>
+                            <ListItemSecondaryAction sx={{ top: '50%', transform: 'translateY(-50%)', right: 16 }}>
                               <Tooltip title="View Details">
                                 <IconButton
                                   onClick={() => {
@@ -1164,6 +1218,78 @@ export default function CoordinatorDashboard() {
                     </Typography>
                   </Grid>
                 </Grid>
+
+                {/* Comments Section */}
+                {selectedComplaint.comments && selectedComplaint.comments.length > 0 && (
+                  <Box sx={{ mt: 4 }}>
+                    <Typography variant="h6" gutterBottom sx={{ fontWeight: 'bold', mb: 2 }}>
+                      Comments
+                    </Typography>
+                    <List sx={{ maxHeight: 400, overflow: 'auto' }}>
+                      {selectedComplaint.comments
+                        .filter(comment => {
+                          // Show comments based on workflow level
+                          const currentLevel = selectedComplaint.workflow?.currentLevel || 'coordinator'
+                          const commentRole = comment.commentedBy?.role || ''
+                          
+                          // Coordinator level: show coordinator comments
+                          if (currentLevel === 'coordinator') {
+                            return commentRole === 'coordinator'
+                          }
+                          // Additional HOD level: show coordinator + additional_hod comments
+                          if (currentLevel === 'additional_hod') {
+                            return commentRole === 'coordinator' || commentRole === 'additional_hod'
+                          }
+                          // Dean level: show all admin comments (coordinator + additional_hod + dean)
+                          if (currentLevel === 'dean') {
+                            return commentRole === 'coordinator' || commentRole === 'additional_hod' || commentRole === 'dean'
+                          }
+                          return false
+                        })
+                        .map((comment, index) => (
+                          <React.Fragment key={index}>
+                            <ListItem alignItems="flex-start" sx={{ px: 0 }}>
+                              <ListItemIcon sx={{ minWidth: 40 }}>
+                                <Avatar sx={{ bgcolor: 'primary.main', width: 32, height: 32 }}>
+                                  {comment.commentedBy?.firstName?.[0] || 'A'}
+                                </Avatar>
+                              </ListItemIcon>
+                              <ListItemText
+                                primary={
+                                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 0.5 }}>
+                                    <Typography variant="subtitle2" sx={{ fontWeight: 'bold' }}>
+                                      {comment.commentedBy?.firstName} {comment.commentedBy?.lastName}
+                                    </Typography>
+                                    <Chip 
+                                      label={comment.commentedBy?.role || 'Admin'} 
+                                      size="small" 
+                                      sx={{ fontSize: '0.7rem', height: 20 }}
+                                    />
+                                    <Typography variant="caption" color="text.secondary" sx={{ ml: 'auto' }}>
+                                      {new Date(comment.createdAt).toLocaleString()}
+                                    </Typography>
+                                  </Box>
+                                }
+                                secondary={
+                                  <Typography variant="body2" sx={{ mt: 0.5 }}>
+                                    {comment.comment}
+                                  </Typography>
+                                }
+                              />
+                            </ListItem>
+                            {index < selectedComplaint.comments.filter(c => {
+                              const currentLevel = selectedComplaint.workflow?.currentLevel || 'coordinator'
+                              const commentRole = c.commentedBy?.role || ''
+                              if (currentLevel === 'coordinator') return commentRole === 'coordinator'
+                              if (currentLevel === 'additional_hod') return commentRole === 'coordinator' || commentRole === 'additional_hod'
+                              if (currentLevel === 'dean') return commentRole === 'coordinator' || commentRole === 'additional_hod' || commentRole === 'dean'
+                              return false
+                            }).length - 1 && <Divider component="li" />}
+                          </React.Fragment>
+                        ))}
+                    </List>
+                  </Box>
+                )}
               </Box>
             )}
           </DialogContent>
