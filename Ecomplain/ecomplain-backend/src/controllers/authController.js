@@ -88,14 +88,32 @@ const registerStudent = asyncHandler(async (req, res) => {
     console.error('\n❌ Registration error:', error);
     console.error('Error name:', error.name);
     console.error('Error message:', error.message);
+    console.error('Error stack:', error.stack);
     console.error('Request body:', JSON.stringify(req.body, null, 2));
+    console.error('Environment:', process.env.VERCEL ? 'Vercel' : process.env.NODE_ENV || 'Unknown');
     
     // Handle MongoDB connection errors
-    if (error.name === 'MongoServerError' || error.name === 'MongoNetworkError' || error.name === 'MongoTimeoutError') {
+    if (error.name === 'MongoServerError' || error.name === 'MongoNetworkError' || error.name === 'MongoTimeoutError' || error.name === 'MongooseError') {
       console.error('💡 MongoDB connection issue detected');
+      
+      // Check if it's a network/connection issue
+      if (error.message.includes('timeout') || 
+          error.message.includes('ECONNREFUSED') || 
+          error.message.includes('ENOTFOUND') ||
+          error.message.includes('whitelist') ||
+          error.message.includes('connection') ||
+          error.message.includes('network')) {
+        return res.status(503).json({
+          success: false,
+          message: 'Database connection error. Please check your MongoDB Atlas network settings and ensure IP whitelist includes 0.0.0.0/0 for Vercel deployments.',
+          error: process.env.NODE_ENV === 'development' ? error.message : undefined
+        });
+      }
+      
       return res.status(503).json({
         success: false,
-        message: 'Database connection error. Please try again later.'
+        message: 'Database connection error. Please try again later.',
+        error: process.env.NODE_ENV === 'development' ? error.message : undefined
       });
     }
     
