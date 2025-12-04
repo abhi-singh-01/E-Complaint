@@ -29,7 +29,8 @@ const getAdditionalHODs = asyncHandler(async (req, res) => {
 
     const additionalHODs = await Admin.find(query)
       .select('firstName lastName email department')
-      .sort({ firstName: 1 });
+      .sort({ firstName: 1 })
+      .lean(); // Use lean() for read-only queries
 
     res.json({
       success: true,
@@ -68,7 +69,8 @@ const getDeans = asyncHandler(async (req, res) => {
 
     const deans = await Admin.find(query)
       .select('firstName lastName email department')
-      .sort({ firstName: 1 });
+      .sort({ firstName: 1 })
+      .lean(); // Use lean() for read-only queries
 
     res.json({ success: true, admins: deans });
   } catch (error) {

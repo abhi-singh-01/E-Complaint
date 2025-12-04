@@ -14,12 +14,16 @@ dotenv.config();
 // Import database connection
 const connectDB = require('./src/config/database');
 
+// Import Redis connection
+const { connectRedis, closeRedis } = require('./src/config/redis');
+
 // Import routes
 const authRoutes = require('./src/routes/auth');
 const complaintRoutes = require('./src/routes/complaints');
 const dashboardRoutes = require('./src/routes/dashboard');
 const adminRoutes = require('./src/routes/admin');
 const superAdminRoutes = require('./src/routes/superAdmin');
+const profileRoutes = require('./src/routes/profile');
 
 // Import middleware
 const { errorHandler, notFound } = require('./src/middleware/errorHandler');
@@ -27,14 +31,31 @@ const { errorHandler, notFound } = require('./src/middleware/errorHandler');
 // Connect to database
 connectDB();
 
+// Connect to Redis
+connectRedis();
+
 const app = express();
 
 // Trust proxy (for rate limiting behind reverse proxy)
 app.set('trust proxy', 1);
 
-// Security middleware
+// Security middleware with performance optimizations
 app.use(helmet({
-  crossOriginResourcePolicy: { policy: "cross-origin" }
+  crossOriginResourcePolicy: { policy: "cross-origin" },
+  contentSecurityPolicy: {
+    directives: {
+      defaultSrc: ["'self'"],
+      styleSrc: ["'self'", "'unsafe-inline'"],
+      scriptSrc: ["'self'"],
+      imgSrc: ["'self'", "data:", "https:"],
+    },
+  },
+  // Disable some headers that can slow down responses
+  hsts: {
+    maxAge: 31536000,
+    includeSubDomains: true,
+    preload: true
+  }
 }));
 
 // Rate limiting
@@ -64,7 +85,19 @@ const corsOptions = {
       'http://localhost:5173'
     ];
     
-    if (allowedOrigins.indexOf(origin) !== -1) {
+    // Allow Vercel deployments (both preview and production)
+    const isVercelDomain = origin.includes('.vercel.app') || 
+                          origin.includes('vercel.app') ||
+                          (process.env.VERCEL_URL && origin.includes(process.env.VERCEL_URL));
+    
+    // Allow custom domains from environment variable (comma-separated)
+    const customDomains = process.env.ALLOWED_ORIGINS 
+      ? process.env.ALLOWED_ORIGINS.split(',').map(domain => domain.trim())
+      : [];
+    
+    if (allowedOrigins.indexOf(origin) !== -1 || 
+        isVercelDomain || 
+        customDomains.includes(origin)) {
       callback(null, true);
     } else {
       callback(new Error('Not allowed by CORS'));
@@ -77,15 +110,45 @@ const corsOptions = {
 
 app.use(cors(corsOptions));
 
-// Body parsing middleware
-app.use(express.json({ limit: '10mb' }));
-app.use(express.urlencoded({ extended: true, limit: '10mb' }));
+// Body parsing middleware - optimized settings
+app.use(express.json({ 
+  limit: '10mb',
+  verify: (req, res, buf) => {
+    // Store raw body for potential use
+    req.rawBody = buf;
+  }
+}));
+app.use(express.urlencoded({ 
+  extended: true, 
+  limit: '10mb',
+  parameterLimit: 100 // Limit number of parameters
+}));
 
 // Data sanitization against NoSQL query injection
 app.use(mongoSanitize());
 
-// Compression middleware
-app.use(compression());
+// Compression middleware with optimized settings
+app.use(compression({
+  level: 6, // Compression level (1-9, 6 is a good balance)
+  filter: (req, res) => {
+    // Don't compress responses if this request header is present
+    if (req.headers['x-no-compression']) {
+      return false;
+    }
+    // Use compression filter function
+    return compression.filter(req, res);
+  }
+}));
+
+// Import cache middleware
+const { cacheMiddleware } = require('./src/middleware/cache');
+
+// Apply caching to frequently accessed endpoints
+// Cache dashboard stats for 2 minutes
+app.use('/api/dashboard', cacheMiddleware(2 * 60 * 1000));
+// Cache admin lists for 5 minutes
+app.use('/api/admin/additional-hods', cacheMiddleware(5 * 60 * 1000));
+app.use('/api/admin/deans', cacheMiddleware(5 * 60 * 1000));
 
 // Logging middleware removed to suppress console logs
 
@@ -97,9 +160,20 @@ app.use('/api/complaints', complaintRoutes);
 app.use('/api/dashboard', dashboardRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/super-admin', superAdminRoutes);
+app.use('/api/profile', profileRoutes);
 
-// Serve static files (if any)
-app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
+// Serve static files (if any) with optimized settings
+app.use('/uploads', express.static(path.join(__dirname, 'uploads'), {
+  maxAge: '1y', // Cache static files for 1 year
+  etag: true, // Enable ETag for better caching
+  lastModified: true,
+  setHeaders: (res, path) => {
+    // Set cache headers for images
+    if (path.match(/\.(jpg|jpeg|png|gif|webp|svg)$/)) {
+      res.setHeader('Cache-Control', 'public, max-age=31536000, immutable');
+    }
+  }
+}));
 
 // Root endpoint
 app.get('/', (req, res) => {
@@ -118,13 +192,15 @@ app.use(notFound);
 app.use(errorHandler);
 
 // Graceful shutdown
-process.on('SIGTERM', () => {
+process.on('SIGTERM', async () => {
   console.log('SIGTERM received. Shutting down gracefully...');
+  await closeRedis();
   process.exit(0);
 });
 
-process.on('SIGINT', () => {
+process.on('SIGINT', async () => {
   console.log('SIGINT received. Shutting down gracefully...');
+  await closeRedis();
   process.exit(0);
 });
 

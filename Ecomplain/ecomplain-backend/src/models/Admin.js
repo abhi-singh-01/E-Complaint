@@ -132,6 +132,9 @@ adminSchema.virtual('displayRole').get(function() {
 adminSchema.index({ role: 1 });
 adminSchema.index({ department: 1 });
 adminSchema.index({ isActive: 1 });
+// Compound indexes for common queries
+adminSchema.index({ role: 1, department: 1, isActive: 1 });
+// Note: email already has a unique index from the unique: true option
 
 // Pre-save middleware to hash password
 adminSchema.pre('save', async function(next) {

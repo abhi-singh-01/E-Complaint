@@ -1,0 +1,30 @@
+# Backend files (deploy backend separately)
+ecomplain-backend/
+
+# Development files
+node_modules/
+.env
+.env.local
+.env.*.local
+
+# Build artifacts
+*.log
+.DS_Store
+
+# IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Git (keep .gitignore for reference)
+.git/
+
+# Test files
+**/__tests__/
+**/*.test.js
+**/*.spec.js
+
+# Vercel
+.vercel
+

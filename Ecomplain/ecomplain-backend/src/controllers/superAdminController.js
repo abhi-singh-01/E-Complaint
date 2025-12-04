@@ -148,10 +148,11 @@ const getAllStudents = asyncHandler(async (req, res) => {
     }
     
     const students = await Student.find(query)
-      .select('-password')
+      .select('-password -passwordResetToken -passwordResetExpires')
       .sort({ createdAt: -1 })
       .skip(skip)
-      .limit(limit);
+      .limit(limit)
+      .lean(); // Use lean() for read-only queries
     
     const total = await Student.countDocuments(query);
     
@@ -183,9 +184,10 @@ const getAllStudents = asyncHandler(async (req, res) => {
 const getAllAdmins = asyncHandler(async (req, res) => {
   try {
     const admins = await Admin.find({})
-      .select('-password')
+      .select('-password -passwordResetToken -passwordResetExpires')
       .populate('createdBy', 'firstName lastName email')
-      .sort({ createdAt: -1 });
+      .sort({ createdAt: -1 })
+      .lean({ virtuals: true }); // Use lean() for read-only queries
     
     res.json({
       success: true,
@@ -229,7 +231,8 @@ const getAllComplaints = asyncHandler(async (req, res) => {
       .populate('assignedTo', 'firstName lastName email role department')
       .sort({ createdAt: -1 })
       .skip(skip)
-      .limit(limit);
+      .limit(limit)
+      .lean({ virtuals: true }); // Use lean() for read-only queries
     
     // Filter by department if specified
     let filteredComplaints = complaints;

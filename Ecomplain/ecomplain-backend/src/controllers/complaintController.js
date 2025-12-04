@@ -2,6 +2,7 @@ const Complaint = require('../models/Complaint');
 const Student = require('../models/Student');
 const Admin = require('../models/Admin');
 const { asyncHandler } = require('../middleware/errorHandler');
+const { invalidateComplaintCache, invalidateDashboardCache } = require('../utils/cacheHelper');
 
 // @desc    Get all complaints (with filtering and pagination)
 // @route   GET /api/complaints
@@ -69,17 +70,20 @@ const getComplaints = asyncHandler(async (req, res) => {
   // Calculate pagination
   const skip = (parseInt(page) - 1) * parseInt(limit);
 
-  // Execute query with pagination
+  // Execute query with pagination - using lean() for better performance
   const complaints = await Complaint.find(filter)
     .populate('student', 'firstName lastName email libraryId rollNo department year')
     .populate('assignedTo', 'firstName lastName email role department')
     .populate('comments.commentedBy', 'firstName lastName email role')
     .sort(sort)
     .skip(skip)
-    .limit(parseInt(limit));
+    .limit(parseInt(limit))
+    .lean({ virtuals: true }); // Use lean() for read-only queries, keep virtuals
 
-  // Get total count for pagination
-  const total = await Complaint.countDocuments(filter);
+  // Get total count for pagination - use estimatedDocumentCount if no filters for better performance
+  const total = Object.keys(filter).length === 0 
+    ? await Complaint.estimatedDocumentCount()
+    : await Complaint.countDocuments(filter);
 
   res.json({
     success: true,
@@ -98,7 +102,8 @@ const getComplaint = asyncHandler(async (req, res) => {
   const complaint = await Complaint.findById(req.params.id)
     .populate('student', 'firstName lastName email libraryId rollNo department year')
     .populate('assignedTo', 'firstName lastName email role department')
-    .populate('comments.commentedBy', 'firstName lastName email role');
+    .populate('comments.commentedBy', 'firstName lastName email role')
+    .lean({ virtuals: true }); // Use lean() for read-only queries, keep virtuals
 
   if (!complaint) {
     return res.status(404).json({
@@ -184,6 +189,10 @@ const createComplaint = asyncHandler(async (req, res) => {
     { path: 'student', select: 'firstName lastName email libraryId rollNo department year' },
     { path: 'assignedTo', select: 'firstName lastName email role' }
   ]);
+
+  // Invalidate cache after creating complaint
+  await invalidateComplaintCache();
+  await invalidateDashboardCache(req.user._id);
 
   res.status(201).json({
     success: true,
@@ -303,6 +312,10 @@ const updateComplaint = asyncHandler(async (req, res) => {
   await complaint.populate('student', 'firstName lastName email libraryId rollNo department year');
   await complaint.populate('assignedTo', 'firstName lastName email role department');
 
+  // Invalidate cache after updating complaint
+  await invalidateComplaintCache(complaint._id);
+  await invalidateDashboardCache();
+
   res.json({
     success: true,
     message: 'Complaint updated successfully',
@@ -372,6 +385,10 @@ const deleteComplaint = asyncHandler(async (req, res) => {
 
   await complaint.deleteOne();
 
+  // Invalidate cache after deleting complaint
+  await invalidateComplaintCache();
+  await invalidateDashboardCache();
+
   res.json({
     success: true,
     message: 'Complaint deleted successfully'
@@ -424,6 +441,9 @@ const addComment = asyncHandler(async (req, res) => {
   await complaint.populate('student', 'firstName lastName email libraryId rollNo department year');
   await complaint.populate('assignedTo', 'firstName lastName email role department');
   await complaint.populate('comments.commentedBy', 'firstName lastName email role');
+
+  // Invalidate cache after adding comment
+  await invalidateComplaintCache(complaint._id);
 
   res.json({
     success: true,

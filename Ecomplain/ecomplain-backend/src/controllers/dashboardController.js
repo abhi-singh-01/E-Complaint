@@ -18,10 +18,11 @@ const getStudentDashboard = asyncHandler(async (req, res) => {
     });
   }
 
-  // Get student's complaints with stats
+  // Get student's complaints with stats - using lean() for better performance
   const complaints = await Complaint.find({ student: studentId })
     .sort({ createdAt: -1 })
-    .select('_id title description category priority status createdAt updatedAt workflow');
+    .select('_id title description category priority status createdAt updatedAt workflow')
+    .lean(); // Use lean() for read-only queries to improve performance
 
   // Calculate stats
   const totalComplaints = complaints.length;
@@ -46,7 +47,8 @@ const getStudentDashboard = asyncHandler(async (req, res) => {
       rollNo: student.rollNo,
       department: student.department,
       year: student.year,
-      libraryId: student.libraryId
+      libraryId: student.libraryId,
+      profilePicture: student.profilePicture
     },
     stats,
     complaints

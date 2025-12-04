@@ -267,10 +267,15 @@ complaintSchema.index({ priority: 1 });
 complaintSchema.index({ createdAt: -1 });
 complaintSchema.index({ dueDate: 1 });
 
-// Compound indexes
+// Compound indexes for common query patterns
 complaintSchema.index({ status: 1, priority: 1 });
 complaintSchema.index({ department: 1, status: 1 });
 complaintSchema.index({ assignedTo: 1, status: 1 });
+complaintSchema.index({ student: 1, status: 1 });
+complaintSchema.index({ student: 1, createdAt: -1 });
+complaintSchema.index({ 'externalForward.isForwarded': 1, 'externalForward.forwardedTo': 1 });
+complaintSchema.index({ 'workflow.currentLevel': 1, department: 1 });
+complaintSchema.index({ createdAt: -1, status: 1 });
 
 // Pre-save middleware to set due date based on priority
 complaintSchema.pre('save', function(next) {

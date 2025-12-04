@@ -94,6 +94,10 @@ const studentSchema = new mongoose.Schema({
   emailVerificationExpires: Date,
   passwordResetToken: String,
   passwordResetExpires: Date,
+  profilePicture: {
+    type: String,
+    default: null
+  },
   lastLogin: Date,
   loginAttempts: {
     type: Number,
@@ -118,6 +122,7 @@ studentSchema.virtual('isLocked').get(function() {
 
 // Index for better query performance
 studentSchema.index({ department: 1 });
+// Note: email and libraryId already have unique indexes from the unique: true option
 
 // Pre-save middleware to hash password
 studentSchema.pre('save', async function(next) {

@@ -1,7 +1,9 @@
-import { useEffect, useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import api from '../../lib/api.js'
 import { useAuth } from '../../auth/AuthContext.jsx'
+import { useTheme as useCustomTheme } from '../../contexts/ThemeContext.jsx'
+import { useTheme } from '@mui/material/styles'
 import {
   Box,
   Container,
@@ -52,12 +54,19 @@ import {
   Refresh,
   Send,
   Edit,
-  Close
+  Close,
+  CameraAlt,
+  Delete,
+  Upload,
+  Visibility,
+  ZoomIn
 } from '@mui/icons-material'
 
 export default function StudentDashboard() {
   const navigate = useNavigate()
   const { user, setToken, setUser } = useAuth()
+  const { isDarkMode } = useCustomTheme()
+  const theme = useTheme()
   const [data, setData] = useState(null)
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(true)
@@ -92,6 +101,12 @@ export default function StudentDashboard() {
   })
   const [updating, setUpdating] = useState(false)
 
+  // Profile picture state
+  const [uploadingPicture, setUploadingPicture] = useState(false)
+  const [previewImage, setPreviewImage] = useState(null)
+  const [selectedFile, setSelectedFile] = useState(null)
+  const [imageViewDialogOpen, setImageViewDialogOpen] = useState(false)
+
   useEffect(() => {
     loadDashboardData()
   }, [])
@@ -99,7 +114,10 @@ export default function StudentDashboard() {
   const loadDashboardData = async () => {
       try {
       setLoading(true)
-        const { data } = await api.get('/api/dashboard')
+        // Add timestamp to bypass cache
+        const { data } = await api.get('/api/dashboard', {
+          params: { _t: Date.now() }
+        })
         setData(data)
       } catch (err) {
         setError(err.response?.data?.message || 'Failed to load dashboard')
@@ -312,6 +330,111 @@ export default function StudentDashboard() {
     return isPendingOrInProgress && isAtCoordinatorLevel
   }
 
+  // Profile picture handlers
+  const handleFileSelect = (e) => {
+    const file = e.target.files[0]
+    if (file) {
+      // Validate file type
+      if (!file.type.startsWith('image/')) {
+        setError('Please select an image file')
+        return
+      }
+      // Validate file size (5MB)
+      if (file.size > 5 * 1024 * 1024) {
+        setError('File size must be less than 5MB')
+        return
+      }
+      setSelectedFile(file)
+      // Create preview
+      const reader = new FileReader()
+      reader.onloadend = () => {
+        setPreviewImage(reader.result)
+      }
+      reader.readAsDataURL(file)
+    }
+  }
+
+  const handleUploadPicture = async () => {
+    if (!selectedFile) {
+      setError('Please select an image file')
+      return
+    }
+
+    setUploadingPicture(true)
+    setError('')
+
+    try {
+      const formData = new FormData()
+      formData.append('profilePicture', selectedFile)
+
+      // For file uploads, we need to remove the default Content-Type header
+      // so axios can set it automatically with the correct boundary
+      const response = await api.post('/api/profile/upload-picture', formData, {
+        headers: {
+          'Content-Type': undefined // Remove default Content-Type to let axios set multipart/form-data with boundary
+        }
+      })
+
+      if (response.data.success) {
+        console.log('Upload successful, profile picture URL:', response.data.profilePicture);
+        // Update the student data immediately with the new profile picture
+        if (data && data.student) {
+          setData({
+            ...data,
+            student: {
+              ...data.student,
+              profilePicture: response.data.profilePicture
+            }
+          })
+        }
+        // Also refresh dashboard data to ensure consistency
+        await loadDashboardData()
+        // Notify navbar to refresh profile picture
+        window.dispatchEvent(new Event('profilePictureUpdated'))
+        setPreviewImage(null)
+        setSelectedFile(null)
+        // Reset file inputs
+        const fileInputTop = document.getElementById('profile-picture-input-top')
+        const fileInputBottom = document.getElementById('profile-picture-input')
+        if (fileInputTop) fileInputTop.value = ''
+        if (fileInputBottom) fileInputBottom.value = ''
+      }
+    } catch (err) {
+      setError(err.response?.data?.message || 'Failed to upload profile picture')
+    } finally {
+      setUploadingPicture(false)
+    }
+  }
+
+  const handleDeletePicture = async () => {
+    if (!window.confirm('Are you sure you want to delete your profile picture?')) {
+      return
+    }
+
+    setUploadingPicture(true)
+    setError('')
+
+    try {
+      await api.delete('/api/profile/delete-picture')
+      await loadDashboardData()
+      // Notify navbar to refresh profile picture
+      window.dispatchEvent(new Event('profilePictureUpdated'))
+    } catch (err) {
+      setError(err.response?.data?.message || 'Failed to delete profile picture')
+    } finally {
+      setUploadingPicture(false)
+    }
+  }
+
+  const cancelUpload = () => {
+    setPreviewImage(null)
+    setSelectedFile(null)
+    const fileInputTop = document.getElementById('profile-picture-input-top')
+    const fileInputBottom = document.getElementById('profile-picture-input')
+    if (fileInputTop) fileInputTop.value = ''
+    if (fileInputBottom) fileInputBottom.value = ''
+  }
+
   if (loading) {
     return (
       <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '50vh' }}>
@@ -341,644 +464,773 @@ export default function StudentDashboard() {
   return (
     <Box sx={{ 
       minHeight: '100vh', 
-      backgroundColor: '#f5f5f5',
+      background: isDarkMode 
+        ? 'linear-gradient(135deg, #121212 0%, #1e1e1e 100%)'
+        : 'linear-gradient(135deg, #f5f7fa 0%, #e8f0f8 100%)',
       width: '100vw',
       margin: 0,
-      padding: 0
+      padding: 0,
+      color: theme.palette.text.primary
     }}>
       <Box sx={{ 
         width: '100%', 
-        py: 4, 
-        px: { xs: 2, sm: 4, md: 6, lg: 8, xl: 12 }
+        py: 2,
+        pt: 2,
+        px: { xs: 2, sm: 3, md: 4, lg: 6, xl: 8 }
       }}>
-        {/* Header */}
-        <Box sx={{ mb: 4 }}>
-          <Typography variant="h4" component="h1" gutterBottom sx={{ fontWeight: 'bold', color: '#1976d2' }}>
-            Student Dashboard
-          </Typography>
-          <Typography variant="subtitle1" color="text.secondary">
-            Welcome back, {student.firstName} {student.lastName}
-          </Typography>
+        {/* Header Section with Profile Picture - Side by Side */}
+        <Box sx={{ 
+          display: 'flex', 
+          justifyContent: 'space-between', 
+          alignItems: 'flex-start',
+          mb: 4,
+          gap: 3,
+          flexWrap: { xs: 'wrap', md: 'nowrap' }
+        }}>
+          {/* Dashboard Title Section - Left Side */}
+          <Box sx={{ flex: 1, minWidth: 0 }}>
+            <Typography variant="h3" gutterBottom sx={{ 
+              fontWeight: 'bold', 
+              background: 'linear-gradient(135deg, #1976d2 0%, #1565c0 100%)',
+              WebkitBackgroundClip: 'text',
+              WebkitTextFillColor: 'transparent',
+              fontSize: '2.5rem',
+              mb: 1
+            }}>
+              Student Dashboard
+            </Typography>
+            <Typography variant="h6" color="text.secondary" sx={{ fontSize: '1.1rem', fontWeight: '400' }}>
+              {student.department} Department • Welcome, {student.firstName} {student.lastName}
+            </Typography>
+          </Box>
+
+          {/* Profile Picture Section - Right Side */}
+          <Box sx={{ 
+            display: 'flex', 
+            flexDirection: 'column', 
+            alignItems: 'center',
+            flexShrink: 0,
+            minWidth: { xs: '100%', md: 'auto' }
+          }}>
+            <Box sx={{ position: 'relative', mb: 1 }}>
+              <Box
+                onClick={() => {
+                  if (student.profilePicture || previewImage) {
+                    setImageViewDialogOpen(true)
+                  }
+                }}
+                sx={{
+                  width: 100,
+                  height: 100,
+                  borderRadius: '50%',
+                  overflow: 'hidden',
+                  border: '3px solid #1976d2',
+                  boxShadow: '0 4px 20px rgba(25, 118, 210, 0.3)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  backgroundColor: theme.palette.mode === 'dark' ? '#2a2a2a' : '#f5f5f5',
+                  cursor: (student.profilePicture || previewImage) ? 'pointer' : 'default',
+                  transition: 'transform 0.3s ease',
+                  '&:hover': {
+                    transform: (student.profilePicture || previewImage) ? 'scale(1.05)' : 'none',
+                    boxShadow: (student.profilePicture || previewImage) ? '0 6px 25px rgba(25, 118, 210, 0.4)' : '0 4px 20px rgba(25, 118, 210, 0.3)'
+                  }
+                }}
+              >
+                {student.profilePicture || previewImage ? (
+                  <img
+                    src={previewImage || student.profilePicture}
+                    alt="Profile"
+                    onError={(e) => {
+                      console.error('Error loading profile picture:', student.profilePicture);
+                      e.target.style.display = 'none';
+                    }}
+                    style={{
+                      width: '100%',
+                      height: '100%',
+                      objectFit: 'cover'
+                    }}
+                  />
+                ) : (
+                  <Person sx={{ fontSize: 50, color: '#1976d2', opacity: 0.5 }} />
+                )}
+              </Box>
+              {!previewImage && (
+                <IconButton
+                  component="label"
+                  sx={{
+                    position: 'absolute',
+                    bottom: -5,
+                    right: -5,
+                    backgroundColor: '#1976d2',
+                    color: 'white',
+                    '&:hover': {
+                      backgroundColor: '#1565c0'
+                    },
+                    boxShadow: '0 2px 8px rgba(0, 0, 0, 0.2)',
+                    width: 32,
+                    height: 32
+                  }}
+                  disabled={uploadingPicture}
+                >
+                  <CameraAlt sx={{ fontSize: 18 }} />
+                  <input
+                    id="profile-picture-input-top"
+                    type="file"
+                    accept="image/*"
+                    hidden
+                    onChange={handleFileSelect}
+                  />
+                </IconButton>
+              )}
+            </Box>
+            {previewImage && (
+              <Box sx={{ display: 'flex', gap: 1, mb: 1 }}>
+                <Button
+                  variant="contained"
+                  size="small"
+                  startIcon={uploadingPicture ? <CircularProgress size={16} color="inherit" /> : <Upload />}
+                  onClick={handleUploadPicture}
+                  disabled={uploadingPicture}
+                  sx={{
+                    background: 'linear-gradient(135deg, #1976d2 0%, #1565c0 100%)',
+                    borderRadius: '6px',
+                    textTransform: 'none',
+                    fontWeight: '600',
+                    fontSize: '0.75rem',
+                    px: 1.5,
+                    py: 0.5
+                  }}
+                >
+                  {uploadingPicture ? 'Uploading...' : 'Upload'}
+                </Button>
+                <Button
+                  variant="outlined"
+                  size="small"
+                  onClick={cancelUpload}
+                  disabled={uploadingPicture}
+                  sx={{
+                    borderRadius: '6px',
+                    textTransform: 'none',
+                    fontWeight: '600',
+                    fontSize: '0.75rem',
+                    px: 1.5,
+                    py: 0.5
+                  }}
+                >
+                  Cancel
+                </Button>
+              </Box>
+            )}
+            {student.profilePicture && !previewImage && (
+              <Box sx={{ display: 'flex', gap: 1, mt: 0.5 }}>
+                <Button
+                  variant="contained"
+                  size="small"
+                  startIcon={<Visibility />}
+                  onClick={() => setImageViewDialogOpen(true)}
+                  sx={{
+                    background: 'linear-gradient(135deg, #1976d2 0%, #1565c0 100%)',
+                    borderRadius: '6px',
+                    textTransform: 'none',
+                    fontWeight: '600',
+                    fontSize: '0.7rem',
+                    px: 1,
+                    py: 0.3
+                  }}
+                >
+                  View
+                </Button>
+                <Button
+                  variant="outlined"
+                  color="error"
+                  size="small"
+                  startIcon={<Delete />}
+                  onClick={handleDeletePicture}
+                  disabled={uploadingPicture}
+                  sx={{
+                    borderRadius: '6px',
+                    textTransform: 'none',
+                    fontWeight: '600',
+                    fontSize: '0.7rem',
+                    px: 1,
+                    py: 0.3
+                  }}
+                >
+                  Remove
+                </Button>
+              </Box>
+            )}
+          </Box>
         </Box>
 
-        {/* Navigation Tabs */}
-        <Paper sx={{ mb: 3 }}>
+        {/* Tabs */}
+        <Box sx={{ 
+          borderBottom: 2, 
+          borderColor: 'divider', 
+          mb: 4,
+          backgroundColor: theme.palette.background.paper,
+          borderRadius: 0,
+          px: { xs: 2, sm: 3, md: 4, lg: 6, xl: 8 },
+          boxShadow: isDarkMode ? '0 2px 8px rgba(0, 0, 0, 0.3)' : '0 2px 8px rgba(0, 0, 0, 0.05)'
+        }}>
           <Tabs 
             value={activeTab} 
             onChange={handleTabChange}
-            variant="fullWidth"
             sx={{
               '& .MuiTab-root': {
                 textTransform: 'none',
                 fontSize: '1rem',
-                fontWeight: 'medium',
-                minHeight: '64px',
-                padding: '12px 16px',
-                transition: 'all 0.3s ease',
+                fontWeight: '600',
+                minHeight: 56,
+                px: 3,
                 '&.Mui-selected': {
-                  color: '#1976d2',
-                  fontWeight: 'bold',
-                  backgroundColor: 'rgba(25, 118, 210, 0.08)',
-                  borderBottom: '3px solid #1976d2'
-                },
-                '&:hover': {
-                  backgroundColor: 'rgba(25, 118, 210, 0.05)',
                   color: '#1976d2'
                 }
               },
               '& .MuiTabs-indicator': {
-                display: 'none'
+                height: 3,
+                borderRadius: '3px 3px 0 0'
               }
             }}
           >
-            <Tab 
-              icon={<BarChart />} 
-              label="Overview" 
-              iconPosition="start"
-            />
-            <Tab 
-              icon={<ListIcon />} 
-              label="My Complaints" 
-              iconPosition="start"
-            />
-            <Tab 
-              icon={<Add />} 
-              label="+ New Complaint" 
-              iconPosition="start"
-            />
-            <Tab 
-              icon={<TrendingUp />} 
-              label="Analytics" 
-              iconPosition="start"
-            />
+            <Tab label="Overview" />
+            <Tab label="My Complaints" />
+            <Tab label="New Complaint" />
+            <Tab label="Analytics" />
           </Tabs>
-        </Paper>
+        </Box>
 
         {/* Tab Content */}
-        <Paper sx={{ p: 3 }}>
-          {/* Overview Tab */}
-          {activeTab === 0 && (
-            <Box>
-              <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 3 }}>
-                <Typography variant="h5" sx={{ fontWeight: 'bold' }}>
-                  Overview
-                </Typography>
-                <Button
-                  variant="outlined"
-                  startIcon={<Refresh />}
-                  onClick={loadDashboardData}
-                  sx={{
-                    borderRadius: '8px',
-                    textTransform: 'none',
-                    fontWeight: '600'
-                  }}
-                >
-                  Refresh
-                </Button>
-              </Box>
-              
-              {/* Stats Cards */}
-              <Grid container spacing={3} sx={{ mb: 4 }}>
-                <Grid item xs={12} sm={6} lg={3}>
-                  <Card 
-                    sx={{ 
-                      backgroundColor: '#e3f2fd',
-                      minHeight: '140px',
-                      borderRadius: '12px',
-                      boxShadow: '0 4px 12px rgba(25, 118, 210, 0.15)',
-                      transition: 'transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out',
-                      '&:hover': {
-                        transform: 'translateY(-4px)',
-                        boxShadow: '0 8px 24px rgba(25, 118, 210, 0.25)'
-                      }
-                    }}
-                  >
-                    <CardContent sx={{ p: 3, height: '100%', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
-                      <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 2 }}>
-                        <Box sx={{ flex: 1 }}>
-                          <Typography 
-                            variant="body2" 
-                            color="text.secondary" 
-                            gutterBottom
-                            sx={{ 
-                              fontSize: '0.875rem',
-                              fontWeight: '500',
-                              textTransform: 'uppercase',
-                              letterSpacing: '0.5px'
-                            }}
-                          >
-                            Total Complaints
-                          </Typography>
-                          <Typography 
-                            variant="h3" 
-                            sx={{ 
-                              fontWeight: 'bold', 
-                              color: '#1976d2',
-                              fontSize: '2.5rem',
-                              lineHeight: 1.2
-                            }}
-                          >
-                            {stats.totalComplaints || 0}
-                          </Typography>
-                        </Box>
-                        <Assignment sx={{ fontSize: 48, color: '#1976d2', opacity: 0.8 }} />
-                      </Box>
-                      <Typography variant="caption" color="text.secondary" sx={{ fontSize: '0.75rem' }}>
-                        All submitted complaints
+        {error && (
+          <Alert severity="error" sx={{ mb: 3 }} onClose={() => setError('')}>
+            {error}
+          </Alert>
+        )}
+
+        {/* Overview Tab */}
+        {activeTab === 0 && (
+          <Box>
+            {/* Student Info */}
+            <Paper sx={{ 
+              py: 4,
+              px: { xs: 2, sm: 3, md: 4, lg: 6, xl: 8 },
+              mb: 3, 
+              borderRadius: 0,
+              boxShadow: isDarkMode ? '0 4px 20px rgba(0, 0, 0, 0.3)' : '0 4px 20px rgba(0, 0, 0, 0.08)',
+              background: isDarkMode 
+                ? 'linear-gradient(135deg, #1e1e1e 0%, #2a2a2a 100%)'
+                : 'linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%)',
+              border: isDarkMode 
+                ? '1px solid rgba(25, 118, 210, 0.3)'
+                : '1px solid rgba(25, 118, 210, 0.1)'
+            }}>
+              <Typography variant="h6" gutterBottom sx={{ 
+                fontWeight: 'bold', 
+                mb: 3,
+                color: '#1976d2',
+                fontSize: '1.25rem',
+                display: 'flex',
+                alignItems: 'center',
+                gap: 1
+              }}>
+                <Person sx={{ fontSize: 28 }} />
+                Student Information
+              </Typography>
+
+              <Grid container spacing={3}>
+                <Grid item xs={12} sm={6}>
+                  <Box sx={{ 
+                    display: 'flex', 
+                    alignItems: 'center',
+                    p: 2,
+                    borderRadius: '10px',
+                    backgroundColor: isDarkMode 
+                      ? 'rgba(25, 118, 210, 0.15)' 
+                      : 'rgba(25, 118, 210, 0.05)',
+                    border: isDarkMode 
+                      ? '1px solid rgba(25, 118, 210, 0.3)' 
+                      : '1px solid rgba(25, 118, 210, 0.1)',
+                    transition: 'all 0.3s ease',
+                    '&:hover': {
+                      backgroundColor: isDarkMode 
+                        ? 'rgba(25, 118, 210, 0.25)' 
+                        : 'rgba(25, 118, 210, 0.08)',
+                      transform: 'translateY(-2px)',
+                      boxShadow: isDarkMode 
+                        ? '0 4px 12px rgba(25, 118, 210, 0.3)' 
+                        : '0 4px 12px rgba(25, 118, 210, 0.15)'
+                    }
+                  }}>
+                    <Person sx={{ mr: 2, color: '#1976d2', fontSize: 32 }} />
+                    <Box>
+                      <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mb: 0.5, fontWeight: '500' }}>
+                        Full Name
                       </Typography>
-                    </CardContent>
-                  </Card>
+                      <Typography variant="body1" sx={{ fontWeight: '600', color: theme.palette.text.primary }}>
+                        {student.firstName} {student.lastName}
+                      </Typography>
+                    </Box>
+                  </Box>
                 </Grid>
-                
-                <Grid item xs={12} sm={6} lg={3}>
-                  <Card 
-                    sx={{ 
-                      backgroundColor: '#fff3e0',
-                      minHeight: '140px',
-                      borderRadius: '12px',
-                      boxShadow: '0 4px 12px rgba(245, 124, 0, 0.15)',
-                      transition: 'transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out',
-                      '&:hover': {
-                        transform: 'translateY(-4px)',
-                        boxShadow: '0 8px 24px rgba(245, 124, 0, 0.25)'
-                      }
-                    }}
-                  >
-                    <CardContent sx={{ p: 3, height: '100%', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
-                      <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 2 }}>
-                        <Box sx={{ flex: 1 }}>
-                          <Typography 
-                            variant="body2" 
-                            color="text.secondary" 
-                            gutterBottom
-                            sx={{ 
-                              fontSize: '0.875rem',
-                              fontWeight: '500',
-                              textTransform: 'uppercase',
-                              letterSpacing: '0.5px'
-                            }}
-                          >
-                            Pending
-                          </Typography>
-                          <Typography 
-                            variant="h3" 
-                            sx={{ 
-                              fontWeight: 'bold', 
-                              color: '#f57c00',
-                              fontSize: '2.5rem',
-                              lineHeight: 1.2
-                            }}
-                          >
-                            {stats.pendingComplaints || 0}
-                          </Typography>
-                        </Box>
-                        <Pending sx={{ fontSize: 48, color: '#f57c00', opacity: 0.8 }} />
-                      </Box>
-                      <Typography variant="caption" color="text.secondary" sx={{ fontSize: '0.75rem' }}>
-                        Awaiting response
+                <Grid item xs={12} sm={6}>
+                  <Box sx={{ 
+                    display: 'flex', 
+                    alignItems: 'center',
+                    p: 2,
+                    borderRadius: '10px',
+                    backgroundColor: isDarkMode 
+                      ? 'rgba(25, 118, 210, 0.15)' 
+                      : 'rgba(25, 118, 210, 0.05)',
+                    border: isDarkMode 
+                      ? '1px solid rgba(25, 118, 210, 0.3)' 
+                      : '1px solid rgba(25, 118, 210, 0.1)',
+                    transition: 'all 0.3s ease',
+                    '&:hover': {
+                      backgroundColor: isDarkMode 
+                        ? 'rgba(25, 118, 210, 0.25)' 
+                        : 'rgba(25, 118, 210, 0.08)',
+                      transform: 'translateY(-2px)',
+                      boxShadow: isDarkMode 
+                        ? '0 4px 12px rgba(25, 118, 210, 0.3)' 
+                        : '0 4px 12px rgba(25, 118, 210, 0.15)'
+                    }
+                  }}>
+                    <Email sx={{ mr: 2, color: '#1976d2', fontSize: 32 }} />
+                    <Box>
+                      <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mb: 0.5, fontWeight: '500' }}>
+                        Email Address
                       </Typography>
-                    </CardContent>
-                  </Card>
+                      <Typography variant="body1" sx={{ fontWeight: '600', color: theme.palette.text.primary }}>
+                        {student.email}
+                      </Typography>
+                    </Box>
+                  </Box>
                 </Grid>
-                
-                <Grid item xs={12} sm={6} lg={3}>
-                  <Card 
-                    sx={{ 
-                      backgroundColor: '#e8f5e8',
-                      minHeight: '140px',
-                      borderRadius: '12px',
-                      boxShadow: '0 4px 12px rgba(46, 125, 50, 0.15)',
-                      transition: 'transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out',
-                      '&:hover': {
-                        transform: 'translateY(-4px)',
-                        boxShadow: '0 8px 24px rgba(46, 125, 50, 0.25)'
-                      }
-                    }}
-                  >
-                    <CardContent sx={{ p: 3, height: '100%', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
-                      <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 2 }}>
-                        <Box sx={{ flex: 1 }}>
-                          <Typography 
-                            variant="body2" 
-                            color="text.secondary" 
-                            gutterBottom
-                            sx={{ 
-                              fontSize: '0.875rem',
-                              fontWeight: '500',
-                              textTransform: 'uppercase',
-                              letterSpacing: '0.5px'
-                            }}
-                          >
-                            Resolved
-                          </Typography>
-                          <Typography 
-                            variant="h3" 
-                            sx={{ 
-                              fontWeight: 'bold', 
-                              color: '#2e7d32',
-                              fontSize: '2.5rem',
-                              lineHeight: 1.2
-                            }}
-                          >
-                            {stats.resolvedComplaints || 0}
-                          </Typography>
-                        </Box>
-                        <CheckCircle sx={{ fontSize: 48, color: '#2e7d32', opacity: 0.8 }} />
-                      </Box>
-                      <Typography variant="caption" color="text.secondary" sx={{ fontSize: '0.75rem' }}>
-                        Successfully resolved
+                <Grid item xs={12} sm={6}>
+                  <Box sx={{ 
+                    display: 'flex', 
+                    alignItems: 'center',
+                    p: 2,
+                    borderRadius: '10px',
+                    backgroundColor: isDarkMode 
+                      ? 'rgba(25, 118, 210, 0.15)' 
+                      : 'rgba(25, 118, 210, 0.05)',
+                    border: isDarkMode 
+                      ? '1px solid rgba(25, 118, 210, 0.3)' 
+                      : '1px solid rgba(25, 118, 210, 0.1)',
+                    transition: 'all 0.3s ease',
+                    '&:hover': {
+                      backgroundColor: isDarkMode 
+                        ? 'rgba(25, 118, 210, 0.25)' 
+                        : 'rgba(25, 118, 210, 0.08)',
+                      transform: 'translateY(-2px)',
+                      boxShadow: isDarkMode 
+                        ? '0 4px 12px rgba(25, 118, 210, 0.3)' 
+                        : '0 4px 12px rgba(25, 118, 210, 0.15)'
+                    }
+                  }}>
+                    <School sx={{ mr: 2, color: '#1976d2', fontSize: 32 }} />
+                    <Box>
+                      <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mb: 0.5, fontWeight: '500' }}>
+                        Department
                       </Typography>
-                    </CardContent>
-                  </Card>
+                      <Typography variant="body1" sx={{ fontWeight: '600', color: theme.palette.text.primary }}>
+                        {student.department}
+                      </Typography>
+                    </Box>
+                  </Box>
                 </Grid>
-                
-                <Grid item xs={12} sm={6} lg={3}>
-                  <Card 
-                    sx={{ 
-                      backgroundColor: '#ffebee',
-                      minHeight: '140px',
-                      borderRadius: '12px',
-                      boxShadow: '0 4px 12px rgba(211, 47, 47, 0.15)',
-                      transition: 'transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out',
-                      '&:hover': {
-                        transform: 'translateY(-4px)',
-                        boxShadow: '0 8px 24px rgba(211, 47, 47, 0.25)'
-                      }
-                    }}
-                  >
-                    <CardContent sx={{ p: 3, height: '100%', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
-                      <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 2 }}>
-                        <Box sx={{ flex: 1 }}>
-                          <Typography 
-                            variant="body2" 
-                            color="text.secondary" 
-                            gutterBottom
-                            sx={{ 
-                              fontSize: '0.875rem',
-                              fontWeight: '500',
-                              textTransform: 'uppercase',
-                              letterSpacing: '0.5px'
-                            }}
-                          >
-                            Rejected
-                          </Typography>
-                          <Typography 
-                            variant="h3" 
-                            sx={{ 
-                              fontWeight: 'bold', 
-                              color: '#d32f2f',
-                              fontSize: '2.5rem',
-                              lineHeight: 1.2
-                            }}
-                          >
-                            {stats.rejectedComplaints || 0}
-                          </Typography>
-                        </Box>
-                        <Cancel sx={{ fontSize: 48, color: '#d32f2f', opacity: 0.8 }} />
-                      </Box>
-                      <Typography variant="caption" color="text.secondary" sx={{ fontSize: '0.75rem' }}>
-                        Not applicable
+                <Grid item xs={12} sm={6}>
+                  <Box sx={{ 
+                    display: 'flex', 
+                    alignItems: 'center',
+                    p: 2,
+                    borderRadius: '10px',
+                    backgroundColor: isDarkMode 
+                      ? 'rgba(25, 118, 210, 0.15)' 
+                      : 'rgba(25, 118, 210, 0.05)',
+                    border: isDarkMode 
+                      ? '1px solid rgba(25, 118, 210, 0.3)' 
+                      : '1px solid rgba(25, 118, 210, 0.1)',
+                    transition: 'all 0.3s ease',
+                    '&:hover': {
+                      backgroundColor: isDarkMode 
+                        ? 'rgba(25, 118, 210, 0.25)' 
+                        : 'rgba(25, 118, 210, 0.08)',
+                      transform: 'translateY(-2px)',
+                      boxShadow: isDarkMode 
+                        ? '0 4px 12px rgba(25, 118, 210, 0.3)' 
+                        : '0 4px 12px rgba(25, 118, 210, 0.15)'
+                    }
+                  }}>
+                    <Assignment sx={{ mr: 2, color: '#1976d2', fontSize: 32 }} />
+                    <Box>
+                      <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mb: 0.5, fontWeight: '500' }}>
+                        Library ID
                       </Typography>
-                    </CardContent>
-                  </Card>
+                      <Typography variant="body1" sx={{ fontWeight: '600', color: theme.palette.text.primary }}>
+                        {student.libraryId}
+                      </Typography>
+                    </Box>
+                  </Box>
                 </Grid>
               </Grid>
+            </Paper>
 
-              {/* Student Info */}
-              <Card sx={{ mb: 3, borderRadius: '12px', boxShadow: '0 4px 12px rgba(0, 0, 0, 0.1)' }}>
-                <CardContent sx={{ p: 3 }}>
-                  <Typography variant="h5" gutterBottom sx={{ fontWeight: 'bold', mb: 3, color: '#1976d2' }}>
-                    Student Information
-                  </Typography>
-                  <Grid container spacing={4}>
-                    <Grid item xs={12} md={6}>
-                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 2 }}>
-                        <Person sx={{ fontSize: 28, color: '#1976d2' }} />
-                        <Box>
-                          <Typography 
-                            variant="body1" 
-                            sx={{ 
-                              fontSize: '0.9rem', 
-                              fontWeight: '600', 
-                              color: 'text.secondary',
-                              mb: 0.5
-                            }}
-                          >
-                            Name
-                          </Typography>
-                          <Typography 
-                            variant="h6" 
-                            sx={{ 
-                              fontWeight: 'bold', 
-                              fontSize: '1.1rem',
-                              color: 'text.primary'
-                            }}
-                          >
-                            {student.firstName} {student.lastName}
-                          </Typography>
-                      </Box>
-                      </Box>
-                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 2 }}>
-                        <Email sx={{ fontSize: 28, color: '#1976d2' }} />
-                        <Box>
-                          <Typography 
-                            variant="body1" 
-                            sx={{ 
-                              fontSize: '0.9rem', 
-                              fontWeight: '600', 
-                              color: 'text.secondary',
-                              mb: 0.5
-                            }}
-                          >
-                            Email
-                          </Typography>
-                          <Typography 
-                            variant="h6" 
-                            sx={{ 
-                              fontWeight: 'bold', 
-                              fontSize: '1.1rem',
-                              color: 'text.primary'
-                            }}
-                          >
-                            {student.email}
-                          </Typography>
-                        </Box>
-                      </Box>
-                    </Grid>
-                    <Grid item xs={12} md={6}>
-                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 2 }}>
-                        <School sx={{ fontSize: 28, color: '#1976d2' }} />
-                        <Box>
-                          <Typography 
-                            variant="body1" 
-                            sx={{ 
-                              fontSize: '0.9rem', 
-                              fontWeight: '600', 
-                              color: 'text.secondary',
-                              mb: 0.5
-                            }}
-                          >
-                            Department
-                          </Typography>
-                          <Typography 
-                            variant="h6" 
-                            sx={{ 
-                              fontWeight: 'bold', 
-                              fontSize: '1.1rem',
-                              color: 'text.primary'
-                            }}
-                          >
-                            {student.department}
-                          </Typography>
-                      </Box>
-                      </Box>
-                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 2 }}>
-                        <Assignment sx={{ fontSize: 28, color: '#1976d2' }} />
-                        <Box>
-                          <Typography 
-                            variant="body1" 
-                            sx={{ 
-                              fontSize: '0.9rem', 
-                              fontWeight: '600', 
-                              color: 'text.secondary',
-                              mb: 0.5
-                            }}
-                          >
-                            Roll Number
-                          </Typography>
-                          <Typography 
-                            variant="h6" 
-                            sx={{ 
-                              fontWeight: 'bold', 
-                              fontSize: '1.1rem',
-                              color: 'text.primary'
-                            }}
-                          >
-                            {student.rollNo}
-                          </Typography>
-                        </Box>
-                      </Box>
-                    </Grid>
-                  </Grid>
-                </CardContent>
-              </Card>
-
-              {/* Recent Complaints */}
-              <Card>
-                <CardContent>
-                  <Typography variant="h6" gutterBottom sx={{ fontWeight: 'bold' }}>
-                    Recent Complaints
-                  </Typography>
-                  {complaints && complaints.length > 0 ? (
-                    <List>
-                      {complaints.slice(0, 3).map((complaint, index) => (
-                        <Box key={complaint._id}>
-                          <ListItem>
-                            <ListItemIcon>
-                              {getStatusIcon(complaint.status)}
-                            </ListItemIcon>
-                            <ListItemText
-                              primary={
-                                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, flexWrap: 'wrap' }}>
-                                  <Typography variant="body1" sx={{ fontWeight: '600', flex: 1 }}>
-                                    {complaint.title}
-                                  </Typography>
-                                  <Chip 
-                                    label={complaint.status} 
-                                    color={getStatusColor(complaint.status)}
-                                    size="small"
-                                  />
-                                  {canEditComplaint(complaint) && (
-                                    <Button
-                                      variant="outlined"
-                                      size="small"
-                                      startIcon={<Edit />}
-                                      onClick={() => handleEditClick(complaint)}
-                                      sx={{
-                                        borderRadius: '8px',
-                                        textTransform: 'none',
-                                        fontWeight: '600',
-                                        ml: 1
-                                      }}
-                                    >
-                                      Edit
-                                    </Button>
-                                  )}
-                                </Box>
-                              }
-                              secondary={
-                                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mt: 0.5 }}>
-                                  <Typography variant="caption" color="text.secondary">
-                                    {new Date(complaint.createdAt).toLocaleDateString()}
-                                  </Typography>
-                                </Box>
-                              }
-                            />
-                          </ListItem>
-                          {index < complaints.slice(0, 3).length - 1 && <Divider />}
-                        </Box>
-                      ))}
-                    </List>
-                  ) : (
-                    <Typography color="text.secondary">No complaints submitted yet.</Typography>
-                  )}
-                </CardContent>
-              </Card>
-            </Box>
-          )}
-
-          {/* My Complaints Tab */}
-          {activeTab === 1 && (
-            <Box>
-              <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 3 }}>
-                <Typography variant="h5" sx={{ fontWeight: 'bold' }}>
-                  My Complaints
-                </Typography>
-                <Button
-                  variant="outlined"
-                  startIcon={<Refresh />}
-                  onClick={loadDashboardData}
-                  sx={{
-                    borderRadius: '8px',
-                    textTransform: 'none',
-                    fontWeight: '600'
-                  }}
-                >
-                  Refresh
-                </Button>
-              </Box>
-              
+            {/* Recent Complaints */}
+            <Paper sx={{ 
+              py: 4,
+              px: { xs: 2, sm: 3, md: 4, lg: 6, xl: 8 },
+              borderRadius: 0,
+              boxShadow: isDarkMode ? '0 4px 20px rgba(0, 0, 0, 0.3)' : '0 4px 20px rgba(0, 0, 0, 0.08)',
+              background: isDarkMode 
+                ? 'linear-gradient(135deg, #1e1e1e 0%, #2a2a2a 100%)'
+                : 'linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%)',
+              border: isDarkMode 
+                ? '1px solid rgba(25, 118, 210, 0.3)'
+                : '1px solid rgba(25, 118, 210, 0.1)'
+            }}>
+              <Typography variant="h6" gutterBottom sx={{ 
+                fontWeight: 'bold', 
+                mb: 3,
+                color: '#1976d2',
+                fontSize: '1.25rem',
+                display: 'flex',
+                alignItems: 'center',
+                gap: 1
+              }}>
+                <Assignment sx={{ fontSize: 28 }} />
+                Recent Complaints
+              </Typography>
               {complaints && complaints.length > 0 ? (
-                <List>
-                  {complaints.map((complaint, index) => (
-                    <Box key={complaint._id}>
-                      <ListItem sx={{ py: 3, px: 2 }}>
-                        <ListItemIcon sx={{ minWidth: 48 }}>
-                          <Box sx={{ fontSize: '2rem' }}>
-                          {getStatusIcon(complaint.status)}
+                <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+                  {complaints.slice(0, 5).map((complaint) => (
+                    <Paper
+                      key={complaint._id}
+                      sx={{
+                        p: 2.5,
+                        borderRadius: '12px',
+                        backgroundColor: theme.palette.background.paper,
+                        boxShadow: isDarkMode ? '0 1px 3px rgba(0, 0, 0, 0.3)' : '0 1px 3px rgba(0, 0, 0, 0.12)',
+                        display: 'flex',
+                        alignItems: 'flex-start',
+                        gap: 2.5
+                      }}
+                    >
+                      {/* Status Icon Square */}
+                      <Box
+                        sx={{
+                          width: 56,
+                          height: 56,
+                          borderRadius: '8px',
+                          backgroundColor:
+                            complaint.status.toLowerCase() === 'pending'
+                              ? '#f57c00'
+                              : complaint.status.toLowerCase() === 'resolved'
+                              ? '#2e7d32'
+                              : complaint.status.toLowerCase() === 'rejected'
+                              ? '#d32f2f'
+                              : '#1976d2',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          flexShrink: 0,
+                          '& svg': {
+                            color: 'white',
+                            fontSize: 28
+                          }
+                        }}
+                      >
+                        {getStatusIcon(complaint.status)}
+                      </Box>
+
+                      {/* Content */}
+                      <Box sx={{ flex: 1, minWidth: 0 }}>
+                        <Typography
+                          variant="h6"
+                          sx={{
+                            fontWeight: 'bold',
+                            color: theme.palette.text.primary,
+                            mb: 0.5,
+                            fontSize: '1rem'
+                          }}
+                        >
+                          {complaint.title}
+                        </Typography>
+                        <Typography
+                          variant="body2"
+                          sx={{
+                            color: theme.palette.text.secondary,
+                            mb: 1.5,
+                            fontSize: '0.875rem',
+                            lineHeight: 1.5
+                          }}
+                        >
+                          {complaint.description.length > 60
+                            ? `${complaint.description.substring(0, 60)}...`
+                            : complaint.description}
+                        </Typography>
+                        <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between' }}>
+                          <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap', alignItems: 'center' }}>
+                            <Chip
+                              label={complaint.status}
+                              size="small"
+                              sx={{
+                                backgroundColor:
+                                  complaint.status.toLowerCase() === 'pending'
+                                    ? '#f57c00'
+                                    : complaint.status.toLowerCase() === 'resolved'
+                                    ? '#2e7d32'
+                                    : complaint.status.toLowerCase() === 'rejected'
+                                    ? '#d32f2f'
+                                    : '#1976d2',
+                                color: 'white',
+                                fontWeight: '500',
+                                fontSize: '0.75rem',
+                                height: '24px'
+                              }}
+                            />
+                            <Chip
+                              label={complaint.category}
+                              size="small"
+                              variant="outlined"
+                              sx={{
+                                borderColor: theme.palette.divider,
+                                color: theme.palette.text.secondary,
+                                backgroundColor: theme.palette.mode === 'dark' ? '#2a2a2a' : '#f5f5f5',
+                                fontWeight: '400',
+                                fontSize: '0.75rem',
+                                height: '24px'
+                              }}
+                            />
                           </Box>
-                        </ListItemIcon>
-                        <ListItemText
-                          primary={
-                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, flexWrap: 'wrap' }}>
-                              <Typography variant="h5" sx={{ fontWeight: 'bold', fontSize: '1.4rem', flex: 1 }}>
-                                {complaint.title}
-                              </Typography>
-                              <Chip 
-                                label={complaint.status} 
-                                color={getStatusColor(complaint.status)}
-                                size="medium"
-                                sx={{ fontSize: '0.9rem', fontWeight: '600' }}
-                              />
-                              {canEditComplaint(complaint) && (
-                                <Button
-                                  variant="outlined"
-                                  size="small"
-                                  startIcon={<Edit />}
-                                  onClick={() => handleEditClick(complaint)}
-                                  sx={{
-                                    borderRadius: '8px',
-                                    textTransform: 'none',
-                                    fontWeight: '600',
-                                    ml: 1
-                                  }}
-                                >
-                                  Edit
-                                </Button>
-                              )}
-                            </Box>
-                          }
-                          secondary={
-                            <Box sx={{ mt: 2 }}>
-                              <Typography 
-                                variant="body1" 
-                                color="text.secondary" 
-                                sx={{ 
-                                  mb: 2, 
-                                  fontSize: '1.1rem',
-                                  lineHeight: 1.6,
-                                  fontWeight: '400'
-                                }}
-                              >
-                                {complaint.description}
-                              </Typography>
-                              <Box sx={{ display: 'flex', alignItems: 'center', gap: 3 }}>
-                                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                                  <Category sx={{ fontSize: '1.2rem' }} />
-                                  <Typography variant="body2" sx={{ fontSize: '1rem', fontWeight: '500' }}>
-                                    {complaint.category}
-                                  </Typography>
-                                </Box>
-                                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                                  <PriorityHigh sx={{ fontSize: '1.2rem' }} />
-                                  <Typography variant="body2" sx={{ fontSize: '1rem', fontWeight: '500' }}>
-                                    {complaint.priority}
-                                  </Typography>
-                                </Box>
-                                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                                  <CalendarToday sx={{ fontSize: '1.2rem' }} />
-                                  <Typography variant="body2" sx={{ fontSize: '1rem', fontWeight: '500' }}>
-                                    {new Date(complaint.createdAt).toLocaleDateString()}
-                                  </Typography>
-                                </Box>
-                              </Box>
-                            </Box>
-                          }
-                        />
-                      </ListItem>
-                      {index < complaints.length - 1 && <Divider />}
-                    </Box>
+                          {canEditComplaint(complaint) && (
+                            <IconButton
+                              size="small"
+                              onClick={() => handleEditClick(complaint)}
+                              sx={{
+                                color: '#1976d2',
+                                '&:hover': {
+                                  backgroundColor: 'rgba(25, 118, 210, 0.1)'
+                                }
+                              }}
+                              title="Edit Complaint"
+                            >
+                              <Edit fontSize="small" />
+                            </IconButton>
+                          )}
+                        </Box>
+                      </Box>
+                    </Paper>
                   ))}
-                </List>
+                </Box>
               ) : (
                 <Box sx={{ textAlign: 'center', py: 6 }}>
-                  <Assignment sx={{ fontSize: 80, color: 'text.secondary', mb: 3 }} />
-                  <Typography variant="h4" color="text.secondary" gutterBottom sx={{ fontWeight: 'bold', mb: 2 }}>
-                    No complaints submitted yet
+                  <Assignment sx={{ fontSize: 64, color: 'text.secondary', mb: 2, opacity: 0.3 }} />
+                  <Typography variant="h6" color="text.secondary" gutterBottom sx={{ fontWeight: '500' }}>
+                    No complaints yet
                   </Typography>
-                  <Typography variant="h6" color="text.secondary" sx={{ mb: 4, fontSize: '1.2rem' }}>
-                    Submit your first complaint to get started
+                  <Typography variant="body2" color="text.secondary">
+                    Create your first complaint to get started!
                   </Typography>
-                  <Button 
-                    variant="contained" 
-                    startIcon={<Add />}
-                    onClick={() => setActiveTab(2)}
-                    size="large"
-                    sx={{ 
-                      fontSize: '1.1rem',
-                      px: 4,
-                      py: 1.5,
-                      fontWeight: 'bold'
-                    }}
-                  >
-                    Submit New Complaint
-                  </Button>
                 </Box>
               )}
-            </Box>
-          )}
+            </Paper>
+          </Box>
+        )}
 
-          {/* New Complaint Tab */}
-          {activeTab === 2 && (
+        {/* My Complaints Tab */}
+        {activeTab === 1 && (
+          <Box>
+            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
+              <Typography variant="h5" sx={{ fontWeight: 'bold', fontSize: '1.8rem' }}>
+                My Complaints
+              </Typography>
+              <Button
+                variant="outlined"
+                startIcon={<Refresh />}
+                onClick={loadDashboardData}
+                sx={{
+                  borderRadius: '8px',
+                  textTransform: 'none',
+                  fontWeight: '600'
+                }}
+              >
+                Refresh
+              </Button>
+            </Box>
+
+            {loading ? (
+              <Box sx={{ display: 'flex', justifyContent: 'center', p: 4 }}>
+                <CircularProgress />
+              </Box>
+            ) : complaints && complaints.length > 0 ? (
+              <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+                {complaints.map((complaint) => (
+                  <Paper
+                    key={complaint._id}
+                    sx={{
+                      p: 2.5,
+                      borderRadius: '12px',
+                      backgroundColor: theme.palette.background.paper,
+                      boxShadow: isDarkMode ? '0 1px 3px rgba(0, 0, 0, 0.3)' : '0 1px 3px rgba(0, 0, 0, 0.12)',
+                      display: 'flex',
+                      alignItems: 'flex-start',
+                      gap: 2.5
+                    }}
+                  >
+                    {/* Status Icon Square */}
+                    <Box
+                      sx={{
+                        width: 56,
+                        height: 56,
+                        borderRadius: '8px',
+                        backgroundColor:
+                          complaint.status.toLowerCase() === 'pending'
+                            ? '#f57c00'
+                            : complaint.status.toLowerCase() === 'resolved'
+                            ? '#2e7d32'
+                            : complaint.status.toLowerCase() === 'rejected'
+                            ? '#d32f2f'
+                            : '#1976d2',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        flexShrink: 0,
+                        '& svg': {
+                          color: 'white',
+                          fontSize: 28
+                        }
+                      }}
+                    >
+                      {getStatusIcon(complaint.status)}
+                    </Box>
+
+                    {/* Content */}
+                    <Box sx={{ flex: 1, minWidth: 0 }}>
+                      <Typography
+                        variant="h6"
+                        sx={{
+                          fontWeight: 'bold',
+                          color: theme.palette.text.primary,
+                          mb: 0.5,
+                          fontSize: '1rem'
+                        }}
+                      >
+                        {complaint.title}
+                      </Typography>
+                      <Typography
+                        variant="body2"
+                        sx={{
+                          color: theme.palette.text.secondary,
+                          mb: 1.5,
+                          fontSize: '0.875rem',
+                          lineHeight: 1.5
+                        }}
+                      >
+                        {complaint.description.length > 80
+                          ? `${complaint.description.substring(0, 80)}...`
+                          : complaint.description}
+                      </Typography>
+                      <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap', alignItems: 'center' }}>
+                        <Chip
+                          label={complaint.status}
+                          size="small"
+                          sx={{
+                            backgroundColor:
+                              complaint.status.toLowerCase() === 'pending'
+                                ? '#f57c00'
+                                : complaint.status.toLowerCase() === 'resolved'
+                                ? '#2e7d32'
+                                : complaint.status.toLowerCase() === 'rejected'
+                                ? '#d32f2f'
+                                : '#1976d2',
+                            color: 'white',
+                            fontWeight: '500',
+                            fontSize: '0.75rem',
+                            height: '24px'
+                          }}
+                        />
+                        <Chip
+                          label={complaint.category}
+                          size="small"
+                          variant="outlined"
+                          sx={{
+                            borderColor: theme.palette.divider,
+                            color: theme.palette.text.secondary,
+                            backgroundColor: theme.palette.mode === 'dark' ? '#2a2a2a' : '#f5f5f5',
+                            fontWeight: '400',
+                            fontSize: '0.75rem',
+                            height: '24px'
+                          }}
+                        />
+                        {canEditComplaint(complaint) && (
+                          <IconButton
+                            size="small"
+                            onClick={() => handleEditClick(complaint)}
+                            sx={{
+                              ml: 'auto',
+                              color: '#1976d2',
+                              '&:hover': {
+                                backgroundColor: 'rgba(25, 118, 210, 0.1)'
+                              }
+                            }}
+                            title="Edit Complaint"
+                          >
+                            <Edit fontSize="small" />
+                          </IconButton>
+                        )}
+                      </Box>
+                    </Box>
+                  </Paper>
+                ))}
+              </Box>
+            ) : (
+              <Paper sx={{ 
+                py: 6,
+                px: { xs: 2, sm: 3, md: 4, lg: 6, xl: 8 },
+                textAlign: 'center', 
+                borderRadius: 0,
+                boxShadow: isDarkMode ? '0 4px 20px rgba(0, 0, 0, 0.3)' : '0 4px 20px rgba(0, 0, 0, 0.08)',
+                background: isDarkMode 
+                  ? 'linear-gradient(135deg, #1e1e1e 0%, #2a2a2a 100%)'
+                  : 'linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%)'
+              }}>
+                <Assignment sx={{ fontSize: 80, color: 'text.secondary', mb: 3, opacity: 0.3 }} />
+                <Typography variant="h6" color="text.secondary" gutterBottom sx={{ fontWeight: '600', mb: 1 }}>
+                  No complaints found
+                </Typography>
+                <Typography variant="body2" color="text.secondary">
+                  Start by creating your first complaint!
+                </Typography>
+              </Paper>
+            )}
+          </Box>
+        )}
+
+        {/* New Complaint Tab */}
+        {activeTab === 2 && (
             <Box>
               {/* Form Card */}
               <Card sx={{ 
-                borderRadius: '16px',
-                boxShadow: (theme) => theme.palette.mode === 'dark' 
+                borderRadius: 0,
+                boxShadow: isDarkMode 
                   ? '0 8px 32px rgba(0, 0, 0, 0.3)' 
                   : '0 8px 32px rgba(0, 0, 0, 0.1)',
-                border: (theme) => theme.palette.mode === 'dark'
+                border: isDarkMode
                   ? '1px solid rgba(25, 118, 210, 0.3)'
                   : '1px solid rgba(25, 118, 210, 0.1)',
                 overflow: 'hidden',
-                backgroundColor: (theme) => theme.palette.mode === 'dark' 
+                backgroundColor: isDarkMode 
                   ? 'rgba(30, 30, 30, 0.8)' 
                   : '#fafafa',
                 position: 'relative',
                 minHeight: '100vh',
                 paddingBottom: '80px'
               }}>
-                <CardContent sx={{ p: 4 }}>
+                <CardContent sx={{ p: { xs: 2, sm: 3, md: 4, lg: 6, xl: 8 } }}>
               <Box component="form" onSubmit={handleComplaintSubmit}>
                     {error && (
                       <Alert severity="error" sx={{ mb: 3 }}>
@@ -991,14 +1243,14 @@ export default function StudentDashboard() {
                         <Box sx={{ 
                           mb: 2, 
                           p: 3, 
-                          backgroundColor: (theme) => theme.palette.mode === 'dark' 
+                          backgroundColor: isDarkMode 
                             ? 'rgba(45, 45, 45, 0.8)' 
-                            : 'white', 
+                            : theme.palette.background.paper, 
                           borderRadius: '12px',
-                          border: (theme) => theme.palette.mode === 'dark'
+                          border: isDarkMode
                             ? '1px solid rgba(255, 255, 255, 0.1)'
                             : '1px solid rgba(0, 0, 0, 0.05)',
-                          boxShadow: (theme) => theme.palette.mode === 'dark'
+                          boxShadow: isDarkMode
                             ? '0 2px 8px rgba(0, 0, 0, 0.3)'
                             : '0 2px 8px rgba(0, 0, 0, 0.05)'
                         }}>
@@ -1025,9 +1277,9 @@ export default function StudentDashboard() {
                         '& .MuiOutlinedInput-root': {
                           borderRadius: '12px',
                           fontSize: '1.1rem',
-                          backgroundColor: (theme) => theme.palette.mode === 'dark' 
+                          backgroundColor: isDarkMode 
                             ? 'rgba(60, 60, 60, 0.8)' 
-                            : 'white',
+                            : theme.palette.background.paper,
                           '&:hover .MuiOutlinedInput-notchedOutline': {
                             borderColor: '#1976d2',
                             borderWidth: '2px'
@@ -1047,14 +1299,14 @@ export default function StudentDashboard() {
                         <Box sx={{ 
                           mb: 2, 
                           p: 3, 
-                          backgroundColor: (theme) => theme.palette.mode === 'dark' 
+                          backgroundColor: isDarkMode 
                             ? 'rgba(45, 45, 45, 0.8)' 
-                            : 'white', 
+                            : theme.palette.background.paper, 
                           borderRadius: '12px',
-                          border: (theme) => theme.palette.mode === 'dark'
+                          border: isDarkMode
                             ? '1px solid rgba(255, 255, 255, 0.1)'
                             : '1px solid rgba(0, 0, 0, 0.05)',
-                          boxShadow: (theme) => theme.palette.mode === 'dark'
+                          boxShadow: isDarkMode
                             ? '0 2px 8px rgba(0, 0, 0, 0.3)'
                             : '0 2px 8px rgba(0, 0, 0, 0.05)'
                         }}>
@@ -1113,14 +1365,14 @@ export default function StudentDashboard() {
                         <Box sx={{ 
                           mb: 2, 
                           p: 3, 
-                          backgroundColor: (theme) => theme.palette.mode === 'dark' 
+                          backgroundColor: isDarkMode 
                             ? 'rgba(45, 45, 45, 0.8)' 
-                            : 'white', 
+                            : theme.palette.background.paper, 
                           borderRadius: '12px',
-                          border: (theme) => theme.palette.mode === 'dark'
+                          border: isDarkMode
                             ? '1px solid rgba(255, 255, 255, 0.1)'
                             : '1px solid rgba(0, 0, 0, 0.05)',
-                          boxShadow: (theme) => theme.palette.mode === 'dark'
+                          boxShadow: isDarkMode
                             ? '0 2px 8px rgba(0, 0, 0, 0.3)'
                             : '0 2px 8px rgba(0, 0, 0, 0.05)'
                         }}>
@@ -1168,14 +1420,14 @@ export default function StudentDashboard() {
                         <Box sx={{ 
                           mb: 2, 
                           p: 3, 
-                          backgroundColor: (theme) => theme.palette.mode === 'dark' 
+                          backgroundColor: isDarkMode 
                             ? 'rgba(45, 45, 45, 0.8)' 
-                            : 'white', 
+                            : theme.palette.background.paper, 
                           borderRadius: '12px',
-                          border: (theme) => theme.palette.mode === 'dark'
+                          border: isDarkMode
                             ? '1px solid rgba(255, 255, 255, 0.1)'
                             : '1px solid rgba(0, 0, 0, 0.05)',
-                          boxShadow: (theme) => theme.palette.mode === 'dark'
+                          boxShadow: isDarkMode
                             ? '0 2px 8px rgba(0, 0, 0, 0.3)'
                             : '0 2px 8px rgba(0, 0, 0, 0.05)'
                         }}>
@@ -1204,9 +1456,9 @@ export default function StudentDashboard() {
                         '& .MuiOutlinedInput-root': {
                           borderRadius: '12px',
                           fontSize: '1.1rem',
-                          backgroundColor: (theme) => theme.palette.mode === 'dark' 
+                          backgroundColor: isDarkMode 
                             ? 'rgba(60, 60, 60, 0.8)' 
-                            : 'white',
+                            : theme.palette.background.paper,
                           '&:hover .MuiOutlinedInput-notchedOutline': {
                             borderColor: '#1976d2',
                             borderWidth: '2px'
@@ -1277,11 +1529,11 @@ export default function StudentDashboard() {
                   {/* Pie Chart Section */}
                   <Grid item xs={12} lg={8}>
                     <Card sx={{ 
-                      borderRadius: '16px',
+                      borderRadius: 0,
                       boxShadow: '0 4px 12px rgba(0, 0, 0, 0.1)',
                       height: '100%'
                     }}>
-                      <CardContent sx={{ p: 4 }}>
+                      <CardContent sx={{ p: { xs: 2, sm: 3, md: 4, lg: 6, xl: 8 } }}>
                         <Typography variant="h5" gutterBottom sx={{ fontWeight: 'bold', mb: 4, color: '#1976d2' }}>
                           <TrendingUp sx={{ mr: 1, verticalAlign: 'middle' }} />
                           Complaint Categories Distribution
@@ -1316,7 +1568,7 @@ export default function StudentDashboard() {
                                     const percentage = ((data.value / total) * 100).toFixed(1);
                                     return (
                                       <Box sx={{
-                                        backgroundColor: (theme) => theme.palette.mode === 'dark' 
+                                        backgroundColor: isDarkMode 
                                   ? 'rgba(60, 60, 60, 0.8)' 
                                   : 'white',
                                         border: '1px solid #ccc',
@@ -1450,11 +1702,11 @@ export default function StudentDashboard() {
                   {/* Statistics Summary */}
                   <Grid item xs={12} lg={4}>
                     <Card sx={{ 
-                      borderRadius: '16px',
+                      borderRadius: 0,
                       boxShadow: '0 4px 12px rgba(0, 0, 0, 0.1)',
                       height: '100%'
                     }}>
-                      <CardContent sx={{ p: 4 }}>
+                      <CardContent sx={{ p: { xs: 2, sm: 3, md: 4, lg: 6, xl: 8 } }}>
                         <Typography variant="h5" gutterBottom sx={{ fontWeight: 'bold', mb: 4, color: '#1976d2' }}>
                           <BarChart sx={{ mr: 1, verticalAlign: 'middle' }} />
                           Summary Statistics
@@ -1597,7 +1849,6 @@ export default function StudentDashboard() {
               )}
             </Box>
           )}
-        </Paper>
 
         {/* Edit Complaint Dialog */}
         <Dialog 
@@ -1899,6 +2150,111 @@ export default function StudentDashboard() {
               }}
             >
               {updating ? 'Updating...' : 'Update Complaint'}
+            </Button>
+          </DialogActions>
+        </Dialog>
+
+        {/* Image View Dialog */}
+        <Dialog
+          open={imageViewDialogOpen}
+          onClose={() => setImageViewDialogOpen(false)}
+          maxWidth="md"
+          fullWidth
+          PaperProps={{
+            sx: {
+              borderRadius: '16px',
+              overflow: 'hidden'
+            }
+          }}
+        >
+          <DialogTitle sx={{
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            pb: 2,
+            borderBottom: '1px solid rgba(0, 0, 0, 0.1)'
+          }}>
+            <Typography variant="h6" sx={{ fontWeight: 'bold', color: '#1976d2' }}>
+              Profile Picture
+            </Typography>
+            <IconButton
+              onClick={() => setImageViewDialogOpen(false)}
+              size="small"
+              sx={{
+                color: 'text.secondary',
+                '&:hover': {
+                  backgroundColor: 'rgba(0, 0, 0, 0.05)'
+                }
+              }}
+            >
+              <Close />
+            </IconButton>
+          </DialogTitle>
+          <DialogContent sx={{
+            p: 3,
+            display: 'flex',
+            justifyContent: 'center',
+            alignItems: 'center',
+            backgroundColor: theme.palette.mode === 'dark' ? '#1e1e1e' : '#f5f5f5',
+            minHeight: '400px'
+          }}>
+            {(student.profilePicture || previewImage) ? (
+              <Box
+                sx={{
+                  maxWidth: '100%',
+                  maxHeight: '70vh',
+                  borderRadius: '12px',
+                  overflow: 'hidden',
+                  boxShadow: isDarkMode ? '0 8px 32px rgba(0, 0, 0, 0.5)' : '0 8px 32px rgba(0, 0, 0, 0.2)',
+                  backgroundColor: theme.palette.background.paper,
+                  display: 'flex',
+                  justifyContent: 'center',
+                  alignItems: 'center'
+                }}
+              >
+                <img
+                  src={previewImage || student.profilePicture}
+                  alt="Profile Picture Full View"
+                  style={{
+                    maxWidth: '100%',
+                    maxHeight: '70vh',
+                    width: 'auto',
+                    height: 'auto',
+                    objectFit: 'contain',
+                    display: 'block'
+                  }}
+                  onError={(e) => {
+                    console.error('Error loading profile picture:', student.profilePicture);
+                  }}
+                />
+              </Box>
+            ) : (
+              <Box sx={{ textAlign: 'center', py: 4 }}>
+                <Person sx={{ fontSize: 80, color: '#1976d2', opacity: 0.3, mb: 2 }} />
+                <Typography variant="h6" color="text.secondary">
+                  No profile picture available
+                </Typography>
+              </Box>
+            )}
+          </DialogContent>
+          <DialogActions sx={{
+            p: 2,
+            pt: 1,
+            borderTop: '1px solid rgba(0, 0, 0, 0.1)',
+            justifyContent: 'center'
+          }}>
+            <Button
+              onClick={() => setImageViewDialogOpen(false)}
+              variant="contained"
+              sx={{
+                background: 'linear-gradient(135deg, #1976d2 0%, #1565c0 100%)',
+                borderRadius: '8px',
+                textTransform: 'none',
+                fontWeight: '600',
+                px: 4
+              }}
+            >
+              Close
             </Button>
           </DialogActions>
         </Dialog>

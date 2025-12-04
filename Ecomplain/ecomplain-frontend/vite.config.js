@@ -38,10 +38,20 @@ export default defineConfig({
           'chart-vendor': ['recharts'],
           'utils-vendor': ['axios', 'xlsx'],
         },
+        // Optimize chunk file names for better caching
+        chunkFileNames: 'assets/js/[name]-[hash].js',
+        entryFileNames: 'assets/js/[name]-[hash].js',
+        assetFileNames: 'assets/[ext]/[name]-[hash].[ext]',
       },
     },
 
     chunkSizeWarningLimit: 1000,
+    
+    // Enable source maps for production debugging (optional - can disable for smaller builds)
+    sourcemap: false,
+    
+    // Optimize asset inlining
+    assetsInlineLimit: 4096, // Inline assets smaller than 4kb
   },
 
   optimizeDeps: {
