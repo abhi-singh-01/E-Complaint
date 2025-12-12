@@ -1,22 +1,15 @@
 const nodemailer = require('nodemailer');
 
-// Create reusable transporter object using SMTP transport
-const createTransporter = () => {
-  // Check if using Resend (recommended for cloud platforms like Render)
-  if (process.env.RESEND_API_KEY) {
-    console.log('Using Resend SMTP for emails');
-    return nodemailer.createTransport({
-      host: 'smtp.resend.com',
-      port: 465,
-      secure: true,
-      auth: {
-        user: 'resend',
-        pass: process.env.RESEND_API_KEY,
-      },
-    });
-  }
+// Initialize Resend client if API key is present
+let resendClient = null;
+if (process.env.RESEND_API_KEY) {
+  const { Resend } = require('resend');
+  resendClient = new Resend(process.env.RESEND_API_KEY);
+  console.log('✅ Resend HTTP API initialized for emails');
+}
 
-  // Fallback to Gmail or custom SMTP
+// Create nodemailer transporter for Gmail fallback (local development)
+const createTransporter = () => {
   console.log('Using Gmail/Custom SMTP for emails');
   const transporter = nodemailer.createTransport({
     service: process.env.EMAIL_SERVICE || 'gmail',
@@ -27,27 +20,58 @@ const createTransporter = () => {
       user: process.env.EMAIL_USER,
       pass: process.env.EMAIL_PASSWORD,
     },
-    // Timeout settings for cloud platforms
     connectionTimeout: 60000,
     greetingTimeout: 30000,
     socketTimeout: 60000,
   });
-
   return transporter;
 };
 
-// Get the correct "from" email address based on configuration
+// Get the correct "from" email address
 const getFromEmail = () => {
-  // If using Resend without a verified domain, use their test email
   if (process.env.RESEND_API_KEY && !process.env.EMAIL_FROM) {
-    return '"E-Complaint System" <onboarding@resend.dev>';
+    return 'E-Complaint System <onboarding@resend.dev>';
   }
-  // Use custom from email if provided
   if (process.env.EMAIL_FROM) {
-    return `"E-Complaint System" <${process.env.EMAIL_FROM}>`;
+    return `E-Complaint System <${process.env.EMAIL_FROM}>`;
   }
-  // Default to EMAIL_USER
-  return `"E-Complaint System" <${process.env.EMAIL_USER}>`;
+  return `E-Complaint System <${process.env.EMAIL_USER}>`;
+};
+
+// Send email using Resend HTTP API (for cloud) or nodemailer (for local)
+const sendEmail = async ({ to, subject, html, text }) => {
+  // Use Resend HTTP API if available (works on Render)
+  if (resendClient) {
+    console.log('📧 Sending email via Resend HTTP API to:', to);
+    const { data, error } = await resendClient.emails.send({
+      from: getFromEmail(),
+      to: [to],
+      subject,
+      html,
+      text,
+    });
+
+    if (error) {
+      console.error('Resend error:', error);
+      throw new Error(error.message || 'Failed to send email via Resend');
+    }
+
+    console.log('✅ Email sent via Resend:', data?.id);
+    return { success: true, messageId: data?.id };
+  }
+
+  // Fallback to nodemailer (for local development)
+  const transporter = createTransporter();
+  const info = await transporter.sendMail({
+    from: getFromEmail(),
+    to,
+    subject,
+    html,
+    text,
+  });
+
+  console.log('✅ Email sent via nodemailer:', info.messageId);
+  return { success: true, messageId: info.messageId };
 };
 
 /**
@@ -513,7 +537,8 @@ const sendCommentAddedEmail = async ({ email, name, complaint, comment, commente
  */
 const sendOTPEmail = async ({ email, name, otp }) => {
   try {
-    if (!process.env.EMAIL_USER || !process.env.EMAIL_PASSWORD) {
+    // If no email configuration (neither Resend nor Gmail), log for development
+    if (!process.env.RESEND_API_KEY && (!process.env.EMAIL_USER || !process.env.EMAIL_PASSWORD)) {
       console.log('\n=== OTP VERIFICATION EMAIL (Development Mode) ===');
       console.log(`To: ${email}`);
       console.log(`Name: ${name}`);
@@ -522,88 +547,85 @@ const sendOTPEmail = async ({ email, name, otp }) => {
       return { success: true, message: 'OTP logged to console (email not configured)' };
     }
 
-    const transporter = createTransporter();
-
-    // Skip verify() to prevent timeout - verification happens during sendMail anyway
-    // If email credentials are wrong, sendMail will fail with clear error
-
-    const mailOptions = {
-      from: getFromEmail(),
-      to: email,
-      subject: 'Email Verification - OTP Code',
-      html: `
-        <!DOCTYPE html>
-        <html>
-        <head>
-          <meta charset="utf-8">
-          <meta name="viewport" content="width=device-width, initial-scale=1.0">
-          <title>Email Verification</title>
-        </head>
-        <body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px;">
-          <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 30px; text-align: center; border-radius: 10px 10px 0 0;">
-            <h1 style="color: white; margin: 0;">E-Complaint System</h1>
+    const html = `
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Email Verification</title>
+      </head>
+      <body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px;">
+        <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 30px; text-align: center; border-radius: 10px 10px 0 0;">
+          <h1 style="color: white; margin: 0;">E-Complaint System</h1>
+        </div>
+        
+        <div style="background: #f9f9f9; padding: 30px; border-radius: 0 0 10px 10px; border: 1px solid #e0e0e0;">
+          <h2 style="color: #333; margin-top: 0;">Email Verification</h2>
+          
+          <p>Hello ${name || 'User'},</p>
+          
+          <p>Thank you for registering with the E-Complaint System. Please use the OTP code below to verify your email address and complete your registration.</p>
+          
+          <div style="background: white; padding: 30px; border-radius: 5px; margin: 30px 0; text-align: center; border: 2px dashed #1976d2;">
+            <p style="margin: 0; font-size: 14px; color: #666; margin-bottom: 10px;">Your Verification Code:</p>
+            <p style="margin: 0; font-size: 36px; font-weight: bold; color: #1976d2; letter-spacing: 8px; font-family: monospace;">
+              ${otp}
+            </p>
           </div>
           
-          <div style="background: #f9f9f9; padding: 30px; border-radius: 0 0 10px 10px; border: 1px solid #e0e0e0;">
-            <h2 style="color: #333; margin-top: 0;">Email Verification</h2>
-            
-            <p>Hello ${name || 'User'},</p>
-            
-            <p>Thank you for registering with the E-Complaint System. Please use the OTP code below to verify your email address and complete your registration.</p>
-            
-            <div style="background: white; padding: 30px; border-radius: 5px; margin: 30px 0; text-align: center; border: 2px dashed #1976d2;">
-              <p style="margin: 0; font-size: 14px; color: #666; margin-bottom: 10px;">Your Verification Code:</p>
-              <p style="margin: 0; font-size: 36px; font-weight: bold; color: #1976d2; letter-spacing: 8px; font-family: monospace;">
-                ${otp}
-              </p>
-            </div>
-            
-            <div style="background: #fff3cd; border-left: 4px solid #ffc107; padding: 15px; margin: 20px 0; border-radius: 4px;">
-              <p style="margin: 0; color: #856404;">
-                <strong>⚠️ Important:</strong> This OTP will expire in 10 minutes. If you didn't request this code, please ignore this email.
-              </p>
-            </div>
-            
-            <p style="color: #666; font-size: 14px; margin-top: 30px;">
-              Enter this code on the verification page to complete your registration.
-            </p>
-            
-            <hr style="border: none; border-top: 1px solid #e0e0e0; margin: 30px 0;">
-            
-            <p style="color: #999; font-size: 12px; text-align: center; margin: 0;">
-              This is an automated message. Please do not reply to this email.<br>
-              © 2025 E-Complaint System. All rights reserved.
+          <div style="background: #fff3cd; border-left: 4px solid #ffc107; padding: 15px; margin: 20px 0; border-radius: 4px;">
+            <p style="margin: 0; color: #856404;">
+              <strong>⚠️ Important:</strong> This OTP will expire in 10 minutes. If you didn't request this code, please ignore this email.
             </p>
           </div>
-        </body>
-        </html>
-      `,
-      text: `
-        Email Verification - E-Complaint System
-        
-        Hello ${name || 'User'},
-        
-        Thank you for registering with the E-Complaint System. Please use the OTP code below to verify your email address and complete your registration.
-        
-        Your Verification Code: ${otp}
-        
-        This OTP will expire in 10 minutes. If you didn't request this code, please ignore this email.
-        
-        Enter this code on the verification page to complete your registration.
-        
-        © 2025 E-Complaint System. All rights reserved.
-      `,
-    };
+          
+          <p style="color: #666; font-size: 14px; margin-top: 30px;">
+            Enter this code on the verification page to complete your registration.
+          </p>
+          
+          <hr style="border: none; border-top: 1px solid #e0e0e0; margin: 30px 0;">
+          
+          <p style="color: #999; font-size: 12px; text-align: center; margin: 0;">
+            This is an automated message. Please do not reply to this email.<br>
+            © 2025 E-Complaint System. All rights reserved.
+          </p>
+        </div>
+      </body>
+      </html>
+    `;
 
-    const info = await transporter.sendMail(mailOptions);
-    console.log('OTP email sent:', info.messageId);
+    const text = `
+      Email Verification - E-Complaint System
+      
+      Hello ${name || 'User'},
+      
+      Thank you for registering with the E-Complaint System. Please use the OTP code below to verify your email address and complete your registration.
+      
+      Your Verification Code: ${otp}
+      
+      This OTP will expire in 10 minutes. If you didn't request this code, please ignore this email.
+      
+      Enter this code on the verification page to complete your registration.
+      
+      © 2025 E-Complaint System. All rights reserved.
+    `;
 
-    return { success: true, messageId: info.messageId };
+    const result = await sendEmail({
+      to: email,
+      subject: 'Email Verification - OTP Code',
+      html,
+      text,
+    });
+
+    console.log('OTP email sent:', result.messageId);
+    return result;
   } catch (error) {
     console.error('Error sending OTP email:', error);
     throw error;
   }
 };
+
 
 module.exports = {
   sendPasswordResetEmail,
