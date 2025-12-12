@@ -1,446 +1,408 @@
-📌 E-Complaint Management System
+# 📌 E-Complaint Management System
 
-A full-stack web application designed to digitize and streamline complaint handling in organizations. It manages the complete lifecycle of a complaint—from submission to resolution—ensuring transparency, accountability, automation, and traceability.
+A full-stack web application built with **Node.js**, **Express**, and **MongoDB** to streamline complaint management in organizations.  
+The platform digitizes the entire complaint lifecycle—submission, assignment, processing, resolution, escalation, feedback, and closure—ensuring **transparency, accountability, automation, and traceability**.
 
-The platform supports multi-role access, file attachments, email notifications, status tracking, feedback, escalation, and complete audit logging.
+---
 
-This README documents all currently implemented features inside your project.
+# 🎯 Project Overview
 
-🎯 Project Overview
+The **E-Complaint Management System** replaces manual grievance handling with a centralized web-based solution.  
+It supports:
 
-The E-Complaint Management System replaces manual, paper-based grievance handling with an automated, centralized platform. Users can file complaints; departments can process them; admins can oversee the entire workflow.
+- Multi-role dashboards  
+- File attachments  
+- Email notifications (SMTP)  
+- Real-time status tracking  
+- Feedback collection  
+- Escalation handling  
+- Audit logging  
 
-The system enables:
+This README documents **all currently implemented features**.
 
-Faster issue resolution
+---
 
-Increased transparency
+# ⭐ Key Features
 
-Complete accountability
+## 👤 User Features
+- Secure register/login  
+- Submit complaints with **title, description, priority**  
+- Upload attachments (images/documents)  
+- Track real-time complaint status  
+- View complete complaint history  
+- Receive **email notifications** for:
+  - Complaint submission  
+  - Complaint assignment  
+  - Status updates  
+  - Escalations  
+  - Complaint resolution  
+- Provide feedback after resolution  
 
-Automated notifications
+---
 
-Digital tracking & audit trail
+## 🏢 Department Features
+- Department dashboard  
+- View assigned complaints  
+- Update complaint status  
+- Add remarks  
+- Manage escalated issues  
+- Receive **email alerts** for new assignments  
 
-It supports multi-role dashboards, file uploads, email alerts, status history, feedback, escalations, and secure authentication.
+---
 
-⭐ Key Features
-👤 User Features
+## 🛠️ Admin Features
+- Add/manage users  
+- Add/manage departments  
+- Assign complaints to departments  
+- View all complaints  
+- Monitor escalations & feedback  
+- Access admin dashboard analytics (if implemented)  
+- Receive escalation notifications  
 
-Secure registration & login
+---
 
-Submit complaints with title, description, priority
+## 🔔 Email Notification System (SMTP)
+Implemented using **Nodemailer + SMTP**.
 
-Attach images/documents
+Automatic emails are sent for:
 
-Track complaint status
+- User registration  
+- Complaint submission  
+- Complaint assignment  
+- Status changes  
+- Complaint escalation  
+- Complaint resolution  
+- Feedback submission  
 
-View complete complaint history
+---
 
-Receive email notifications when:
+## 📎 Attachment Handling
+- File uploads stored in `/public/uploads`  
+- Metadata stored in MongoDB  
+- Supports multiple attachments per complaint  
 
-Complaint is submitted
+---
 
-Complaint is assigned
+## ⚠️ Escalation System
+- Escalates unresolved complaints  
+- Stores escalation level, authority, timestamp  
+- Sends escalation alerts to admin/department  
 
-Status is updated
+---
 
-Complaint is escalated
+## 📝 Status History Logging
+Every status update is recorded with:
 
-Complaint is resolved
+- Previous & new status  
+- Updated by (user/admin/department)  
+- Timestamp  
 
-Provide feedback after resolution
+Provides a complete audit trail.
 
-🏢 Department Features
+---
 
-Department dashboard
+# 🧱 System Architecture
 
-View complaints assigned to the department
-
-Update complaint status through workflow stages
-
-Add remarks during processing
-
-Handle escalated complaints
-
-Receive email alerts on new assignments
-
-🛠️ Admin Features
-
-Add/manage users
-
-Add/manage departments
-
-Assign complaints to appropriate departments
-
-Monitor all complaints across the system
-
-Track status, escalations, and feedback
-
-Access administrative dashboard with analytics (if included)
-
-Receive escalation alerts
-
-📎 Attachment Handling
-
-Upload images/documents as supporting evidence
-
-Files stored in /public/uploads
-
-Metadata stored in MongoDB
-
-Linked to specific complaint records
-
-🔔 Email Notification System
-
-Implemented using Nodemailer.
-
-Automatic emails are sent when:
-
-New user registers
-
-Complaint is submitted
-
-Complaint is assigned to a department
-
-Department updates complaint status
-
-Complaint is escalated
-
-Complaint is resolved
-
-Feedback is submitted
-
-⚠️ Escalation System
-
-Escalate unresolved complaints
-
-Maintain escalation levels with timestamps
-
-Notify admin/department via email
-
-📝 Status History Logging
-
-Each update records:
-
-Previous status
-
-New status
-
-Updated by (user/admin/department)
-
-Timestamp
-
-Creates a complete audit trail.
-
-🧱 System Architecture
 Client (Browser)
-     |
-     | HTTP Requests
-     v
+|
+| HTTP Requests
+v
 Express.js Server
-     |
-     | Routes → Controllers → Middleware
-     v
+|
+| Routes → Controllers → Middleware
+v
 Business Logic Layer
-     |
-     v
-MongoDB (via Mongoose Models)
-     |
-     v
-Email Notification Service (Nodemailer SMTP)
+|
+v
+MongoDB (Mongoose Models)
+|
+v
+SMTP Email Service (Nodemailer)
 
-Includes:
+markdown
+Copy code
 
-MVC folder architecture
+### Includes:
+- MVC folder structure  
+- Authentication middleware  
+- File upload handler (Multer)  
+- Config-based DB connection  
+- Role-based authorization  
 
-Secure authentication middleware
+---
 
-File upload handling
+# 🧰 Tech Stack
 
-Config-driven MongoDB connection
+### Frontend
+- HTML5  
+- CSS3  
+- JavaScript  
+- EJS Templates  
+- Bootstrap  
 
-Role-based authorization
+### Backend
+- Node.js  
+- Express.js  
+- Mongoose ORM  
 
-Scalable structure
+### Database
+- MongoDB  
 
-🧰 Tech Stack
-Frontend
+### Utilities
+- Multer (file uploads)  
+- Bcrypt (password hashing)  
+- JWT / Sessions (auth)  
+- Nodemailer (SMTP emails)  
+- Nodemon (dev auto-reload)  
 
-HTML5, CSS3, JavaScript
+---
 
-EJS Template Engine
+# 📂 Folder Structure
 
-Bootstrap
-
-Backend
-
-Node.js
-
-Express.js
-
-Mongoose ORM
-
-Database
-
-MongoDB (NoSQL)
-
-Utilities
-
-Multer (File Uploads)
-
-Bcrypt (Password Hashing)
-
-JWT / Sessions (Auth)
-
-Nodemailer (Email Notifications)
-
-Nodemon (Development Server)
-
-📂 Folder Structure
 E-Complaint/
 │
 ├── config/
-│   └── db.js
+│ └── db.js
 │
 ├── controllers/
-│   ├── authController.js
-│   ├── complaintController.js
-│   ├── adminController.js
-│   └── departmentController.js
+│ ├── authController.js
+│ ├── complaintController.js
+│ ├── adminController.js
+│ └── departmentController.js
 │
 ├── middleware/
-│   ├── authMiddleware.js
-│   └── uploadMiddleware.js
+│ ├── authMiddleware.js
+│ └── uploadMiddleware.js
 │
 ├── models/
-│   ├── User.js
-│   ├── Complaint.js
-│   ├── Department.js
-│   ├── Attachment.js
-│   ├── Feedback.js
-│   └── Escalation.js
+│ ├── User.js
+│ ├── Complaint.js
+│ ├── Department.js
+│ ├── Attachment.js
+│ ├── Feedback.js
+│ └── Escalation.js
 │
 ├── public/
-│   ├── css/
-│   ├── js/
-│   └── uploads/
+│ ├── css/
+│ ├── js/
+│ └── uploads/
 │
 ├── routes/
-│   ├── authRoutes.js
-│   ├── adminRoutes.js
-│   ├── complaintRoutes.js
-│   └── departmentRoutes.js
+│ ├── authRoutes.js
+│ ├── adminRoutes.js
+│ ├── complaintRoutes.js
+│ └── departmentRoutes.js
 │
 ├── views/
-│   ├── login.ejs
-│   ├── register.ejs
-│   ├── userDashboard.ejs
-│   ├── adminDashboard.ejs
-│   ├── departmentDashboard.ejs
-│   └── complaintDetails.ejs
+│ ├── login.ejs
+│ ├── register.ejs
+│ ├── userDashboard.ejs
+│ ├── adminDashboard.ejs
+│ ├── departmentDashboard.ejs
+│ └── complaintDetails.ejs
 │
 ├── app.js
 ├── package.json
 └── README.md
 
-🗄️ Database Schema
-✔ User
+yaml
+Copy code
 
-Fields: _id, name, email, password, role, department_id, created_at
+---
 
-✔ Department
+# 🗄️ Database Schema
 
-Fields: _id, department_name, description
+### ✔ User
+`_id, name, email, password, role, department_id, created_at`
 
-✔ Complaint
+### ✔ Department
+`_id, department_name, description`
 
-Fields: _id, user_id, department_id, title, description, priority, status, assigned_to, created_at
+### ✔ Complaint
+`_id, user_id, department_id, title, description, priority, status, assigned_to, created_at`
 
-✔ Attachment
+### ✔ Attachment
+`_id, complaint_id, file_path`
 
-Fields: _id, complaint_id, file_path
+### ✔ Feedback
+`_id, complaint_id, rating, comment`
 
-✔ Feedback
+### ✔ Escalation
+`_id, complaint_id, escalation_level, escalated_to, timestamp`
 
-Fields: _id, complaint_id, rating, comment
+### ✔ Status History
+`_id, complaint_id, prev_status, new_status, changed_by, timestamp`
 
-✔ Escalation
+---
 
-Fields: _id, complaint_id, escalation_level, escalated_to, timestamp
+# 🧩 ER Diagram
 
-✔ Status History
+> Add your PNG ER Diagram image here once uploaded to GitHub.
 
-Fields: _id, complaint_id, prev_status, new_status, changed_by, timestamp
+---
 
-🧩 ER Diagram
+# 🔄 Complaint Lifecycle
 
-(Place your PNG ERD image here when uploading to GitHub)
-
-🔄 Complaint Lifecycle
 Complaint Created
-       ↓
+↓
 Assigned to Department
-       ↓
+↓
 Under Processing
-       ↓
+↓
 Resolved
-       ↓
+↓
 Feedback Submitted
-       ↓
+↓
 Closed
 
+yaml
+Copy code
 
-💡 Escalation can occur at any stage before resolution.
+⚠ Escalation can occur anytime before resolution.
 
-🔌 API Documentation
-▶ Auth Routes
-Method	Endpoint	Description
-POST	/register	Create new user
-POST	/login	Authenticate user
-▶ Complaint Routes
-Method	Endpoint	Description
-POST	/complaints	File complaint
-GET	/complaints/:id	Get complaint details
-PUT	/complaints/:id/status	Update complaint status
-▶ Admin Routes
-Method	Endpoint	Description
-GET	/admin/complaints	View all complaints
-POST	/admin/assign	Assign department
-🔐 Authentication & Authorization
+---
 
-Passwords hashed using bcrypt
+# 🔌 API Documentation
 
-Authentication via JWT or session cookies
+## ▶ Auth Routes
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| POST | `/register` | Register new user |
+| POST | `/login` | Authenticate |
 
-Role-based access control (RBAC):
+## ▶ Complaint Routes
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| POST | `/complaints` | Submit a complaint |
+| GET | `/complaints/:id` | View complaint |
+| PUT | `/complaints/:id/status` | Update complaint status |
 
-User → submit & track complaints
+## ▶ Admin Routes
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| GET | `/admin/complaints` | View all complaints |
+| POST | `/admin/assign` | Assign complaint to department |
 
-Department → process assigned complaints
+---
 
-Admin → full system access
+# 🔐 Authentication & Authorization
 
-🛠 Installation Guide
+- Passwords hashed with bcrypt  
+- JWT or Session-based authentication  
+- Role-based access control:
+  - **User** → file & track complaints  
+  - **Department** → process assigned complaints  
+  - **Admin** → full system management  
+
+---
+
+# 🛠 Installation
+
+```bash
 git clone <repo-url>
 cd E-Complaint
 npm install
+🔧 Environment Variables
+Create a .env file:
 
-🔧 Environment Variables (.env)
+env
+Copy code
 PORT=5000
-MONGO_URI=your-mongo-db-url
+MONGO_URI=your-mongodb-url
 JWT_SECRET=your-secret-key
 
 EMAIL_HOST=smtp.gmail.com
 EMAIL_PORT=587
 EMAIL_USER=your-email@gmail.com
 EMAIL_PASS=your-app-password
-
 ▶ Running the Application
-Production
-npm start
-
 Development
+bash
+Copy code
 npm run dev
-
+Production
+bash
+Copy code
+npm start
 ☁️ Deployment Guide
-Deploy on Render / Vercel
-
+Deploy on Render / Railway / Vercel
 Upload repository
 
 Configure environment variables
 
-Configure build & start commands
+Set start command: node app.js
 
 Deploy on VPS
-
 Install Node.js & MongoDB
 
-Run server via PM2
+Use PM2: pm2 start app.js
 
-Reverse proxy with NGINX
+Configure NGINX reverse proxy
 
-🔒 Security Considerations
+🔒 Security Practices
+Enforce bcrypt password hashing
 
-Hash all passwords
+Validate & sanitize all inputs
 
-Validate and sanitize input
-
-Limit allowed upload file types
+Restrict file types on upload
 
 Use HTTPS in production
 
-Never expose credentials or .env files
-
-Use App Passwords for email SMTP
+Never commit .env or secret keys
 
 📈 Scalability & Optimization
-
-Move file storage to AWS S3
+Move uploads to Amazon S3
 
 Add Redis caching
 
-Add request rate-limiting
+Implement rate-limiting
 
-Introduce microservices for heavy modules
+Convert to microservices architecture if load increases
 
-Enable horizontal scaling using Docker/Kubernetes
+🧪 Testing
+Postman API testing
 
-🧪 Testing Guidelines
+Jest/Mocha for unit tests
 
-API testing with Postman
-
-Unit tests using Jest/Mocha
-
-End-to-end UI testing with Selenium (optional)
-
-Test email delivery using SMTP sandbox
+Selenium for UI testing (optional)
 
 🚑 Troubleshooting
-❌ MongoDB connection error
-
+MongoDB connection error
 Check MONGO_URI.
 
-❌ JWT/Sessions not working
+JWT/Sessions failing
+Check JWT_SECRET.
 
-Check JWT_SECRET and cookie configuration.
+Uploads not storing
+Verify /public/uploads write permissions.
 
-❌ File uploads not saving
-
-Verify /public/uploads folder permissions.
-
-❌ Emails not sending
-
-Ensure SMTP credentials are correct
-Use Gmail App Password if using Gmail SMTP.
+Emails not sending
+Verify SMTP credentials in .env and use Gmail App Password.
 
 🧭 Future Enhancements
+Auto-escalation rules
 
-Automated escalation engine
-
-Real-time notification system
+Push notification system
 
 AI-based complaint classification
 
-Advanced admin analytics
+Advanced analytics dashboard
 
-Mobile app interface
+Mobile app version
 
 🤝 Contributing
+Fork repository
 
-Fork this repository
-
-Create a feature branch
+Create a new branch
 
 Commit your changes
 
 Submit a pull request
 
 📜 License
-
 MIT License
 
 👨‍💻 Authors
-
 Abhishek Mishra
+
 Abhijeet Singh
