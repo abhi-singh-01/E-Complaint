@@ -1,8 +1,22 @@
 const nodemailer = require('nodemailer');
 
+// Initialize AWS SES client (Priority 0 - Best deliverability for university emails!)
+let sesClient = null;
+if (process.env.AWS_SES_ACCESS_KEY && process.env.AWS_SES_SECRET_KEY) {
+  const { SESClient, SendEmailCommand } = require('@aws-sdk/client-ses');
+  sesClient = new SESClient({
+    region: process.env.AWS_SES_REGION || 'us-east-1',
+    credentials: {
+      accessKeyId: process.env.AWS_SES_ACCESS_KEY,
+      secretAccessKey: process.env.AWS_SES_SECRET_KEY,
+    },
+  });
+  console.log('✅ AWS SES initialized for emails');
+}
+
 // Initialize Brevo HTTP API client (Priority 1 - works on Render!)
 let brevoClient = null;
-if (process.env.BREVO_API_KEY) {
+if (process.env.BREVO_API_KEY && !sesClient) {
   const SibApiV3Sdk = require('@getbrevo/brevo');
   brevoClient = new SibApiV3Sdk.TransactionalEmailsApi();
   const apiKey = brevoClient.authentications['apiKey'];
@@ -10,13 +24,14 @@ if (process.env.BREVO_API_KEY) {
   console.log('✅ Brevo HTTP API initialized for emails');
 }
 
-// Initialize Resend client only if no Brevo
+// Initialize Resend client only if no SES or Brevo
 let resendClient = null;
-if (process.env.RESEND_API_KEY && !process.env.BREVO_API_KEY) {
+if (process.env.RESEND_API_KEY && !sesClient && !brevoClient) {
   const { Resend } = require('resend');
   resendClient = new Resend(process.env.RESEND_API_KEY);
   console.log('✅ Resend HTTP API initialized for emails');
 }
+
 
 
 // Create nodemailer transporter (works with Brevo, Gmail, or any SMTP)
@@ -63,8 +78,47 @@ const getFromEmail = () => {
   return 'E-Complaint System <noreply@ecomplaint.com>';
 };
 
-// Send email using Brevo HTTP API (Priority 1), Resend (Priority 2), or SMTP fallback
+// Send email using AWS SES (Priority 0), Brevo (Priority 1), Resend (Priority 2), or SMTP fallback
 const sendEmail = async ({ to, subject, html, text }) => {
+  // Priority 0: Use AWS SES if available (Best for university emails!)
+  if (sesClient) {
+    console.log('📧 Sending email via AWS SES to:', to);
+    try {
+      const { SendEmailCommand } = require('@aws-sdk/client-ses');
+      const fromEmail = process.env.EMAIL_FROM || process.env.EMAIL_USER || 'noreply@ecomplaint.com';
+
+      const command = new SendEmailCommand({
+        Source: `E-Complaint System <${fromEmail}>`,
+        Destination: {
+          ToAddresses: [to],
+        },
+        Message: {
+          Subject: {
+            Data: subject,
+            Charset: 'UTF-8',
+          },
+          Body: {
+            Html: {
+              Data: html,
+              Charset: 'UTF-8',
+            },
+            Text: {
+              Data: text || 'Please view this email in HTML format.',
+              Charset: 'UTF-8',
+            },
+          },
+        },
+      });
+
+      const response = await sesClient.send(command);
+      console.log('✅ Email sent via AWS SES:', response.MessageId);
+      return { success: true, messageId: response.MessageId };
+    } catch (error) {
+      console.error('AWS SES error:', error);
+      throw new Error(error.message || 'Failed to send email via AWS SES');
+    }
+  }
+
   // Priority 1: Use Brevo HTTP API if available (works on Render!)
   if (brevoClient) {
     console.log('📧 Sending email via Brevo HTTP API to:', to);
@@ -77,6 +131,7 @@ const sendEmail = async ({ to, subject, html, text }) => {
         htmlContent: html,
         textContent: text,
       };
+
 
       const response = await brevoClient.sendTransacEmail(sendSmtpEmail);
       console.log('✅ Email sent via Brevo:', response.messageId);
@@ -149,8 +204,8 @@ const sendEmail = async ({ to, subject, html, text }) => {
  */
 const sendPasswordResetEmail = async ({ email, name, resetToken, resetUrl }) => {
   try {
-    // If no email configuration (neither Brevo, Resend, nor Gmail), log for development
-    if (!process.env.BREVO_API_KEY && !process.env.RESEND_API_KEY && (!process.env.EMAIL_USER || !process.env.EMAIL_PASSWORD)) {
+    // If no email configuration (neither SES, Brevo, Resend, nor Gmail), log for development
+    if (!process.env.AWS_SES_ACCESS_KEY && !process.env.BREVO_API_KEY && !process.env.RESEND_API_KEY && (!process.env.EMAIL_USER || !process.env.EMAIL_PASSWORD)) {
       console.log('\n=== PASSWORD RESET EMAIL (Development Mode) ===');
       console.log(`To: ${email}`);
       console.log(`Reset URL: ${resetUrl}`);
@@ -594,8 +649,8 @@ const sendCommentAddedEmail = async ({ email, name, complaint, comment, commente
  */
 const sendOTPEmail = async ({ email, name, otp }) => {
   try {
-    // If no email configuration (neither Brevo, Resend, nor Gmail), log for development
-    if (!process.env.BREVO_API_KEY && !process.env.RESEND_API_KEY && (!process.env.EMAIL_USER || !process.env.EMAIL_PASSWORD)) {
+    // If no email configuration (neither SES, Brevo, Resend, nor Gmail), log for development
+    if (!process.env.AWS_SES_ACCESS_KEY && !process.env.BREVO_API_KEY && !process.env.RESEND_API_KEY && (!process.env.EMAIL_USER || !process.env.EMAIL_PASSWORD)) {
       console.log('\n=== OTP VERIFICATION EMAIL (Development Mode) ===');
       console.log(`To: ${email}`);
       console.log(`Name: ${name}`);
