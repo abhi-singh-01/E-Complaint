@@ -3,7 +3,6 @@
 A full-stack web application built with **Node.js**, **Express**, and **MongoDB** to streamline complaint management in organizations.  
 The platform digitizes the entire complaint lifecycle—submission, assignment, processing, resolution, escalation, feedback, and closure—ensuring **transparency, accountability, automation, and traceability**.
 
----
 
 # 🎯 Project Overview
 
@@ -20,7 +19,6 @@ It supports:
 
 This README documents **all currently implemented features**.
 
----
 
 # ⭐ Key Features
 
@@ -38,7 +36,6 @@ This README documents **all currently implemented features**.
   - Complaint resolution  
 - Provide feedback after resolution  
 
----
 
 ## 🏢 Department Features
 - Department dashboard  
@@ -48,7 +45,6 @@ This README documents **all currently implemented features**.
 - Manage escalated issues  
 - Receive **email alerts** for new assignments  
 
----
 
 ## 🛠️ Admin Features
 - Add/manage users  
@@ -59,7 +55,6 @@ This README documents **all currently implemented features**.
 - Access admin dashboard analytics (if implemented)  
 - Receive escalation notifications  
 
----
 
 ## 🔔 Email Notification System (SMTP)
 Implemented using **Nodemailer + SMTP**.
@@ -74,21 +69,18 @@ Automatic emails are sent for:
 - Complaint resolution  
 - Feedback submission  
 
----
 
 ## 📎 Attachment Handling
 - File uploads stored in `/public/uploads`  
 - Metadata stored in MongoDB  
 - Supports multiple attachments per complaint  
 
----
 
 ## ⚠️ Escalation System
 - Escalates unresolved complaints  
 - Stores escalation level, authority, timestamp  
 - Sends escalation alerts to admin/department  
 
----
 
 ## 📝 Status History Logging
 Every status update is recorded with:
@@ -96,10 +88,6 @@ Every status update is recorded with:
 - Previous & new status  
 - Updated by (user/admin/department)  
 - Timestamp  
-
-Provides a complete audit trail.
-
----
 
 # 🧱 System Architecture
 
@@ -119,8 +107,6 @@ MongoDB (Mongoose Models)
 v
 SMTP Email Service (Nodemailer)
 
-markdown
-Copy code
 
 ### Includes:
 - MVC folder structure  
@@ -128,8 +114,6 @@ Copy code
 - File upload handler (Multer)  
 - Config-based DB connection  
 - Role-based authorization  
-
----
 
 # 🧰 Tech Stack
 
@@ -154,8 +138,6 @@ Copy code
 - JWT / Sessions (auth)  
 - Nodemailer (SMTP emails)  
 - Nodemon (dev auto-reload)  
-
----
 
 # 📂 Folder Structure
 
@@ -205,10 +187,6 @@ E-Complaint/
 ├── package.json
 └── README.md
 
-yaml
-Copy code
-
----
 
 # 🗄️ Database Schema
 
