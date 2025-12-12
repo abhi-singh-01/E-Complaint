@@ -21,8 +21,8 @@ const studentSchema = new mongoose.Schema({
     lowercase: true,
     trim: true,
     match: [
-      /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.edu$/i,
-      'Please provide a valid educational email address (must end with .edu)'
+      /^[a-zA-Z0-9._%+-]+@([a-zA-Z0-9.-]+\.edu|gmail\.com)$/i,
+      'Please provide a valid educational email (.edu) or Gmail address'
     ]
   },
   libraryId: {
@@ -55,11 +55,11 @@ const studentSchema = new mongoose.Schema({
     type: String,
     required: [true, 'Year of study is required'],
     validate: {
-      validator: function(value) {
+      validator: function (value) {
         const department = this.department;
         const twoYearCourses = ['MCA', 'MBA'];
         const fourYearCourses = ['CSE', 'Electronics', 'Mechanical', 'Civil', 'Electrical'];
-        
+
         if (twoYearCourses.includes(department)) {
           return ['1', '2'].includes(value);
         } else if (fourYearCourses.includes(department)) {
@@ -67,7 +67,7 @@ const studentSchema = new mongoose.Schema({
         }
         return ['1', '2', '3', '4'].includes(value);
       },
-      message: function(props) {
+      message: function (props) {
         const department = this.department;
         if (['MCA', 'MBA'].includes(department)) {
           return 'MBA and MCA courses are only 2 years. Please select 1st or 2nd year.';
@@ -111,12 +111,12 @@ const studentSchema = new mongoose.Schema({
 });
 
 // Virtual for full name
-studentSchema.virtual('fullName').get(function() {
+studentSchema.virtual('fullName').get(function () {
   return `${this.firstName} ${this.lastName}`;
 });
 
 // Virtual for account lock status
-studentSchema.virtual('isLocked').get(function() {
+studentSchema.virtual('isLocked').get(function () {
   return !!(this.lockUntil && this.lockUntil > Date.now());
 });
 
@@ -125,7 +125,7 @@ studentSchema.index({ department: 1 });
 // Note: email and libraryId already have unique indexes from the unique: true option
 
 // Pre-save middleware to hash password
-studentSchema.pre('save', async function(next) {
+studentSchema.pre('save', async function (next) {
   // Only hash the password if it has been modified (or is new)
   if (!this.isModified('password')) return next();
 
@@ -140,34 +140,34 @@ studentSchema.pre('save', async function(next) {
 });
 
 // Instance method to check password
-studentSchema.methods.comparePassword = async function(candidatePassword) {
+studentSchema.methods.comparePassword = async function (candidatePassword) {
   return await bcrypt.compare(candidatePassword, this.password);
 };
 
 // Instance method to generate email verification token
-studentSchema.methods.generateEmailVerificationToken = function() {
+studentSchema.methods.generateEmailVerificationToken = function () {
   const crypto = require('crypto');
   const token = crypto.randomBytes(32).toString('hex');
-  
+
   this.emailVerificationToken = crypto.createHash('sha256').update(token).digest('hex');
   this.emailVerificationExpires = Date.now() + 24 * 60 * 60 * 1000; // 24 hours
-  
+
   return token;
 };
 
 // Instance method to generate password reset token
-studentSchema.methods.generatePasswordResetToken = function() {
+studentSchema.methods.generatePasswordResetToken = function () {
   const crypto = require('crypto');
   const token = crypto.randomBytes(32).toString('hex');
-  
+
   this.passwordResetToken = crypto.createHash('sha256').update(token).digest('hex');
   this.passwordResetExpires = Date.now() + 10 * 60 * 1000; // 10 minutes
-  
+
   return token;
 };
 
 // Instance method to increment login attempts
-studentSchema.methods.incLoginAttempts = function() {
+studentSchema.methods.incLoginAttempts = function () {
   // If we have a previous lock that has expired, restart at 1
   if (this.lockUntil && this.lockUntil < Date.now()) {
     return this.updateOne({
@@ -175,19 +175,19 @@ studentSchema.methods.incLoginAttempts = function() {
       $set: { loginAttempts: 1 }
     });
   }
-  
+
   const updates = { $inc: { loginAttempts: 1 } };
-  
+
   // Lock account after 5 failed attempts for 2 hours
   if (this.loginAttempts + 1 >= 5 && !this.isLocked) {
     updates.$set = { lockUntil: Date.now() + 2 * 60 * 60 * 1000 }; // 2 hours
   }
-  
+
   return this.updateOne(updates);
 };
 
 // Instance method to reset login attempts
-studentSchema.methods.resetLoginAttempts = function() {
+studentSchema.methods.resetLoginAttempts = function () {
   return this.updateOne({
     $unset: { loginAttempts: 1, lockUntil: 1 }
   });
