@@ -68,10 +68,10 @@ export default function StudentRegister() {
   const [currentStep, setCurrentStep] = useState(0)
   const [formProgress, setFormProgress] = useState(0)
 
-  // College email validation
+  // College email validation (also allows Gmail for testing)
   const validateCollegeEmail = (email) => {
-    const collegeEmailPattern = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.edu$/i
-    return collegeEmailPattern.test(email)
+    const emailPattern = /^[a-zA-Z0-9._%+-]+@([a-zA-Z0-9.-]+\.edu|gmail\.com)$/i
+    return emailPattern.test(email)
   }
 
   // Calculate form progress
@@ -90,7 +90,7 @@ export default function StudentRegister() {
   const getAvailableYears = (department) => {
     const twoYearCourses = ['MCA', 'MBA']
     const fourYearCourses = ['CSE', 'Electronics', 'Mechanical', 'Civil', 'Electrical']
-    
+
     if (twoYearCourses.includes(department)) {
       return [
         { value: '1', label: '1st Year' },
@@ -141,7 +141,7 @@ export default function StudentRegister() {
     if (form.lastName && form.lastName.trim().length < 4) {
       newErrors.lastName = 'wrong credentials'
     }
-    
+
     if (!form.email.trim()) {
       newErrors.email = 'wrong credentials'
     }
@@ -206,21 +206,21 @@ export default function StudentRegister() {
 
   const handleInputChange = (field) => (e) => {
     let value = e.target.value
-    
+
     // Allow all characters to be typed - validation will happen on submission
     // No filtering during typing
-    
+
     setForm(prev => {
       const newForm = { ...prev, [field]: value }
-      
+
       // Reset year when department changes
       if (field === 'department') {
         newForm.year = ''
       }
-      
+
       return newForm
     })
-    
+
     // Clear error when user starts typing
     if (errors[field]) {
       setErrors({ ...errors, [field]: '' })
@@ -241,20 +241,20 @@ export default function StudentRegister() {
         // Try to find the input field by various methods
         setTimeout(() => {
           const fieldId = firstErrorField
-          
+
           // Try multiple selectors to find the field
-          let element = document.getElementById(fieldId) || 
-                       document.querySelector(`[name="${fieldId}"]`) ||
-                       document.querySelector(`input#${fieldId}`) ||
-                       document.querySelector(`textarea#${fieldId}`)
-          
+          let element = document.getElementById(fieldId) ||
+            document.querySelector(`[name="${fieldId}"]`) ||
+            document.querySelector(`input#${fieldId}`) ||
+            document.querySelector(`textarea#${fieldId}`)
+
           // For Select fields, use labelId
           if (!element && (fieldId === 'department' || fieldId === 'year')) {
             const labelId = fieldId === 'department' ? 'department-label' : 'year-label'
             element = document.getElementById(labelId) ||
-                     document.querySelector(`[aria-labelledby*="${labelId}"]`)
+              document.querySelector(`[aria-labelledby*="${labelId}"]`)
           }
-          
+
           if (element) {
             element.scrollIntoView({ behavior: 'smooth', block: 'center' })
             // For Select components, focus might not work, so we try to click
@@ -282,10 +282,10 @@ export default function StudentRegister() {
         year: form.year,
         password: form.password
       })
-      
+
       showSuccess('OTP sent to your email! Please check your inbox.')
       setSuccess('OTP sent to your email! Redirecting to verification page...')
-      
+
       // Redirect to OTP verification page with email as query parameter
       setTimeout(() => {
         nav(`/verify-otp?email=${encodeURIComponent(form.email)}`)
@@ -302,8 +302,8 @@ export default function StudentRegister() {
   }
 
   return (
-    <Box 
-      sx={{ 
+    <Box
+      sx={{
         minHeight: '100vh',
         background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
         py: 4
@@ -311,10 +311,10 @@ export default function StudentRegister() {
     >
       <Container maxWidth="md">
         <Box sx={{ display: 'flex', justifyContent: 'center', mb: 4 }}>
-          <Typography 
-            variant="h4" 
-            component="h1" 
-            sx={{ 
+          <Typography
+            variant="h4"
+            component="h1"
+            sx={{
               color: 'white',
               fontWeight: 'bold',
               textAlign: 'center'
@@ -324,16 +324,16 @@ export default function StudentRegister() {
           </Typography>
         </Box>
 
-        <Card 
+        <Card
           elevation={10}
-          sx={{ 
+          sx={{
             borderRadius: 3,
             overflow: 'hidden',
-            boxShadow: (theme) => theme.palette.mode === 'dark' 
-              ? '0 20px 40px rgba(0,0,0,0.3)' 
+            boxShadow: (theme) => theme.palette.mode === 'dark'
+              ? '0 20px 40px rgba(0,0,0,0.3)'
               : '0 20px 40px rgba(0,0,0,0.1)',
-            backgroundColor: (theme) => theme.palette.mode === 'dark' 
-              ? 'rgba(30, 30, 30, 0.9)' 
+            backgroundColor: (theme) => theme.palette.mode === 'dark'
+              ? 'rgba(30, 30, 30, 0.9)'
               : 'white'
           }}
         >
@@ -364,22 +364,22 @@ export default function StudentRegister() {
                     Form Progress: {formProgress}%
                   </Typography>
                   <Box sx={{ flexGrow: 1 }}>
-                    <LinearProgress 
-                      variant="determinate" 
-                      value={formProgress} 
-                      sx={{ 
-                        height: 8, 
+                    <LinearProgress
+                      variant="determinate"
+                      value={formProgress}
+                      sx={{
+                        height: 8,
                         borderRadius: 4,
                         backgroundColor: '#e0e0e0',
                         '& .MuiLinearProgress-bar': {
                           borderRadius: 4,
                           background: 'linear-gradient(45deg, #1976d2 30%, #42a5f5 90%)'
                         }
-                      }} 
+                      }}
                     />
                   </Box>
                 </Box>
-                
+
                 {/* Progress Steps */}
                 <Stepper activeStep={currentStep} alternativeLabel>
                   <Step>
@@ -398,16 +398,16 @@ export default function StudentRegister() {
                 {/* Section 1: Personal Information */}
                 <Grid item xs={12}>
                   <Fade in={true} timeout={800}>
-                    <Paper 
-                      elevation={3} 
-                      sx={{ 
-                        p: 4, 
+                    <Paper
+                      elevation={3}
+                      sx={{
+                        p: 4,
                         borderRadius: 3,
                         border: (theme) => theme.palette.mode === 'dark'
                           ? '2px solid rgba(25, 118, 210, 0.3)'
                           : '2px solid #e3f2fd',
-                        backgroundColor: (theme) => theme.palette.mode === 'dark' 
-                          ? 'rgba(30, 30, 30, 0.8)' 
+                        backgroundColor: (theme) => theme.palette.mode === 'dark'
+                          ? 'rgba(30, 30, 30, 0.8)'
                           : '#fafafa',
                         transition: 'all 0.3s ease',
                         '&:hover': {
@@ -417,9 +417,9 @@ export default function StudentRegister() {
                       }}
                     >
                       <Box sx={{ display: 'flex', alignItems: 'center', mb: 4 }}>
-                        <Box sx={{ 
-                          p: 1.5, 
-                          borderRadius: '50%', 
+                        <Box sx={{
+                          p: 1.5,
+                          borderRadius: '50%',
                           backgroundColor: '#e3f2fd',
                           mr: 2
                         }}>
@@ -433,15 +433,15 @@ export default function StudentRegister() {
                             Tell us about yourself
                           </Typography>
                         </Box>
-                        <Chip 
-                          label="Required" 
-                          size="small" 
-                          color="primary" 
+                        <Chip
+                          label="Required"
+                          size="small"
+                          color="primary"
                           icon={<Info />}
                           sx={{ ml: 2 }}
                         />
                       </Box>
-                      
+
                       <Grid container spacing={3}>
                         <Grid item xs={12} sm={6}>
                           <TextField
@@ -589,16 +589,16 @@ export default function StudentRegister() {
                 {/* Section 2: Academic Information */}
                 <Grid item xs={12}>
                   <Fade in={true} timeout={1000}>
-                    <Paper 
-                      elevation={3} 
-                      sx={{ 
-                        p: 4, 
+                    <Paper
+                      elevation={3}
+                      sx={{
+                        p: 4,
                         borderRadius: 3,
                         border: (theme) => theme.palette.mode === 'dark'
                           ? '2px solid rgba(76, 175, 80, 0.3)'
                           : '2px solid #e8f5e8',
-                        backgroundColor: (theme) => theme.palette.mode === 'dark' 
-                          ? 'rgba(30, 30, 30, 0.8)' 
+                        backgroundColor: (theme) => theme.palette.mode === 'dark'
+                          ? 'rgba(30, 30, 30, 0.8)'
                           : '#fafafa',
                         transition: 'all 0.3s ease',
                         '&:hover': {
@@ -608,9 +608,9 @@ export default function StudentRegister() {
                       }}
                     >
                       <Box sx={{ display: 'flex', alignItems: 'center', mb: 4 }}>
-                        <Box sx={{ 
-                          p: 1.5, 
-                          borderRadius: '50%', 
+                        <Box sx={{
+                          p: 1.5,
+                          borderRadius: '50%',
                           backgroundColor: '#e8f5e8',
                           mr: 2
                         }}>
@@ -624,15 +624,15 @@ export default function StudentRegister() {
                             Your educational details
                           </Typography>
                         </Box>
-                        <Chip 
-                          label="Required" 
-                          size="small" 
-                          color="success" 
+                        <Chip
+                          label="Required"
+                          size="small"
+                          color="success"
                           icon={<Info />}
                           sx={{ ml: 2 }}
                         />
                       </Box>
-                      
+
                       <Grid container spacing={3}>
                         <Grid item xs={12} sm={6}>
                           <TextField
@@ -648,8 +648,8 @@ export default function StudentRegister() {
                             autoComplete="username"
                             sx={{
                               '& .MuiOutlinedInput-root': {
-                                backgroundColor: (theme) => theme.palette.mode === 'dark' 
-                                  ? 'rgba(60, 60, 60, 0.8)' 
+                                backgroundColor: (theme) => theme.palette.mode === 'dark'
+                                  ? 'rgba(60, 60, 60, 0.8)'
                                   : 'white',
                                 transition: 'all 0.3s ease',
                                 '&:hover': {
@@ -744,17 +744,17 @@ export default function StudentRegister() {
                                   return <span style={{ color: '#999' }}>Select Department</span>;
                                 }
                                 return selected === "MCA" ? "MCA (Master of Computer Applications)" :
-                                       selected === "MBA" ? "MBA (Master of Business Administration)" :
-                                       selected === "CSE" ? "CSE (Computer Science Engineering)" :
-                                       selected === "Electronics" ? "Electronics Engineering" :
-                                       selected === "Mechanical" ? "Mechanical Engineering" :
-                                       selected === "Civil" ? "Civil Engineering" :
-                                       selected === "Electrical" ? "Electrical Engineering" : selected;
+                                  selected === "MBA" ? "MBA (Master of Business Administration)" :
+                                    selected === "CSE" ? "CSE (Computer Science Engineering)" :
+                                      selected === "Electronics" ? "Electronics Engineering" :
+                                        selected === "Mechanical" ? "Mechanical Engineering" :
+                                          selected === "Civil" ? "Civil Engineering" :
+                                            selected === "Electrical" ? "Electrical Engineering" : selected;
                               }}
                               sx={{
                                 height: '56px',
-                                backgroundColor: (theme) => theme.palette.mode === 'dark' 
-                                  ? 'rgba(60, 60, 60, 0.8)' 
+                                backgroundColor: (theme) => theme.palette.mode === 'dark'
+                                  ? 'rgba(60, 60, 60, 0.8)'
                                   : 'white',
                                 transition: 'all 0.3s ease',
                                 '&:hover': {
@@ -806,8 +806,8 @@ export default function StudentRegister() {
                               }}
                               sx={{
                                 height: '56px',
-                                backgroundColor: (theme) => theme.palette.mode === 'dark' 
-                                  ? 'rgba(60, 60, 60, 0.8)' 
+                                backgroundColor: (theme) => theme.palette.mode === 'dark'
+                                  ? 'rgba(60, 60, 60, 0.8)'
                                   : 'white',
                                 transition: 'all 0.3s ease',
                                 '&:hover': {
@@ -846,16 +846,16 @@ export default function StudentRegister() {
                 {/* Section 3: Security */}
                 <Grid item xs={12}>
                   <Fade in={true} timeout={1200}>
-                    <Paper 
-                      elevation={3} 
-                      sx={{ 
-                        p: 4, 
+                    <Paper
+                      elevation={3}
+                      sx={{
+                        p: 4,
                         borderRadius: 3,
                         border: (theme) => theme.palette.mode === 'dark'
                           ? '2px solid rgba(255, 152, 0, 0.3)'
                           : '2px solid #fff3e0',
-                        backgroundColor: (theme) => theme.palette.mode === 'dark' 
-                          ? 'rgba(30, 30, 30, 0.8)' 
+                        backgroundColor: (theme) => theme.palette.mode === 'dark'
+                          ? 'rgba(30, 30, 30, 0.8)'
                           : '#fafafa',
                         transition: 'all 0.3s ease',
                         '&:hover': {
@@ -865,9 +865,9 @@ export default function StudentRegister() {
                       }}
                     >
                       <Box sx={{ display: 'flex', alignItems: 'center', mb: 4 }}>
-                        <Box sx={{ 
-                          p: 1.5, 
-                          borderRadius: '50%', 
+                        <Box sx={{
+                          p: 1.5,
+                          borderRadius: '50%',
                           backgroundColor: '#fff3e0',
                           mr: 2
                         }}>
@@ -881,15 +881,15 @@ export default function StudentRegister() {
                             Create a secure password
                           </Typography>
                         </Box>
-                        <Chip 
-                          label="Required" 
-                          size="small" 
-                          color="warning" 
+                        <Chip
+                          label="Required"
+                          size="small"
+                          color="warning"
                           icon={<Info />}
                           sx={{ ml: 2 }}
                         />
                       </Box>
-                      
+
                       <Grid container spacing={3}>
                         <Grid item xs={12} sm={6}>
                           <TextField
@@ -906,8 +906,8 @@ export default function StudentRegister() {
                             autoComplete="new-password"
                             sx={{
                               '& .MuiOutlinedInput-root': {
-                                backgroundColor: (theme) => theme.palette.mode === 'dark' 
-                                  ? 'rgba(60, 60, 60, 0.8)' 
+                                backgroundColor: (theme) => theme.palette.mode === 'dark'
+                                  ? 'rgba(60, 60, 60, 0.8)'
                                   : 'white',
                                 transition: 'all 0.3s ease',
                                 '&:hover': {
@@ -946,9 +946,9 @@ export default function StudentRegister() {
                           {form.password && (
                             <Box sx={{ mt: 1 }}>
                               <Typography variant="caption" color="text.secondary">
-                                Password Strength: 
-                                <Box component="span" sx={{ 
-                                  ml: 1, 
+                                Password Strength:
+                                <Box component="span" sx={{
+                                  ml: 1,
                                   color: form.password.length >= 8 ? '#4caf50' : '#ff9800',
                                   fontWeight: 'bold'
                                 }}>
@@ -974,8 +974,8 @@ export default function StudentRegister() {
                             autoComplete="new-password"
                             sx={{
                               '& .MuiOutlinedInput-root': {
-                                backgroundColor: (theme) => theme.palette.mode === 'dark' 
-                                  ? 'rgba(60, 60, 60, 0.8)' 
+                                backgroundColor: (theme) => theme.palette.mode === 'dark'
+                                  ? 'rgba(60, 60, 60, 0.8)'
                                   : 'white',
                                 transition: 'all 0.3s ease',
                                 '&:hover': {
@@ -1014,9 +1014,9 @@ export default function StudentRegister() {
                           {form.confirmPassword && (
                             <Box sx={{ mt: 1 }}>
                               <Typography variant="caption" color="text.secondary">
-                                Password Match: 
-                                <Box component="span" sx={{ 
-                                  ml: 1, 
+                                Password Match:
+                                <Box component="span" sx={{
+                                  ml: 1,
                                   color: form.confirmPassword === form.password ? '#4caf50' : '#f44336',
                                   fontWeight: 'bold'
                                 }}>
@@ -1035,13 +1035,13 @@ export default function StudentRegister() {
               {/* Submit Section */}
               <Box sx={{ mt: 4, textAlign: 'center' }}>
                 <Zoom in={true} timeout={1000}>
-                  <Paper 
-                    elevation={4} 
-                    sx={{ 
-                      p: 4, 
+                  <Paper
+                    elevation={4}
+                    sx={{
+                      p: 4,
                       borderRadius: 3,
-                      backgroundColor: (theme) => theme.palette.mode === 'dark' 
-                        ? 'rgba(30, 30, 30, 0.9)' 
+                      backgroundColor: (theme) => theme.palette.mode === 'dark'
+                        ? 'rgba(30, 30, 30, 0.9)'
                         : '#f8f9fa',
                       border: (theme) => theme.palette.mode === 'dark'
                         ? '2px solid rgba(25, 118, 210, 0.3)'
@@ -1061,7 +1061,7 @@ export default function StudentRegister() {
                         By creating an account, you agree to our Terms of Service and Privacy Policy
                       </Typography>
                     </Box>
-                    
+
                     <Button
                       type="submit"
                       variant="contained"
@@ -1072,7 +1072,7 @@ export default function StudentRegister() {
                         py: 2,
                         fontSize: '1.2rem',
                         fontWeight: 'bold',
-                        background: formProgress === 100 
+                        background: formProgress === 100
                           ? 'linear-gradient(45deg, #1976d2 30%, #42a5f5 90%)'
                           : 'linear-gradient(45deg, #9e9e9e 30%, #bdbdbd 90%)',
                         borderRadius: 3,
@@ -1082,7 +1082,7 @@ export default function StudentRegister() {
                             ? 'linear-gradient(45deg, #1565c0 30%, #1976d2 90%)'
                             : 'linear-gradient(45deg, #9e9e9e 30%, #bdbdbd 90%)',
                           transform: formProgress === 100 ? 'translateY(-3px)' : 'none',
-                          boxShadow: formProgress === 100 
+                          boxShadow: formProgress === 100
                             ? '0 12px 30px rgba(25, 118, 210, 0.4)'
                             : 'none'
                         },
@@ -1093,11 +1093,11 @@ export default function StudentRegister() {
                         transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)'
                       }}
                     >
-                      {loading ? 'Creating Account...' : 
-                       formProgress === 100 ? 'Create Account' : 
-                       `Complete Form (${formProgress}%)`}
+                      {loading ? 'Creating Account...' :
+                        formProgress === 100 ? 'Create Account' :
+                          `Complete Form (${formProgress}%)`}
                     </Button>
-                    
+
                     {formProgress < 100 && (
                       <Box sx={{ mt: 2 }}>
                         <Typography variant="caption" color="text.secondary">
@@ -1112,10 +1112,10 @@ export default function StudentRegister() {
               <Box sx={{ mt: 3, textAlign: 'center' }}>
                 <Typography variant="body2" color="text.secondary">
                   Already have an account?{' '}
-                  <Link 
-                    component={RouterLink} 
-                    to="/login" 
-                    sx={{ 
+                  <Link
+                    component={RouterLink}
+                    to="/login"
+                    sx={{
                       fontWeight: 'bold',
                       color: '#1976d2',
                       textDecoration: 'none',
