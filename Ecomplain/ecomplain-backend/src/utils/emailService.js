@@ -2,18 +2,35 @@ const nodemailer = require('nodemailer');
 
 // Create reusable transporter object using SMTP transport
 const createTransporter = () => {
-  // Use environment variables for email configuration
-  // For Gmail, use the 'gmail' service for better compatibility
+  // Check if using Resend (recommended for cloud platforms like Render)
+  if (process.env.RESEND_API_KEY) {
+    console.log('Using Resend SMTP for emails');
+    return nodemailer.createTransport({
+      host: 'smtp.resend.com',
+      port: 465,
+      secure: true,
+      auth: {
+        user: 'resend',
+        pass: process.env.RESEND_API_KEY,
+      },
+    });
+  }
+
+  // Fallback to Gmail or custom SMTP
+  console.log('Using Gmail/Custom SMTP for emails');
   const transporter = nodemailer.createTransport({
-    service: 'gmail', // Use Gmail service instead of manual SMTP
+    service: process.env.EMAIL_SERVICE || 'gmail',
+    host: process.env.EMAIL_HOST,
+    port: parseInt(process.env.EMAIL_PORT) || 587,
+    secure: process.env.EMAIL_SECURE === 'true',
     auth: {
       user: process.env.EMAIL_USER,
       pass: process.env.EMAIL_PASSWORD,
     },
     // Timeout settings for cloud platforms
-    connectionTimeout: 60000, // 60 seconds
-    greetingTimeout: 30000, // 30 seconds
-    socketTimeout: 60000, // 60 seconds
+    connectionTimeout: 60000,
+    greetingTimeout: 30000,
+    socketTimeout: 60000,
   });
 
   return transporter;
