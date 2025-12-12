@@ -36,6 +36,20 @@ const createTransporter = () => {
   return transporter;
 };
 
+// Get the correct "from" email address based on configuration
+const getFromEmail = () => {
+  // If using Resend without a verified domain, use their test email
+  if (process.env.RESEND_API_KEY && !process.env.EMAIL_FROM) {
+    return '"E-Complaint System" <onboarding@resend.dev>';
+  }
+  // Use custom from email if provided
+  if (process.env.EMAIL_FROM) {
+    return `"E-Complaint System" <${process.env.EMAIL_FROM}>`;
+  }
+  // Default to EMAIL_USER
+  return `"E-Complaint System" <${process.env.EMAIL_USER}>`;
+};
+
 /**
  * Send password reset email
  * @param {Object} options - Email options
@@ -46,8 +60,8 @@ const createTransporter = () => {
  */
 const sendPasswordResetEmail = async ({ email, name, resetToken, resetUrl }) => {
   try {
-    // If no email configuration, log the reset link (for development)
-    if (!process.env.EMAIL_USER || !process.env.EMAIL_PASSWORD) {
+    // If no email configuration (neither Resend nor Gmail), log for development
+    if (!process.env.RESEND_API_KEY && (!process.env.EMAIL_USER || !process.env.EMAIL_PASSWORD)) {
       console.log('\n=== PASSWORD RESET EMAIL (Development Mode) ===');
       console.log(`To: ${email}`);
       console.log(`Reset URL: ${resetUrl}`);
@@ -62,7 +76,7 @@ const sendPasswordResetEmail = async ({ email, name, resetToken, resetUrl }) => 
     await transporter.verify();
 
     const mailOptions = {
-      from: `"E-Complaint System" <${process.env.EMAIL_USER}>`,
+      from: getFromEmail(),
       to: email,
       subject: 'Password Reset Request - E-Complaint System',
       html: `
@@ -175,7 +189,7 @@ const sendComplaintCreatedEmail = async ({ email, name, complaint, complaintUrl 
     await transporter.verify();
 
     const mailOptions = {
-      from: `"E-Complaint System" <${process.env.EMAIL_USER}>`,
+      from: getFromEmail(),
       to: email,
       subject: `Complaint Submitted - ${complaint.complaintNumber || complaint._id}`,
       html: `
@@ -298,7 +312,7 @@ const sendComplaintStatusUpdateEmail = async ({ email, name, complaint, oldStatu
     };
 
     const mailOptions = {
-      from: `"E-Complaint System" <${process.env.EMAIL_USER}>`,
+      from: getFromEmail(),
       to: email,
       subject: `Complaint Status Updated - ${complaint.complaintNumber || complaint._id}`,
       html: `
@@ -405,7 +419,7 @@ const sendCommentAddedEmail = async ({ email, name, complaint, comment, commente
     await transporter.verify();
 
     const mailOptions = {
-      from: `"E-Complaint System" <${process.env.EMAIL_USER}>`,
+      from: getFromEmail(),
       to: email,
       subject: `New Comment on Complaint - ${complaint.complaintNumber || complaint._id}`,
       html: `
@@ -514,7 +528,7 @@ const sendOTPEmail = async ({ email, name, otp }) => {
     // If email credentials are wrong, sendMail will fail with clear error
 
     const mailOptions = {
-      from: `"E-Complaint System" <${process.env.EMAIL_USER}>`,
+      from: getFromEmail(),
       to: email,
       subject: 'Email Verification - OTP Code',
       html: `
@@ -598,4 +612,5 @@ module.exports = {
   sendCommentAddedEmail,
   sendOTPEmail,
 };
+
 
