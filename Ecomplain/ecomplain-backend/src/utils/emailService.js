@@ -1,12 +1,23 @@
 const nodemailer = require('nodemailer');
 
-// Initialize Resend client only if explicitly enabled and no SMTP config
+// Initialize Brevo HTTP API client (Priority 1 - works on Render!)
+let brevoClient = null;
+if (process.env.BREVO_API_KEY) {
+  const SibApiV3Sdk = require('@getbrevo/brevo');
+  brevoClient = new SibApiV3Sdk.TransactionalEmailsApi();
+  const apiKey = brevoClient.authentications['apiKey'];
+  apiKey.apiKey = process.env.BREVO_API_KEY;
+  console.log('✅ Brevo HTTP API initialized for emails');
+}
+
+// Initialize Resend client only if no Brevo
 let resendClient = null;
-if (process.env.RESEND_API_KEY && !process.env.EMAIL_HOST) {
+if (process.env.RESEND_API_KEY && !process.env.BREVO_API_KEY) {
   const { Resend } = require('resend');
   resendClient = new Resend(process.env.RESEND_API_KEY);
   console.log('✅ Resend HTTP API initialized for emails');
 }
+
 
 // Create nodemailer transporter (works with Brevo, Gmail, or any SMTP)
 const createTransporter = () => {
@@ -52,9 +63,31 @@ const getFromEmail = () => {
   return 'E-Complaint System <noreply@ecomplaint.com>';
 };
 
-// Send email using nodemailer SMTP (Brevo) or Resend API
+// Send email using Brevo HTTP API (Priority 1), Resend (Priority 2), or SMTP fallback
 const sendEmail = async ({ to, subject, html, text }) => {
-  // Priority 1: Use nodemailer SMTP if EMAIL_HOST is configured (Brevo, etc.)
+  // Priority 1: Use Brevo HTTP API if available (works on Render!)
+  if (brevoClient) {
+    console.log('📧 Sending email via Brevo HTTP API to:', to);
+    try {
+      const fromEmail = process.env.EMAIL_FROM || process.env.EMAIL_USER || 'noreply@ecomplaint.com';
+      const sendSmtpEmail = {
+        sender: { name: 'E-Complaint System', email: fromEmail },
+        to: [{ email: to }],
+        subject: subject,
+        htmlContent: html,
+        textContent: text,
+      };
+
+      const response = await brevoClient.sendTransacEmail(sendSmtpEmail);
+      console.log('✅ Email sent via Brevo:', response.messageId);
+      return { success: true, messageId: response.messageId };
+    } catch (error) {
+      console.error('Brevo error:', error);
+      throw new Error(error.message || 'Failed to send email via Brevo');
+    }
+  }
+
+  // Priority 2: Use nodemailer SMTP if EMAIL_HOST is configured
   if (process.env.EMAIL_HOST) {
     console.log('📧 Sending email via SMTP to:', to);
     const transporter = createTransporter();
@@ -68,6 +101,7 @@ const sendEmail = async ({ to, subject, html, text }) => {
     console.log('✅ Email sent via SMTP:', info.messageId);
     return { success: true, messageId: info.messageId };
   }
+
 
   // Priority 2: Use Resend HTTP API if available
   if (resendClient) {
