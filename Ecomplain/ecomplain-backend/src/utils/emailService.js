@@ -3,11 +3,9 @@ const nodemailer = require('nodemailer');
 // Create reusable transporter object using SMTP transport
 const createTransporter = () => {
   // Use environment variables for email configuration
-  // For Gmail, you can use an App Password instead of your regular password
+  // For Gmail, use the 'gmail' service for better compatibility
   const transporter = nodemailer.createTransport({
-    host: process.env.EMAIL_HOST || 'smtp.gmail.com',
-    port: parseInt(process.env.EMAIL_PORT) || 587,
-    secure: false, // true for 465, false for other ports
+    service: 'gmail', // Use Gmail service instead of manual SMTP
     auth: {
       user: process.env.EMAIL_USER,
       pass: process.env.EMAIL_PASSWORD,
@@ -16,10 +14,6 @@ const createTransporter = () => {
     connectionTimeout: 60000, // 60 seconds
     greetingTimeout: 30000, // 30 seconds
     socketTimeout: 60000, // 60 seconds
-    // TLS settings
-    tls: {
-      rejectUnauthorized: false
-    }
   });
 
   return transporter;
