@@ -602,8 +602,8 @@ const sendCommentAddedEmail = async ({ email, name, complaint, comment, commente
  */
 const sendOTPEmail = async ({ email, name, otp }) => {
   try {
-    // If no email configuration (neither Resend nor Gmail), log for development
-    if (!process.env.RESEND_API_KEY && (!process.env.EMAIL_USER || !process.env.EMAIL_PASSWORD)) {
+    // If no email configuration (neither Brevo, Resend, nor Gmail), log for development
+    if (!process.env.BREVO_API_KEY && !process.env.RESEND_API_KEY && (!process.env.EMAIL_USER || !process.env.EMAIL_PASSWORD)) {
       console.log('\n=== OTP VERIFICATION EMAIL (Development Mode) ===');
       console.log(`To: ${email}`);
       console.log(`Name: ${name}`);
