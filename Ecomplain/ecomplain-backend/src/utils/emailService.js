@@ -1,21 +1,36 @@
 const nodemailer = require('nodemailer');
 
-// Initialize Resend client if API key is present
+// Initialize Resend client only if explicitly enabled and no SMTP config
 let resendClient = null;
-if (process.env.RESEND_API_KEY) {
+if (process.env.RESEND_API_KEY && !process.env.EMAIL_HOST) {
   const { Resend } = require('resend');
   resendClient = new Resend(process.env.RESEND_API_KEY);
   console.log('✅ Resend HTTP API initialized for emails');
 }
 
-// Create nodemailer transporter for Gmail fallback (local development)
+// Create nodemailer transporter (works with Brevo, Gmail, or any SMTP)
 const createTransporter = () => {
-  console.log('Using Gmail/Custom SMTP for emails');
-  const transporter = nodemailer.createTransport({
-    service: process.env.EMAIL_SERVICE || 'gmail',
-    host: process.env.EMAIL_HOST,
-    port: parseInt(process.env.EMAIL_PORT) || 587,
-    secure: process.env.EMAIL_SECURE === 'true',
+  // If EMAIL_HOST is set, use custom SMTP (Brevo, etc.)
+  if (process.env.EMAIL_HOST) {
+    console.log('📧 Using SMTP:', process.env.EMAIL_HOST);
+    return nodemailer.createTransport({
+      host: process.env.EMAIL_HOST,
+      port: parseInt(process.env.EMAIL_PORT) || 587,
+      secure: process.env.EMAIL_SECURE === 'true',
+      auth: {
+        user: process.env.EMAIL_USER,
+        pass: process.env.EMAIL_PASSWORD,
+      },
+      connectionTimeout: 60000,
+      greetingTimeout: 30000,
+      socketTimeout: 60000,
+    });
+  }
+
+  // Fallback to Gmail service
+  console.log('📧 Using Gmail service');
+  return nodemailer.createTransport({
+    service: 'gmail',
     auth: {
       user: process.env.EMAIL_USER,
       pass: process.env.EMAIL_PASSWORD,
@@ -24,23 +39,37 @@ const createTransporter = () => {
     greetingTimeout: 30000,
     socketTimeout: 60000,
   });
-  return transporter;
 };
 
 // Get the correct "from" email address
 const getFromEmail = () => {
-  if (process.env.RESEND_API_KEY && !process.env.EMAIL_FROM) {
-    return 'E-Complaint System <onboarding@resend.dev>';
-  }
   if (process.env.EMAIL_FROM) {
     return `E-Complaint System <${process.env.EMAIL_FROM}>`;
   }
-  return `E-Complaint System <${process.env.EMAIL_USER}>`;
+  if (process.env.EMAIL_USER) {
+    return `E-Complaint System <${process.env.EMAIL_USER}>`;
+  }
+  return 'E-Complaint System <noreply@ecomplaint.com>';
 };
 
-// Send email using Resend HTTP API (for cloud) or nodemailer (for local)
+// Send email using nodemailer SMTP (Brevo) or Resend API
 const sendEmail = async ({ to, subject, html, text }) => {
-  // Use Resend HTTP API if available (works on Render)
+  // Priority 1: Use nodemailer SMTP if EMAIL_HOST is configured (Brevo, etc.)
+  if (process.env.EMAIL_HOST) {
+    console.log('📧 Sending email via SMTP to:', to);
+    const transporter = createTransporter();
+    const info = await transporter.sendMail({
+      from: getFromEmail(),
+      to,
+      subject,
+      html,
+      text,
+    });
+    console.log('✅ Email sent via SMTP:', info.messageId);
+    return { success: true, messageId: info.messageId };
+  }
+
+  // Priority 2: Use Resend HTTP API if available
   if (resendClient) {
     console.log('📧 Sending email via Resend HTTP API to:', to);
     const { data, error } = await resendClient.emails.send({
@@ -60,7 +89,8 @@ const sendEmail = async ({ to, subject, html, text }) => {
     return { success: true, messageId: data?.id };
   }
 
-  // Fallback to nodemailer (for local development)
+  // Priority 3: Fallback to Gmail
+  console.log('📧 Sending email via Gmail to:', to);
   const transporter = createTransporter();
   const info = await transporter.sendMail({
     from: getFromEmail(),
@@ -70,9 +100,10 @@ const sendEmail = async ({ to, subject, html, text }) => {
     text,
   });
 
-  console.log('✅ Email sent via nodemailer:', info.messageId);
+  console.log('✅ Email sent via Gmail:', info.messageId);
   return { success: true, messageId: info.messageId };
 };
+
 
 /**
  * Send password reset email
