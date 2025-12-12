@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react'
 import { useNavigate, Link as RouterLink } from 'react-router-dom'
 import api from '../../lib/api.js'
 import { useAuth } from '../../auth/AuthContext.jsx'
+import { useToast } from '../../contexts/ToastContext.jsx'
 import {
   Container,
   TextField,
@@ -46,6 +47,7 @@ import {
 export default function StudentRegister() {
   const nav = useNavigate()
   const { setToken, setUser } = useAuth()
+  const { showSuccess, showError } = useToast()
   const [form, setForm] = useState({
     firstName: '',
     lastName: '',
@@ -269,7 +271,8 @@ export default function StudentRegister() {
 
     setLoading(true)
     try {
-      const { data } = await api.post('/api/auth/register', {
+      // Send OTP to email instead of directly registering
+      const { data } = await api.post('/api/auth/send-otp', {
         firstName: form.firstName,
         lastName: form.lastName,
         email: form.email,
@@ -280,18 +283,19 @@ export default function StudentRegister() {
         password: form.password
       })
       
-      setToken(data.token)
-      setUser(data.student)
-      setSuccess('Registration successful! Redirecting...')
+      showSuccess('OTP sent to your email! Please check your inbox.')
+      setSuccess('OTP sent to your email! Redirecting to verification page...')
       
+      // Redirect to OTP verification page with email as query parameter
       setTimeout(() => {
-        nav('/dashboard')
+        nav(`/verify-otp?email=${encodeURIComponent(form.email)}`)
       }, 1500)
     } catch (err) {
       console.error('Registration error:', err)
       console.error('Error response:', err.response?.data)
-      const errorMessage = err.response?.data?.message || err.message || 'Failed to register. Please try again.'
+      const errorMessage = err.response?.data?.message || err.message || 'Failed to send OTP. Please try again.'
       setError(errorMessage)
+      showError(errorMessage)
     } finally {
       setLoading(false)
     }

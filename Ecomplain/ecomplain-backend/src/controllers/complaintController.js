@@ -3,6 +3,17 @@ const Student = require('../models/Student');
 const Admin = require('../models/Admin');
 const { asyncHandler } = require('../middleware/errorHandler');
 const { invalidateComplaintCache, invalidateDashboardCache } = require('../utils/cacheHelper');
+const {
+  sendComplaintCreatedEmail,
+  sendComplaintStatusUpdateEmail,
+  sendCommentAddedEmail
+} = require('../utils/emailService');
+
+// Helper to get complaint URL (adjust based on your frontend URL)
+const getComplaintUrl = (complaintId) => {
+  const baseUrl = process.env.FRONTEND_URL || process.env.CLIENT_URL || 'http://localhost:3000';
+  return `${baseUrl}/dashboard?complaint=${complaintId}`;
+};
 
 // @desc    Get all complaints (with filtering and pagination)
 // @route   GET /api/complaints
@@ -18,7 +29,8 @@ const getComplaints = asyncHandler(async (req, res) => {
     department,
     search,
     assignedTo,
-    coordinatorAssigned
+    coordinatorAssigned,
+    additionalHodAssigned
   } = req.query;
 
   // Build filter object
@@ -58,6 +70,7 @@ const getComplaints = asyncHandler(async (req, res) => {
   if (department && req.userType === 'admin') filter.department = department;
   if (assignedTo) filter.assignedTo = assignedTo;
   if (coordinatorAssigned) filter['workflow.coordinatorAssigned'] = coordinatorAssigned;
+  if (additionalHodAssigned) filter['workflow.additionalHodAssigned'] = additionalHodAssigned;
 
   // Search functionality
   if (search) {
@@ -194,6 +207,19 @@ const createComplaint = asyncHandler(async (req, res) => {
   await invalidateComplaintCache();
   await invalidateDashboardCache(req.user._id);
 
+  // Send email notification to student (non-blocking)
+  if (complaint.student && complaint.student.email) {
+    sendComplaintCreatedEmail({
+      email: complaint.student.email,
+      name: `${complaint.student.firstName} ${complaint.student.lastName}`,
+      complaint: complaint.toObject(),
+      complaintUrl: getComplaintUrl(complaint._id)
+    }).catch(err => {
+      console.error('Failed to send complaint created email:', err);
+      // Don't throw - email failure shouldn't break complaint creation
+    });
+  }
+
   res.status(201).json({
     success: true,
     message: 'Complaint created successfully',
@@ -215,6 +241,9 @@ const updateComplaint = asyncHandler(async (req, res) => {
       message: 'Complaint not found'
     });
   }
+
+  // Store old status for email notification
+  const oldStatus = complaint.status;
 
   // Check permissions
   if (req.userType === 'student') {
@@ -315,6 +344,21 @@ const updateComplaint = asyncHandler(async (req, res) => {
   // Invalidate cache after updating complaint
   await invalidateComplaintCache(complaint._id);
   await invalidateDashboardCache();
+
+  // Send email notification if status changed (non-blocking)
+  if (status && status !== oldStatus && complaint.student && complaint.student.email) {
+    sendComplaintStatusUpdateEmail({
+      email: complaint.student.email,
+      name: `${complaint.student.firstName} ${complaint.student.lastName}`,
+      complaint: complaint.toObject(),
+      oldStatus,
+      newStatus: status,
+      complaintUrl: getComplaintUrl(complaint._id)
+    }).catch(err => {
+      console.error('Failed to send status update email:', err);
+      // Don't throw - email failure shouldn't break complaint update
+    });
+  }
 
   res.json({
     success: true,
@@ -444,6 +488,40 @@ const addComment = asyncHandler(async (req, res) => {
 
   // Invalidate cache after adding comment
   await invalidateComplaintCache(complaint._id);
+
+  // Send email notification (non-blocking)
+  // Don't send email for internal comments
+  if (!isInternal) {
+    const commentedByUser = complaint.comments[complaint.comments.length - 1]?.commentedBy;
+    const commentedByName = commentedByUser 
+      ? `${commentedByUser.firstName || ''} ${commentedByUser.lastName || ''}`.trim() || 'System'
+      : 'System';
+
+    // If admin commented, notify student; if student commented, notify assigned admin
+    if (req.userType === 'admin' && complaint.student && complaint.student.email) {
+      sendCommentAddedEmail({
+        email: complaint.student.email,
+        name: `${complaint.student.firstName} ${complaint.student.lastName}`,
+        complaint: complaint.toObject(),
+        comment,
+        commentedBy: commentedByName,
+        complaintUrl: getComplaintUrl(complaint._id)
+      }).catch(err => {
+        console.error('Failed to send comment notification email:', err);
+      });
+    } else if (req.userType === 'student' && complaint.assignedTo && complaint.assignedTo.email) {
+      sendCommentAddedEmail({
+        email: complaint.assignedTo.email,
+        name: `${complaint.assignedTo.firstName} ${complaint.assignedTo.lastName}`,
+        complaint: complaint.toObject(),
+        comment,
+        commentedBy: commentedByName,
+        complaintUrl: getComplaintUrl(complaint._id)
+      }).catch(err => {
+        console.error('Failed to send comment notification email:', err);
+      });
+    }
+  }
 
   res.json({
     success: true,
@@ -614,6 +692,8 @@ const escalateComplaint = asyncHandler(async (req, res) => {
   complaint.workflow = {
     ...complaint.workflow,
     currentLevel: 'dean',
+    coordinatorAssigned: complaint.workflow?.coordinatorAssigned || null,
+    additionalHodAssigned: complaint.workflow?.additionalHodAssigned || user._id,
     deanAssigned: dean._id,
     escalatedBy: user._id,
     escalatedAt: new Date(),
@@ -1009,6 +1089,337 @@ const closeExternalComplaint = asyncHandler(async (req, res) => {
   });
 });
 
+// @desc    Upload attachments to complaint
+// @route   POST /api/complaints/:id/attachments
+// @access  Private
+const uploadAttachments = asyncHandler(async (req, res) => {
+  const complaintId = req.params.id;
+  
+  if (!req.files || req.files.length === 0) {
+    return res.status(400).json({
+      success: false,
+      message: 'Please upload at least one file'
+    });
+  }
+
+  // Find complaint
+  const complaint = await Complaint.findById(complaintId);
+  if (!complaint) {
+    return res.status(404).json({
+      success: false,
+      message: 'Complaint not found'
+    });
+  }
+
+  // Check permissions
+  if (req.userType === 'student') {
+    if (complaint.student.toString() !== req.user._id.toString()) {
+      return res.status(403).json({
+        success: false,
+        message: 'Access denied'
+      });
+    }
+  }
+
+  // Process uploaded files with proper logging
+  const attachments = req.files.map((file, index) => {
+    // Determine file type
+    const isPdf = file.mimetype === 'application/pdf';
+    const isImage = file.mimetype.startsWith('image/');
+    
+    // Get the secure URL from Cloudinary
+    // CloudinaryStorage provides: path, url, secure_url, public_id, resource_type, etc.
+    const cloudinaryUrl = file.secure_url || file.url || file.path;
+    
+    // Log upload details for debugging
+    console.log(`[Upload ${index + 1}] File upload details:`, {
+      originalName: file.originalname,
+      mimetype: file.mimetype,
+      size: file.size,
+      isPdf,
+      isImage,
+      cloudinaryUrl,
+      resource_type: file.resource_type || 'unknown',
+      public_id: file.public_id || 'unknown'
+    });
+    
+    // Validate that we have a Cloudinary URL
+    if (!cloudinaryUrl) {
+      console.error(`[Upload ${index + 1}] ERROR: No URL returned from Cloudinary for file:`, file.originalname);
+      console.error(`[Upload ${index + 1}] File object keys:`, Object.keys(file));
+      console.error(`[Upload ${index + 1}] File object:`, JSON.stringify(file, null, 2));
+      throw new Error(`Failed to get upload URL for file: ${file.originalname}`);
+    }
+    
+    // Ensure we have a full Cloudinary URL (not relative path)
+    if (!cloudinaryUrl.startsWith('http://') && !cloudinaryUrl.startsWith('https://')) {
+      console.error(`[Upload ${index + 1}] ERROR: URL is not a full URL (missing http/https):`, cloudinaryUrl);
+      throw new Error(`Invalid URL format for file: ${file.originalname}. Expected full Cloudinary URL.`);
+    }
+    
+    // Ensure PDFs have the correct Cloudinary URL format
+    if (isPdf && !cloudinaryUrl.includes('cloudinary.com')) {
+      console.error(`[Upload ${index + 1}] ERROR: PDF URL is not a Cloudinary URL:`, cloudinaryUrl);
+      throw new Error(`Invalid PDF URL format for file: ${file.originalname}. Expected Cloudinary URL.`);
+    }
+    
+    // Log the final URL that will be stored
+    console.log(`[Upload ${index + 1}] Final URL to be stored in database:`, cloudinaryUrl);
+    
+    // Log successful PDF upload
+    if (isPdf) {
+      console.log(`[Upload ${index + 1}] PDF successfully uploaded to Cloudinary:`, {
+        url: cloudinaryUrl,
+        resource_type: file.resource_type || 'raw',
+        public_id: file.public_id
+      });
+    }
+    
+    return {
+      filename: file.filename || file.originalname,
+      originalName: file.originalname,
+      path: cloudinaryUrl, // Store the Cloudinary secure URL
+      size: file.size || 0,
+      uploadedAt: new Date()
+    };
+  });
+
+  // Add attachments to complaint
+  complaint.attachments.push(...attachments);
+  await complaint.save();
+
+  // Invalidate cache
+  await invalidateComplaintCache();
+  await invalidateDashboardCache(complaint.student.toString());
+
+  res.json({
+    success: true,
+    message: 'Attachments uploaded successfully',
+    attachments: complaint.attachments.slice(-attachments.length) // Return only newly added attachments
+  });
+});
+
+// @desc    Proxy image file from Cloudinary
+// @route   GET /api/complaints/attachments/image
+// @access  Public (but validates Cloudinary URL for security)
+const proxyImage = (req, res) => {
+  const { url } = req.query;
+  
+  if (!url) {
+    return res.status(400).json({
+      success: false,
+      message: 'Image URL is required'
+    });
+  }
+
+  try {
+    // Validate that the URL is from Cloudinary
+    if (!url.includes('cloudinary.com')) {
+      return res.status(400).json({
+        success: false,
+        message: 'Invalid image URL'
+      });
+    }
+
+    // Use Node.js built-in https/http to fetch the image
+    const https = require('https');
+    const http = require('http');
+    const { URL: URLParser } = require('url');
+    
+    const parsedUrl = new URLParser(url);
+    const client = parsedUrl.protocol === 'https:' ? https : http;
+    
+    const request = client.get(url, (response) => {
+      // Handle redirects (max 5 redirects to prevent loops)
+      if ((response.statusCode === 301 || response.statusCode === 302 || response.statusCode === 307 || response.statusCode === 308) && response.headers.location) {
+        const redirectUrl = response.headers.location;
+        const redirectCount = (req.redirectCount || 0) + 1;
+        
+        if (redirectCount > 5) {
+          return res.status(500).json({
+            success: false,
+            message: 'Too many redirects'
+          });
+        }
+        
+        // Handle relative redirects
+        const fullRedirectUrl = redirectUrl.startsWith('http') 
+          ? redirectUrl 
+          : `${parsedUrl.protocol}//${parsedUrl.host}${redirectUrl}`;
+        
+        return proxyImage({ ...req, query: { url: fullRedirectUrl }, redirectCount }, res);
+      }
+
+      if (response.statusCode !== 200) {
+        if (!res.headersSent) {
+          return res.status(response.statusCode).json({
+            success: false,
+            message: 'Failed to fetch image from Cloudinary'
+          });
+        }
+        return;
+      }
+
+      // Determine content type from response or URL
+      let contentType = response.headers['content-type'] || 'image/jpeg';
+      if (!contentType.startsWith('image/')) {
+        // Try to determine from URL extension
+        if (url.match(/\.(jpg|jpeg)$/i)) contentType = 'image/jpeg';
+        else if (url.match(/\.png$/i)) contentType = 'image/png';
+        else if (url.match(/\.gif$/i)) contentType = 'image/gif';
+        else if (url.match(/\.webp$/i)) contentType = 'image/webp';
+        else contentType = 'image/jpeg'; // Default
+      }
+
+      // Set appropriate headers
+      if (!res.headersSent) {
+        res.setHeader('Content-Type', contentType);
+        res.setHeader('Content-Disposition', `inline; filename="image"`);
+        res.setHeader('Cache-Control', 'public, max-age=3600'); // Cache for 1 hour
+        res.setHeader('Access-Control-Allow-Origin', '*');
+        res.setHeader('Access-Control-Allow-Methods', 'GET');
+      }
+      
+      // Pipe the response directly to the client
+      response.pipe(res);
+    });
+    
+    request.on('error', (error) => {
+      console.error('Error proxying image:', error);
+      if (!res.headersSent) {
+        res.status(500).json({
+          success: false,
+          message: 'Error fetching image'
+        });
+      }
+    });
+    
+    // Set timeout
+    request.setTimeout(30000, () => {
+      request.destroy();
+      if (!res.headersSent) {
+        res.status(504).json({
+          success: false,
+          message: 'Request timeout'
+        });
+      }
+    });
+  } catch (error) {
+    console.error('Error proxying image:', error);
+    if (!res.headersSent) {
+      res.status(500).json({
+        success: false,
+        message: 'Error fetching image'
+      });
+    }
+  }
+};
+
+// @desc    Proxy PDF file from Cloudinary
+// @route   GET /api/complaints/attachments/pdf
+// @access  Public (but validates Cloudinary URL for security)
+const proxyPdf = (req, res) => {
+  const { url } = req.query;
+  
+  if (!url) {
+    return res.status(400).json({
+      success: false,
+      message: 'PDF URL is required'
+    });
+  }
+
+  try {
+    // Validate that the URL is from Cloudinary
+    if (!url.includes('cloudinary.com')) {
+      return res.status(400).json({
+        success: false,
+        message: 'Invalid PDF URL'
+      });
+    }
+
+    // Use Node.js built-in https/http to fetch the PDF
+    const https = require('https');
+    const http = require('http');
+    const { URL: URLParser } = require('url');
+    
+    const parsedUrl = new URLParser(url);
+    const client = parsedUrl.protocol === 'https:' ? https : http;
+    
+    const request = client.get(url, (response) => {
+      // Handle redirects (max 5 redirects to prevent loops)
+      if ((response.statusCode === 301 || response.statusCode === 302 || response.statusCode === 307 || response.statusCode === 308) && response.headers.location) {
+        const redirectUrl = response.headers.location;
+        const redirectCount = (req.redirectCount || 0) + 1;
+        
+        if (redirectCount > 5) {
+          return res.status(500).json({
+            success: false,
+            message: 'Too many redirects'
+          });
+        }
+        
+        // Handle relative redirects
+        const fullRedirectUrl = redirectUrl.startsWith('http') 
+          ? redirectUrl 
+          : `${parsedUrl.protocol}//${parsedUrl.host}${redirectUrl}`;
+        
+        return proxyPdf({ ...req, query: { url: fullRedirectUrl }, redirectCount }, res);
+      }
+
+      if (response.statusCode !== 200) {
+        if (!res.headersSent) {
+          return res.status(response.statusCode).json({
+            success: false,
+            message: 'Failed to fetch PDF from Cloudinary'
+          });
+        }
+        return;
+      }
+
+      // Set appropriate headers
+      if (!res.headersSent) {
+        res.setHeader('Content-Type', 'application/pdf');
+        res.setHeader('Content-Disposition', `inline; filename="document.pdf"`);
+        res.setHeader('Cache-Control', 'public, max-age=3600'); // Cache for 1 hour
+        res.setHeader('Access-Control-Allow-Origin', '*');
+        res.setHeader('Access-Control-Allow-Methods', 'GET');
+      }
+      
+      // Pipe the response directly to the client
+      response.pipe(res);
+    });
+    
+    request.on('error', (error) => {
+      console.error('Error proxying PDF:', error);
+      if (!res.headersSent) {
+        res.status(500).json({
+          success: false,
+          message: 'Error fetching PDF'
+        });
+      }
+    });
+    
+    // Set timeout
+    request.setTimeout(30000, () => {
+      request.destroy();
+      if (!res.headersSent) {
+        res.status(504).json({
+          success: false,
+          message: 'Request timeout'
+        });
+      }
+    });
+  } catch (error) {
+    console.error('Error proxying PDF:', error);
+    if (!res.headersSent) {
+      res.status(500).json({
+        success: false,
+        message: 'Error fetching PDF'
+      });
+    }
+  }
+};
+
 module.exports = {
   getComplaints,
   getComplaint,
@@ -1023,5 +1434,8 @@ module.exports = {
   forwardComplaint,
   forwardToExternal,
   acknowledgeExternal,
-  closeExternalComplaint
+  closeExternalComplaint,
+  uploadAttachments,
+  proxyImage,
+  proxyPdf
 };

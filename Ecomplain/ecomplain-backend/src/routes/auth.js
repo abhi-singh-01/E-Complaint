@@ -2,6 +2,9 @@ const express = require('express');
 const router = express.Router();
 const {
   registerStudent,
+  sendRegistrationOTP,
+  verifyOTPAndRegister,
+  resendRegistrationOTP,
   loginStudent,
   loginAdmin,
   getMe,
@@ -20,7 +23,12 @@ const {
 const { authenticateToken } = require('../middleware/auth');
 
 // Public routes
-router.post('/register', validateStudentRegistration, registerStudent);
+// OTP-based registration flow
+router.post('/send-otp', validateStudentRegistration, sendRegistrationOTP);
+router.post('/verify-otp', verifyOTPAndRegister);
+router.post('/resend-otp', resendRegistrationOTP);
+// Keep old register endpoint for backwards compatibility (redirects to OTP flow)
+router.post('/register', validateStudentRegistration, sendRegistrationOTP);
 router.post('/login', validateStudentLogin, loginStudent);
 router.post('/admin/login', validateAdminLogin, loginAdmin);
 router.post('/refresh', refreshToken);

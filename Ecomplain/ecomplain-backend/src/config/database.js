@@ -17,6 +17,10 @@ const connectDB = async () => {
     // Check if we're in a serverless environment (Vercel, AWS Lambda, etc.)
     const isServerless = process.env.VERCEL || process.env.AWS_LAMBDA_FUNCTION_NAME || process.env.NODE_ENV === 'production';
     
+    // Configure Mongoose buffering options (set globally, not in connection options)
+    // Disable mongoose buffering - operations fail immediately if no connection (important for serverless)
+    mongoose.set('bufferCommands', false);
+    
     const options = {
       // Connection pool options - adjusted for serverless environments
       maxPoolSize: isServerless ? 10 : 50, // Smaller pool for serverless
@@ -25,8 +29,6 @@ const connectDB = async () => {
       socketTimeoutMS: isServerless ? 60000 : 45000, // Longer socket timeout for serverless
       connectTimeoutMS: isServerless ? 15000 : 10000, // Longer connection timeout for serverless
       family: 4, // Use IPv4, skip trying IPv6
-      bufferCommands: false, // Disable mongoose buffering (important for serverless)
-      bufferMaxEntries: 0, // Disable mongoose buffering completely
       // Retry options
       retryWrites: true, // Enable retryable writes
       retryReads: true, // Enable retryable reads

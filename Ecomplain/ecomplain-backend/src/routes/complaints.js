@@ -1,4 +1,5 @@
 const express = require('express');
+const multer = require('multer');
 const router = express.Router();
 const {
   getComplaints,
@@ -14,8 +15,12 @@ const {
   forwardComplaint,
   forwardToExternal,
   acknowledgeExternal,
-  closeExternalComplaint
+  closeExternalComplaint,
+  uploadAttachments,
+  proxyImage,
+  proxyPdf
 } = require('../controllers/complaintController');
+const { uploadComplaintAttachments } = require('../config/cloudinary');
 const {
   validateComplaintCreation,
   validateComplaintUpdate,
@@ -30,7 +35,11 @@ const {
   requirePermission
 } = require('../middleware/auth');
 
-// All routes require authentication
+// Proxy routes (before auth middleware - needs to be accessible for iframe)
+router.get('/attachments/image', proxyImage);
+router.get('/attachments/pdf', proxyPdf);
+
+// All other routes require authentication
 router.use(authenticateToken);
 
 // Public complaint routes (for students)
@@ -108,5 +117,47 @@ router.put('/:id/assign-additional',
   validateObjectId('id'),
   assignToAdditionalHOD
 );
+
+// Multer error handling middleware
+const handleMulterError = (err, req, res, next) => {
+  if (err instanceof multer.MulterError) {
+    if (err.code === 'LIMIT_FILE_SIZE') {
+      return res.status(400).json({
+        success: false,
+        message: 'File size exceeds the 10MB limit'
+      });
+    }
+    if (err.code === 'LIMIT_FILE_COUNT') {
+      return res.status(400).json({
+        success: false,
+        message: 'Too many files. Maximum 5 files allowed per complaint'
+      });
+    }
+    return res.status(400).json({
+      success: false,
+      message: err.message || 'File upload error'
+    });
+  }
+  if (err) {
+    return res.status(400).json({
+      success: false,
+      message: err.message || 'File upload error'
+    });
+  }
+  next();
+};
+
+// Upload attachments route
+router.post('/:id/attachments',
+  validateObjectId('id'),
+  uploadComplaintAttachments.array('attachments', 5),
+  handleMulterError,
+  uploadAttachments
+);
+
+// Proxy routes (before :id routes to avoid conflicts)
+// Note: These routes are public but validate the URL is from Cloudinary for security
+router.get('/attachments/image', proxyImage);
+router.get('/attachments/pdf', proxyPdf);
 
 module.exports = router;

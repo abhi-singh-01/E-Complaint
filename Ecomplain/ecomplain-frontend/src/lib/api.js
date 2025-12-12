@@ -10,7 +10,7 @@ const api = axios.create({
 
 // Request interceptor for caching and optimization
 const requestCache = new Map();
-const CACHE_TTL = 2 * 60 * 1000; // 2 minutes
+const CACHE_TTL = 30 * 1000; // 30 seconds (reduced from 2 minutes for fresher data)
 
 // Clean up expired cache entries
 setInterval(() => {
@@ -20,22 +20,46 @@ setInterval(() => {
       requestCache.delete(key);
     }
   }
-}, 5 * 60 * 1000); // Clean every 5 minutes
+}, 60 * 1000); // Clean every 1 minute
+
+// Helper to generate cache key excluding timestamp and noCache params
+const generateCacheKey = (url, params) => {
+  if (!params || params.noCache) return null; // Don't cache if noCache flag is set
+  
+  // Exclude timestamp params and noCache from cache key
+  const filteredParams = { ...params };
+  delete filteredParams._t;
+  delete filteredParams._ts;
+  delete filteredParams.timestamp;
+  delete filteredParams.noCache;
+  
+  // Sort keys for consistent cache key generation
+  const sortedKeys = Object.keys(filteredParams).sort();
+  const sortedParams = {};
+  sortedKeys.forEach(key => {
+    sortedParams[key] = filteredParams[key];
+  });
+  
+  return `${url}?${JSON.stringify(sortedParams)}`;
+};
 
 api.interceptors.request.use(
   (config) => {
-    // Only cache GET requests
+    // Only cache GET requests and if noCache is not set
     if (config.method === 'get' && !config.params?.noCache) {
-      const cacheKey = `${config.url}?${JSON.stringify(config.params || {})}`;
-      const cached = requestCache.get(cacheKey);
+      const cacheKey = generateCacheKey(config.url, config.params);
       
-      if (cached && cached.expiresAt > Date.now()) {
-        // Return cached response
-        return Promise.reject({
-          __cached: true,
-          data: cached.data,
-          config
-        });
+      if (cacheKey) {
+        const cached = requestCache.get(cacheKey);
+        
+        if (cached && cached.expiresAt > Date.now()) {
+          // Return cached response
+          return Promise.reject({
+            __cached: true,
+            data: cached.data,
+            config
+          });
+        }
       }
     }
     
@@ -49,14 +73,35 @@ api.interceptors.request.use(
 // Response interceptor for caching and error handling
 api.interceptors.response.use(
   (response) => {
-    // Cache successful GET responses
+    // Cache successful GET responses (exclude timestamp params from cache key)
     const config = response.config;
     if (config.method === 'get' && !config.params?.noCache) {
-      const cacheKey = `${config.url}?${JSON.stringify(config.params || {})}`;
-      requestCache.set(cacheKey, {
-        data: response.data,
-        expiresAt: Date.now() + CACHE_TTL
-      });
+      const cacheKey = generateCacheKey(config.url, config.params);
+      
+      if (cacheKey) {
+        requestCache.set(cacheKey, {
+          data: response.data,
+          expiresAt: Date.now() + CACHE_TTL
+        });
+      }
+    }
+    
+    // Clear related cache on mutations (POST, PUT, DELETE, PATCH)
+    // This ensures fresh data after creating/updating/deleting resources
+    if (['post', 'put', 'delete', 'patch'].includes(config.method?.toLowerCase())) {
+      const urlPath = config.url?.split('?')[0]; // Get path without query params
+      
+      // Clear cache for related endpoints
+      if (urlPath?.includes('/complaints')) {
+        clearApiCache('/api/complaints');
+        clearApiCache('/api/dashboard');
+      } else if (urlPath?.includes('/profile')) {
+        clearApiCache('/api/profile');
+        clearApiCache('/api/dashboard');
+      } else if (urlPath?.includes('/admin')) {
+        clearApiCache('/api/admin');
+        clearApiCache('/api/dashboard');
+      }
     }
     
     return response;

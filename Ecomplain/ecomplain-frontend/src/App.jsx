@@ -3,15 +3,18 @@ import { Suspense, lazy } from 'react'
 import './App.css'
 import { AuthProvider, useAuth } from './auth/AuthContext.jsx'
 import { ThemeProvider, useTheme as useCustomTheme } from './contexts/ThemeContext.jsx'
+import { ToastProvider } from './contexts/ToastContext.jsx'
 import { createAppTheme } from './theme/theme.js'
 import { ThemeProvider as MuiThemeProvider } from '@mui/material/styles'
 import { CssBaseline, Box, CircularProgress } from '@mui/material'
 import Header from './components/Header.jsx'
 import StudentNavbar from './components/StudentNavbar.jsx'
 import Footer from './components/Footer.jsx'
+import ErrorBoundary from './components/ErrorBoundary.jsx'
 
 // Lazy load heavy components
 const StudentRegister = lazy(() => import('./pages/student/StudentRegister.jsx'))
+const StudentOTPVerification = lazy(() => import('./pages/student/StudentOTPVerification.jsx'))
 const StudentLogin = lazy(() => import('./pages/student/StudentLogin.jsx'))
 const StudentForgotPassword = lazy(() => import('./pages/student/StudentForgotPassword.jsx'))
 const StudentResetPassword = lazy(() => import('./pages/student/StudentResetPassword.jsx'))
@@ -70,25 +73,27 @@ function App() {
   return (
     <MuiThemeProvider theme={muiTheme}>
       <CssBaseline />
-      <AuthProvider>
-      <Box sx={{ display: 'flex', flexDirection: 'column', minHeight: '100vh', margin: 0, padding: 0 }}>
-          <ConditionalNavbar />
+      <ErrorBoundary>
+        <ToastProvider>
+          <AuthProvider>
+          <Box sx={{ display: 'flex', flexDirection: 'column', minHeight: '100vh', margin: 0, padding: 0 }}>
+              <ConditionalNavbar />
 
-      <Box sx={{ 
-        mt: { xs: 7, md: 8 }, 
-        flexGrow: 1, 
-        marginBottom: 0,
-        '& .full-screen-page': {
-          marginTop: 0,
-          width: '100vw',
-          position: 'relative',
-          left: '50%',
-          right: '50%',
-          marginLeft: '-50vw',
-          marginRight: '-50vw'
-        }
-      }}>
-        <Routes>
+          <Box sx={{ 
+            mt: { xs: 7, md: 8 }, 
+            flexGrow: 1, 
+            marginBottom: 0,
+            '& .full-screen-page': {
+              marginTop: 0,
+              width: '100vw',
+              position: 'relative',
+              left: '50%',
+              right: '50%',
+              marginLeft: '-50vw',
+              marginRight: '-50vw'
+            }
+          }}>
+            <Routes>
           <Route path="/" element={
             <div className="full-screen-page">
               <Suspense fallback={<Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '50vh' }}><CircularProgress /></Box>}>
@@ -106,6 +111,11 @@ function App() {
           <Route path="/register" element={
             <Suspense fallback={<Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '50vh' }}><CircularProgress /></Box>}>
               <StudentRegister />
+            </Suspense>
+          } />
+          <Route path="/verify-otp" element={
+            <Suspense fallback={<Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '50vh' }}><CircularProgress /></Box>}>
+              <StudentOTPVerification />
             </Suspense>
           } />
           <Route path="/login" element={
@@ -149,12 +159,14 @@ function App() {
               </Suspense>
             </ProtectedRoute>
           } />
-        </Routes>
-      </Box>
-      
-      <ConditionalFooter />
-      </Box>
-      </AuthProvider>
+            </Routes>
+          </Box>
+          
+          <ConditionalFooter />
+          </Box>
+          </AuthProvider>
+        </ToastProvider>
+      </ErrorBoundary>
     </MuiThemeProvider>
   )
 }

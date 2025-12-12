@@ -36,7 +36,8 @@ import {
   MenuItem,
   FormControl,
   InputLabel,
-  Select
+  Select,
+  CircularProgress
 } from '@mui/material'
 import {
   Assignment,
@@ -59,13 +60,21 @@ import {
   MoreVert,
   Refresh,
   Download,
-  Delete
+  Delete,
+  PictureAsPdf,
+  Image as ImageIcon,
+  InsertDriveFile,
+  AttachFile,
+  ZoomIn,
+  Close,
+  OpenInNew
 } from '@mui/icons-material'
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip as RechartsTooltip, Legend, BarChart, Bar, XAxis, YAxis, CartesianGrid } from 'recharts'
 
 export default function CoordinatorDashboard() {
   const { user, setUser } = useAuth()
   const { isDarkMode } = useCustomTheme()
+
   const [activeTab, setActiveTab] = useState(0)
   const [complaints, setComplaints] = useState([])
   const [loading, setLoading] = useState(true)
@@ -78,31 +87,83 @@ export default function CoordinatorDashboard() {
   const [comment, setComment] = useState('')
   const [forwardReason, setForwardReason] = useState('')
   const [targetLevel, setTargetLevel] = useState('additional_hod')
+  const [imagePreviewOpen, setImagePreviewOpen] = useState(false)
+  const [previewImageUrl, setPreviewImageUrl] = useState('')
+  const [previewImageName, setPreviewImageName] = useState('')
+  const [pdfPreviewOpen, setPdfPreviewOpen] = useState(false)
+  const [previewPdfUrl, setPreviewPdfUrl] = useState('')
+  const [previewPdfName, setPreviewPdfName] = useState('')
+  const [pdfBlobUrl, setPdfBlobUrl] = useState('')
+  const [pdfLoading, setPdfLoading] = useState(true)
   const [filterStatus, setFilterStatus] = useState('all')
   const [anchorEl, setAnchorEl] = useState(null)
+
+  // Helper function to get proxied image URL
+  const getImageProxyUrl = (imageUrl) => {
+    if (!imageUrl) return '';
+    if (imageUrl.includes('cloudinary.com')) {
+      return `/api/complaints/attachments/image?url=${encodeURIComponent(imageUrl)}`;
+    }
+    return imageUrl;
+  }
+
+  // Helper function to get proxied PDF URL
+  const getPdfProxyUrl = (pdfUrl) => {
+    if (!pdfUrl) {
+      console.warn('[CoordinatorDashboard] No PDF URL provided');
+      return '';
+    }
+
+    // Check if it's already a full Cloudinary URL
+    if (pdfUrl.includes('cloudinary.com')) {
+      const proxyUrl = `/api/complaints/attachments/pdf?url=${encodeURIComponent(pdfUrl)}`;
+      console.log('[CoordinatorDashboard] Using Cloudinary PDF URL:', { original: pdfUrl, proxy: proxyUrl });
+      return proxyUrl;
+    }
+
+    // Check if it's a relative URL or just a filename - this is the problem!
+    if (pdfUrl.startsWith('/') || !pdfUrl.startsWith('http')) {
+      console.error('[CoordinatorDashboard] ERROR: Invalid PDF URL format:', pdfUrl);
+      console.error('[CoordinatorDashboard] Expected full Cloudinary URL. Attachment path from DB:', pdfUrl);
+      // Don't return relative URLs as they will cause React Router navigation
+      return '';
+    }
+
+    // If it's a full URL but not Cloudinary, return as-is
+    return pdfUrl;
+  }
+
+  // Cleanup blob URL when component unmounts
+  useEffect(() => {
+    return () => {
+      if (pdfBlobUrl) {
+        URL.revokeObjectURL(pdfBlobUrl);
+      }
+    };
+  }, []);
 
   // Fetch complaints assigned to this coordinator
   const fetchComplaints = async (statusFilter = 'all') => {
     try {
       setLoading(true)
       setError('')
-      
+
       const userId = user._id || user.id
-      
+
       const { data } = await api.get('/api/complaints', {
         params: {
           department: user.department,
           assignedTo: userId,
-          status: statusFilter === 'all' ? undefined : 
+          status: statusFilter === 'all' ? undefined :
             statusFilter === 'pending' ? 'Pending' :
-            statusFilter === 'in progress' ? 'In Progress' :
-            statusFilter === 'resolved' ? 'Resolved' :
-            statusFilter === 'rejected' ? 'Rejected' :
-            statusFilter === 'closed' ? 'Closed' : statusFilter,
+              statusFilter === 'in progress' ? 'In Progress' :
+                statusFilter === 'resolved' ? 'Resolved' :
+                  statusFilter === 'rejected' ? 'Rejected' :
+                    statusFilter === 'closed' ? 'Closed' : statusFilter,
           limit: 100
         }
       })
-      
+
       setComplaints(data.complaints || [])
     } catch (err) {
       if (err.__CACHED__) {
@@ -110,7 +171,7 @@ export default function CoordinatorDashboard() {
         return
       }
       console.error('Error fetching complaints:', err)
-      
+
       if (err.response?.status === 401) {
         setError('Authentication failed. Please login again.')
       } else if (err.response?.status === 403) {
@@ -132,9 +193,9 @@ export default function CoordinatorDashboard() {
     try {
       setLoading(true)
       setError('')
-      
+
       const userId = user._id || user.id
-      
+
       // Fetch complaints currently assigned to coordinator
       const { data: assignedData } = await api.get('/api/complaints', {
         params: {
@@ -143,7 +204,7 @@ export default function CoordinatorDashboard() {
           limit: 100
         }
       })
-      
+
       // Fetch resolved complaints that were originally assigned to this coordinator
       // (even if they were resolved at dean, additional_hod, or panel levels)
       const { data: coordinatorAssignedData } = await api.get('/api/complaints', {
@@ -154,26 +215,26 @@ export default function CoordinatorDashboard() {
           limit: 100
         }
       })
-      
+
       // Merge the two lists and remove duplicates
       const assignedComplaints = assignedData.complaints || []
       const coordinatorResolvedComplaints = coordinatorAssignedData.complaints || []
-      
+
       // Create a map to avoid duplicates
       const complaintMap = new Map()
-      
+
       // Add currently assigned complaints
       assignedComplaints.forEach(complaint => {
         complaintMap.set(complaint._id, complaint)
       })
-      
+
       // Add resolved complaints originally assigned to coordinator
       coordinatorResolvedComplaints.forEach(complaint => {
         if (!complaintMap.has(complaint._id)) {
           complaintMap.set(complaint._id, complaint)
         }
       })
-      
+
       // Convert map back to array
       setComplaints(Array.from(complaintMap.values()))
     } catch (err) {
@@ -187,7 +248,7 @@ export default function CoordinatorDashboard() {
   // Handle tab change
   const handleTabChange = (event, newValue) => {
     setActiveTab(newValue)
-    
+
     if (newValue === 0) {
       fetchComplaints(filterStatus)
     } else if (newValue === 1) {
@@ -204,7 +265,7 @@ export default function CoordinatorDashboard() {
       }
     } else {
       setError('User information not available. Please login again.')
-      
+
       const fetchUserProfile = async () => {
         try {
           const { data } = await api.get('/api/auth/me')
@@ -215,7 +276,7 @@ export default function CoordinatorDashboard() {
           console.error('Failed to fetch user profile:', err)
         }
       }
-      
+
       fetchUserProfile()
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -242,6 +303,19 @@ export default function CoordinatorDashboard() {
   const handleAddComment = async () => {
     if (!comment.trim()) return
 
+    // Prevent operations on rejected complaints
+    if (selectedComplaint?.status?.toLowerCase() === 'rejected') {
+      setError('Cannot add comments to rejected complaints')
+      return
+    }
+
+    // Prevent operations on forwarded complaints
+    const isForwarded = selectedComplaint?.workflow?.currentLevel !== 'coordinator' || selectedComplaint?.workflow?.escalatedAt;
+    if (isForwarded) {
+      setError('Cannot add comments to forwarded complaints')
+      return
+    }
+
     try {
       await api.post(`/api/complaints/${selectedComplaint._id}/comments`, {
         comment: comment.trim(),
@@ -260,12 +334,25 @@ export default function CoordinatorDashboard() {
   const handleForward = async () => {
     if (!selectedComplaint) return
 
+    // Prevent operations on rejected complaints
+    if (selectedComplaint?.status?.toLowerCase() === 'rejected') {
+      setError('Cannot forward rejected complaints')
+      return
+    }
+
+    // Prevent operations on forwarded complaints
+    const isForwarded = selectedComplaint?.workflow?.currentLevel !== 'coordinator' || selectedComplaint?.workflow?.escalatedAt;
+    if (isForwarded) {
+      setError('Cannot forward already forwarded complaints')
+      return
+    }
+
     try {
       await api.put(`/api/complaints/${selectedComplaint._id}/forward`, {
         targetLevel,
         reason: forwardReason.trim() || undefined
       })
-      
+
       setForwardReason('')
       setForwardDialogOpen(false)
       setSelectedComplaint(null)
@@ -419,7 +506,7 @@ export default function CoordinatorDashboard() {
         {/* Statistics Cards */}
         <Grid container spacing={2} sx={{ mb: 4 }}>
           <Grid item xs={12} sm={6} md={2.4} sx={{ display: 'flex', minHeight: 0 }}>
-            <Card sx={{ 
+            <Card sx={{
               borderRadius: '16px',
               boxShadow: '0 4px 12px rgba(0, 0, 0, 0.1)',
               transition: 'transform 0.2s ease',
@@ -430,12 +517,12 @@ export default function CoordinatorDashboard() {
               flexDirection: 'column',
               '&:hover': { transform: 'translateY(-4px)' }
             }}>
-              <CardContent sx={{ 
-                textAlign: 'center', 
-                p: 2, 
-                display: 'flex', 
-                flexDirection: 'column', 
-                justifyContent: 'center', 
+              <CardContent sx={{
+                textAlign: 'center',
+                p: 2,
+                display: 'flex',
+                flexDirection: 'column',
+                justifyContent: 'center',
                 alignItems: 'center',
                 flexGrow: 1,
                 height: '100%'
@@ -452,7 +539,7 @@ export default function CoordinatorDashboard() {
           </Grid>
 
           <Grid item xs={12} sm={6} md={2.4} sx={{ display: 'flex', minHeight: 0 }}>
-            <Card sx={{ 
+            <Card sx={{
               borderRadius: '16px',
               boxShadow: '0 4px 12px rgba(0, 0, 0, 0.1)',
               transition: 'transform 0.2s ease',
@@ -463,12 +550,12 @@ export default function CoordinatorDashboard() {
               flexDirection: 'column',
               '&:hover': { transform: 'translateY(-4px)' }
             }}>
-              <CardContent sx={{ 
-                textAlign: 'center', 
-                p: 2, 
-                display: 'flex', 
-                flexDirection: 'column', 
-                justifyContent: 'center', 
+              <CardContent sx={{
+                textAlign: 'center',
+                p: 2,
+                display: 'flex',
+                flexDirection: 'column',
+                justifyContent: 'center',
                 alignItems: 'center',
                 flexGrow: 1,
                 height: '100%'
@@ -485,7 +572,7 @@ export default function CoordinatorDashboard() {
           </Grid>
 
           <Grid item xs={12} sm={6} md={2.4} sx={{ display: 'flex', minHeight: 0 }}>
-            <Card sx={{ 
+            <Card sx={{
               borderRadius: '16px',
               boxShadow: '0 4px 12px rgba(0, 0, 0, 0.1)',
               transition: 'transform 0.2s ease',
@@ -496,12 +583,12 @@ export default function CoordinatorDashboard() {
               flexDirection: 'column',
               '&:hover': { transform: 'translateY(-4px)' }
             }}>
-              <CardContent sx={{ 
-                textAlign: 'center', 
-                p: 2, 
-                display: 'flex', 
-                flexDirection: 'column', 
-                justifyContent: 'center', 
+              <CardContent sx={{
+                textAlign: 'center',
+                p: 2,
+                display: 'flex',
+                flexDirection: 'column',
+                justifyContent: 'center',
                 alignItems: 'center',
                 flexGrow: 1,
                 height: '100%'
@@ -518,7 +605,7 @@ export default function CoordinatorDashboard() {
           </Grid>
 
           <Grid item xs={12} sm={6} md={2.4} sx={{ display: 'flex', minHeight: 0 }}>
-            <Card sx={{ 
+            <Card sx={{
               borderRadius: '16px',
               boxShadow: '0 4px 12px rgba(0, 0, 0, 0.1)',
               transition: 'transform 0.2s ease',
@@ -529,12 +616,12 @@ export default function CoordinatorDashboard() {
               flexDirection: 'column',
               '&:hover': { transform: 'translateY(-4px)' }
             }}>
-              <CardContent sx={{ 
-                textAlign: 'center', 
-                p: 2, 
-                display: 'flex', 
-                flexDirection: 'column', 
-                justifyContent: 'center', 
+              <CardContent sx={{
+                textAlign: 'center',
+                p: 2,
+                display: 'flex',
+                flexDirection: 'column',
+                justifyContent: 'center',
                 alignItems: 'center',
                 flexGrow: 1,
                 height: '100%'
@@ -551,7 +638,7 @@ export default function CoordinatorDashboard() {
           </Grid>
 
           <Grid item xs={12} sm={6} md={2.4} sx={{ display: 'flex', minHeight: 0 }}>
-            <Card sx={{ 
+            <Card sx={{
               borderRadius: '16px',
               boxShadow: '0 4px 12px rgba(0, 0, 0, 0.1)',
               transition: 'transform 0.2s ease',
@@ -562,12 +649,12 @@ export default function CoordinatorDashboard() {
               flexDirection: 'column',
               '&:hover': { transform: 'translateY(-4px)' }
             }}>
-              <CardContent sx={{ 
-                textAlign: 'center', 
-                p: 2, 
-                display: 'flex', 
-                flexDirection: 'column', 
-                justifyContent: 'center', 
+              <CardContent sx={{
+                textAlign: 'center',
+                p: 2,
+                display: 'flex',
+                flexDirection: 'column',
+                justifyContent: 'center',
                 alignItems: 'center',
                 flexGrow: 1,
                 height: '100%'
@@ -586,8 +673,8 @@ export default function CoordinatorDashboard() {
 
         {/* Tabs */}
         <Box sx={{ borderBottom: 1, borderColor: 'divider', mb: 3 }}>
-          <Tabs 
-            value={activeTab} 
+          <Tabs
+            value={activeTab}
             onChange={handleTabChange}
             sx={{
               '& .MuiTab-root': {
@@ -704,7 +791,7 @@ export default function CoordinatorDashboard() {
                                 <Typography variant="body1" sx={{ mb: 2, color: 'text.secondary', fontSize: '1rem', lineHeight: 1.6 }}>
                                   {complaint.description}
                                 </Typography>
-                                
+
                                 {/* Student Information */}
                                 <Box sx={{ mb: 2, p: 2, backgroundColor: 'rgba(0, 0, 0, 0.02)', borderRadius: '8px' }}>
                                   <Typography variant="body2" sx={{ fontWeight: '600', mb: 1, color: '#1976d2' }}>
@@ -775,38 +862,72 @@ export default function CoordinatorDashboard() {
                                   <Visibility />
                                 </IconButton>
                               </Tooltip>
-                              <Tooltip title={complaint.status.toLowerCase() === 'resolved' || complaint.status.toLowerCase() === 'closed' ? 'Cannot comment on resolved complaints' : 'Add Comment'}>
-                                <span>
-                                  <IconButton
-                                    onClick={() => {
-                                      setSelectedComplaint(complaint)
-                                      setCommentDialogOpen(true)
-                                    }}
-                                    disabled={complaint.status.toLowerCase() === 'resolved' || complaint.status.toLowerCase() === 'closed'}
-                                  >
-                                    <Comment />
-                                  </IconButton>
-                                </span>
-                              </Tooltip>
-                              <Tooltip title="Forward Complaint">
-                                <IconButton
-                                  onClick={() => {
-                                    setSelectedComplaint(complaint)
-                                    setForwardDialogOpen(true)
-                                  }}
-                                  disabled={complaint.status.toLowerCase() === 'resolved' || complaint.status.toLowerCase() === 'rejected'}
-                                >
-                                  <Forward />
-                                </IconButton>
-                              </Tooltip>
-                              <IconButton
-                                onClick={(e) => {
-                                  setAnchorEl(e.currentTarget)
-                                  setSelectedComplaint(complaint)
-                                }}
-                              >
-                                <MoreVert />
-                              </IconButton>
+                              {(() => {
+                                const isForwarded = complaint.workflow?.currentLevel !== 'coordinator' || complaint.workflow?.escalatedAt;
+                                const isRejected = complaint.status.toLowerCase() === 'rejected';
+                                const isResolved = complaint.status.toLowerCase() === 'resolved' || complaint.status.toLowerCase() === 'closed';
+                                const isDisabled = isForwarded || isRejected || isResolved;
+                                
+                                return (
+                                  <>
+                                    <Tooltip title={
+                                      isForwarded 
+                                        ? 'Cannot operate on forwarded complaints' 
+                                        : isResolved || isRejected
+                                        ? 'Cannot comment on resolved/rejected complaints' 
+                                        : 'Add Comment'
+                                    }>
+                                      <span>
+                                        <IconButton
+                                          onClick={() => {
+                                            setSelectedComplaint(complaint)
+                                            setCommentDialogOpen(true)
+                                          }}
+                                          disabled={isDisabled}
+                                        >
+                                          <Comment />
+                                        </IconButton>
+                                      </span>
+                                    </Tooltip>
+                                    <Tooltip title={
+                                      isForwarded 
+                                        ? 'Cannot forward already forwarded complaints' 
+                                        : isResolved || isRejected
+                                        ? 'Cannot forward resolved/rejected complaints' 
+                                        : 'Forward Complaint'
+                                    }>
+                                      <IconButton
+                                        onClick={() => {
+                                          setSelectedComplaint(complaint)
+                                          setForwardDialogOpen(true)
+                                        }}
+                                        disabled={isDisabled}
+                                      >
+                                        <Forward />
+                                      </IconButton>
+                                    </Tooltip>
+                                    <Tooltip title={
+                                      isForwarded 
+                                        ? 'No operations allowed on forwarded complaints' 
+                                        : isRejected 
+                                        ? 'No operations allowed on rejected complaints' 
+                                        : 'More Options'
+                                    }>
+                                      <span>
+                                        <IconButton
+                                          onClick={(e) => {
+                                            setAnchorEl(e.currentTarget)
+                                            setSelectedComplaint(complaint)
+                                          }}
+                                          disabled={isForwarded || isRejected}
+                                        >
+                                          <MoreVert />
+                                        </IconButton>
+                                      </span>
+                                    </Tooltip>
+                                  </>
+                                );
+                              })()}
                             </Box>
                           </ListItemSecondaryAction>
                         </ListItem>
@@ -826,7 +947,7 @@ export default function CoordinatorDashboard() {
             <Typography variant="h5" gutterBottom sx={{ fontWeight: 'bold', mb: 3, fontSize: '1.8rem' }}>
               Completed Complaints
             </Typography>
-            
+
             {complaints && complaints.filter(c => c.status.toLowerCase() === 'resolved').length > 0 ? (
               <Card sx={{ borderRadius: '16px', boxShadow: '0 4px 12px rgba(0, 0, 0, 0.1)' }}>
                 <CardContent sx={{ p: 0 }}>
@@ -835,9 +956,9 @@ export default function CoordinatorDashboard() {
                       .filter(c => c.status.toLowerCase() === 'resolved')
                       .map((complaint, index) => (
                         <React.Fragment key={complaint._id}>
-                          <ListItem 
-                            sx={{ 
-                              py: 3, 
+                          <ListItem
+                            sx={{
+                              py: 3,
                               px: 3,
                               pr: 10, // Add right padding to make room for the View Details button
                               alignItems: 'flex-start'
@@ -868,7 +989,7 @@ export default function CoordinatorDashboard() {
                                   <Typography variant="body1" sx={{ mb: 2, color: 'text.secondary', fontSize: '1rem', lineHeight: 1.6 }}>
                                     {complaint.description}
                                   </Typography>
-                                  
+
                                   <Box sx={{ mb: 2, p: 2, backgroundColor: 'rgba(46, 125, 50, 0.05)', borderRadius: '8px', border: '1px solid rgba(46, 125, 50, 0.1)' }}>
                                     <Typography variant="body2" sx={{ fontWeight: '600', mb: 1, color: '#2e7d32' }}>
                                       Student Information:
@@ -992,18 +1113,18 @@ export default function CoordinatorDashboard() {
                 Export Report
               </Button>
             </Box>
-            
+
             <Grid container spacing={4}>
               {/* Complaints by Category Pie Chart */}
               <Grid item xs={12} lg={4}>
-                <Card sx={{ 
+                <Card sx={{
                   height: '550px',
                   display: 'flex',
                   flexDirection: 'column'
                 }}>
                   <CardContent sx={{ flex: 1, display: 'flex', flexDirection: 'column', p: 4 }}>
-                    <Typography variant="h5" gutterBottom sx={{ 
-                      fontWeight: 'bold', 
+                    <Typography variant="h5" gutterBottom sx={{
+                      fontWeight: 'bold',
                       color: isDarkMode ? '#ffffff' : '#1976d2',
                       fontSize: '1.5rem',
                       mb: 1
@@ -1014,25 +1135,54 @@ export default function CoordinatorDashboard() {
                       Distribution of complaints by category assigned to you
                     </Typography>
                     {chartData.length > 0 ? (
-                      <Box sx={{ height: 380, mt: 2, flex: 1, overflow: 'hidden' }}>
+                      <Box sx={{ height: 380, mt: 2, flex: 1, overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
                         <ResponsiveContainer width="100%" height="100%">
                           <PieChart>
                             <Pie
                               data={chartData}
                               cx="50%"
-                              cy="50%"
+                              cy={chartData.length === 1 ? "45%" : "50%"}
                               labelLine={false}
-                              label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
-                              outerRadius={90}
+                              label={chartData.length === 1
+                                ? false
+                                : ({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
+                              outerRadius={chartData.length === 1 ? 80 : 90}
                               fill="#8884d8"
                               dataKey="value"
+                              labelStyle={{
+                                fill: isDarkMode ? '#ffffff' : '#000000',
+                                fontSize: '11px',
+                                fontWeight: '500',
+                                textAnchor: 'middle'
+                              }}
                             >
                               {chartData.map((entry, index) => (
                                 <Cell key={`cell-${index}`} fill={colors[index % colors.length]} />
                               ))}
                             </Pie>
-                            <RechartsTooltip />
-                            <Legend />
+                            <RechartsTooltip
+                              formatter={(value, name) => [value, 'Complaints']}
+                              labelFormatter={(label) => `Category: ${label}`}
+                              contentStyle={{
+                                backgroundColor: isDarkMode ? '#1e1e1e' : '#ffffff',
+                                border: isDarkMode ? '1px solid #333' : '1px solid #ccc',
+                                color: isDarkMode ? '#ffffff' : '#000000',
+                              }}
+                              cursor={{ fill: isDarkMode ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)' }}
+                            />
+                            <Legend
+                              wrapperStyle={{
+                                color: isDarkMode ? '#ffffff' : '#000000',
+                                fontSize: '12px',
+                                fontWeight: '500',
+                                paddingTop: '10px',
+                                paddingBottom: '5px'
+                              }}
+                              layout="horizontal"
+                              verticalAlign="bottom"
+                              align="center"
+                              iconType="circle"
+                            />
                           </PieChart>
                         </ResponsiveContainer>
                       </Box>
@@ -1047,14 +1197,14 @@ export default function CoordinatorDashboard() {
 
               {/* Status Distribution */}
               <Grid item xs={12} lg={4}>
-                <Card sx={{ 
+                <Card sx={{
                   height: '550px',
                   display: 'flex',
                   flexDirection: 'column'
                 }}>
                   <CardContent sx={{ flex: 1, display: 'flex', flexDirection: 'column', p: 4 }}>
-                    <Typography variant="h5" gutterBottom sx={{ 
-                      fontWeight: 'bold', 
+                    <Typography variant="h5" gutterBottom sx={{
+                      fontWeight: 'bold',
                       color: isDarkMode ? '#ffffff' : '#1976d2',
                       fontSize: '1.5rem',
                       mb: 1
@@ -1095,14 +1245,14 @@ export default function CoordinatorDashboard() {
 
               {/* Performance Summary */}
               <Grid item xs={12} lg={4}>
-                <Card sx={{ 
+                <Card sx={{
                   height: '550px',
                   display: 'flex',
                   flexDirection: 'column'
                 }}>
                   <CardContent sx={{ flex: 1, display: 'flex', flexDirection: 'column', p: 4 }}>
-                    <Typography variant="h5" gutterBottom sx={{ 
-                      fontWeight: 'bold', 
+                    <Typography variant="h5" gutterBottom sx={{
+                      fontWeight: 'bold',
                       color: isDarkMode ? '#ffffff' : '#1976d2',
                       fontSize: '1.5rem',
                       mb: 1
@@ -1112,23 +1262,23 @@ export default function CoordinatorDashboard() {
                     <Typography variant="body2" color="text.secondary" sx={{ mb: 3, fontSize: '1rem' }}>
                       Key performance metrics and resolution statistics
                     </Typography>
-                    <Box sx={{ 
-                      flex: 1, 
-                      display: 'flex', 
-                      flexDirection: 'column', 
+                    <Box sx={{
+                      flex: 1,
+                      display: 'flex',
+                      flexDirection: 'column',
                       justifyContent: 'center',
-                      mt: 2 
+                      mt: 2
                     }}>
-                      <Box sx={{ 
-                        display: 'flex', 
-                        alignItems: 'center', 
+                      <Box sx={{
+                        display: 'flex',
+                        alignItems: 'center',
                         mb: 4,
                         p: 3,
                         backgroundColor: isDarkMode ? 'rgba(25, 118, 210, 0.1)' : 'rgba(25, 118, 210, 0.05)',
                       }}>
                         <Box sx={{ flex: 1, textAlign: 'center' }}>
-                          <Typography variant="h3" sx={{ 
-                            fontWeight: 'bold', 
+                          <Typography variant="h3" sx={{
+                            fontWeight: 'bold',
                             color: isDarkMode ? '#ffffff' : '#1976d2',
                             mb: 1
                           }}>
@@ -1141,9 +1291,9 @@ export default function CoordinatorDashboard() {
                       </Box>
                       <Box sx={{ display: 'flex', gap: 2 }}>
                         <Box sx={{ flex: 1, textAlign: 'center', p: 2, backgroundColor: isDarkMode ? 'rgba(46, 125, 50, 0.1)' : 'rgba(46, 125, 50, 0.05)' }}>
-                          <Typography variant="h4" sx={{ 
+                          <Typography variant="h4" sx={{
                             fontWeight: 'bold',
-                            color: '#2e7d32' 
+                            color: '#2e7d32'
                           }}>
                             {stats.resolved}
                           </Typography>
@@ -1152,9 +1302,9 @@ export default function CoordinatorDashboard() {
                           </Typography>
                         </Box>
                         <Box sx={{ flex: 1, textAlign: 'center', p: 2, backgroundColor: isDarkMode ? 'rgba(245, 124, 0, 0.1)' : 'rgba(245, 124, 0, 0.05)' }}>
-                          <Typography variant="h4" sx={{ 
-                            fontWeight: 'bold', 
-                            color: '#f57c00' 
+                          <Typography variant="h4" sx={{
+                            fontWeight: 'bold',
+                            color: '#f57c00'
                           }}>
                             {stats.pending}
                           </Typography>
@@ -1163,9 +1313,9 @@ export default function CoordinatorDashboard() {
                           </Typography>
                         </Box>
                         <Box sx={{ flex: 1, textAlign: 'center', p: 2, backgroundColor: isDarkMode ? 'rgba(25, 118, 210, 0.1)' : 'rgba(25, 118, 210, 0.05)' }}>
-                          <Typography variant="h4" sx={{ 
-                            fontWeight: 'bold', 
-                            color: '#1976d2' 
+                          <Typography variant="h4" sx={{
+                            fontWeight: 'bold',
+                            color: '#1976d2'
                           }}>
                             {stats.inProgress}
                           </Typography>
@@ -1183,118 +1333,456 @@ export default function CoordinatorDashboard() {
         )}
 
         {/* View Complaint Dialog */}
-        <Dialog open={viewDialogOpen} onClose={() => setViewDialogOpen(false)} maxWidth="md" fullWidth>
-          <DialogTitle>
-            <Typography variant="h6" sx={{ fontWeight: 'bold' }}>
+        <Dialog
+          open={viewDialogOpen}
+          onClose={() => setViewDialogOpen(false)}
+          maxWidth="md"
+          fullWidth
+          PaperProps={{
+            sx: {
+              maxHeight: '90vh'
+            }
+          }}
+        >
+          <DialogTitle sx={{ pb: 2, borderBottom: '1px solid', borderColor: 'divider' }}>
+            <Typography variant="h6" sx={{ fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: 1 }}>
+              <Assignment color="primary" />
               Complaint Details
             </Typography>
           </DialogTitle>
-          <DialogContent>
+          <DialogContent sx={{ pt: 3, pb: 2 }}>
             {selectedComplaint && (
               <Box>
-                <Typography variant="h5" gutterBottom sx={{ fontWeight: 'bold' }}>
-                  {selectedComplaint.title}
-                </Typography>
-                <Typography variant="body1" sx={{ mb: 3 }}>
-                  {selectedComplaint.description}
-                </Typography>
-                <Grid container spacing={2}>
-                  <Grid item xs={6}>
-                    <Typography variant="body2" color="text.secondary">Status:</Typography>
-                    <Chip label={selectedComplaint.status} color={getStatusColor(selectedComplaint.status)} />
-                  </Grid>
-                  <Grid item xs={6}>
-                    <Typography variant="body2" color="text.secondary">Priority:</Typography>
-                    <Chip label={selectedComplaint.priority} color={getPriorityColor(selectedComplaint.priority)} />
-                  </Grid>
-                  <Grid item xs={6}>
-                    <Typography variant="body2" color="text.secondary">Category:</Typography>
-                    <Typography variant="body1">{selectedComplaint.category}</Typography>
-                  </Grid>
-                  <Grid item xs={6}>
-                    <Typography variant="body2" color="text.secondary">Created:</Typography>
-                    <Typography variant="body1">
-                      {new Date(selectedComplaint.createdAt).toLocaleString()}
-                    </Typography>
-                  </Grid>
-                </Grid>
+                {/* Title Section */}
+                <Box sx={{ mt: 2, mb: 3 }}>
+                  <Typography variant="h5" sx={{ fontWeight: 'bold', color: 'primary.main', mb: 2 }}>
+                    {selectedComplaint.title}
+                  </Typography>
+                  <Typography variant="body1" sx={{ color: 'text.secondary', lineHeight: 1.8, fontSize: '1rem' }}>
+                    {selectedComplaint.description}
+                  </Typography>
+                </Box>
 
-                {/* Comments Section */}
-                {selectedComplaint.comments && selectedComplaint.comments.length > 0 && (
-                  <Box sx={{ mt: 4 }}>
-                    <Typography variant="h6" gutterBottom sx={{ fontWeight: 'bold', mb: 2 }}>
-                      Comments
-                    </Typography>
-                    <List sx={{ maxHeight: 400, overflow: 'auto' }}>
-                      {selectedComplaint.comments
-                        .filter(comment => {
-                          // Show comments based on workflow level
-                          const currentLevel = selectedComplaint.workflow?.currentLevel || 'coordinator'
-                          const commentRole = comment.commentedBy?.role || ''
-                          
-                          // Coordinator level: show coordinator comments
-                          if (currentLevel === 'coordinator') {
-                            return commentRole === 'coordinator'
-                          }
-                          // Additional HOD level: show coordinator + additional_hod comments
-                          if (currentLevel === 'additional_hod') {
-                            return commentRole === 'coordinator' || commentRole === 'additional_hod'
-                          }
-                          // Dean level: show all admin comments (coordinator + additional_hod + dean)
-                          if (currentLevel === 'dean') {
-                            return commentRole === 'coordinator' || commentRole === 'additional_hod' || commentRole === 'dean'
-                          }
-                          return false
-                        })
-                        .map((comment, index) => (
-                          <React.Fragment key={index}>
-                            <ListItem alignItems="flex-start" sx={{ px: 0 }}>
-                              <ListItemIcon sx={{ minWidth: 40 }}>
-                                <Avatar sx={{ bgcolor: 'primary.main', width: 32, height: 32 }}>
-                                  {comment.commentedBy?.firstName?.[0] || 'A'}
-                                </Avatar>
-                              </ListItemIcon>
-                              <ListItemText
-                                primary={
-                                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 0.5 }}>
-                                    <Typography variant="subtitle2" sx={{ fontWeight: 'bold' }}>
-                                      {comment.commentedBy?.firstName} {comment.commentedBy?.lastName}
-                                    </Typography>
-                                    <Chip 
-                                      label={comment.commentedBy?.role || 'Admin'} 
-                                      size="small" 
-                                      sx={{ fontSize: '0.7rem', height: 20 }}
-                                    />
-                                    <Typography variant="caption" color="text.secondary" sx={{ ml: 'auto' }}>
-                                      {new Date(comment.createdAt).toLocaleString()}
-                                    </Typography>
-                                  </Box>
-                                }
-                                secondary={
-                                  <Typography variant="body2" sx={{ mt: 0.5 }}>
-                                    {comment.comment}
+                <Divider sx={{ my: 2 }} />
+
+                {/* Complaint Details Grid */}
+                <Box sx={{ mb: 3 }}>
+                  <Typography variant="subtitle1" sx={{ fontWeight: 600, mb: 2.5, color: 'text.primary', fontSize: '1.1rem' }}>
+                    Complaint Information
+                  </Typography>
+                  <Grid container spacing={2.5}>
+                    <Grid item xs={12} sm={6}>
+                      <Box sx={{ mb: 2 }}>
+                        <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mb: 0.5, fontWeight: 500 }}>
+                          Status
+                        </Typography>
+                        <Chip label={selectedComplaint.status} color={getStatusColor(selectedComplaint.status)} size="small" />
+                      </Box>
+                    </Grid>
+                    <Grid item xs={12} sm={6}>
+                      <Box sx={{ mb: 2 }}>
+                        <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mb: 0.5, fontWeight: 500 }}>
+                          Priority
+                        </Typography>
+                        <Chip label={selectedComplaint.priority} color={getPriorityColor(selectedComplaint.priority)} size="small" />
+                      </Box>
+                    </Grid>
+                    <Grid item xs={12} sm={6}>
+                      <Box sx={{ mb: 2 }}>
+                        <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mb: 0.5, fontWeight: 500 }}>
+                          Category
+                        </Typography>
+                        <Typography variant="body2" sx={{ fontWeight: 500 }}>
+                          {selectedComplaint.category}
+                        </Typography>
+                      </Box>
+                    </Grid>
+                    <Grid item xs={12} sm={6}>
+                      <Box sx={{ mb: 2 }}>
+                        <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mb: 0.5, fontWeight: 500 }}>
+                          Created Date
+                        </Typography>
+                        <Typography variant="body2" sx={{ fontWeight: 500 }}>
+                          {new Date(selectedComplaint.createdAt).toLocaleString()}
+                        </Typography>
+                      </Box>
+                    </Grid>
+                  </Grid>
+                </Box>
+
+                {/* Workflow History / Forwarding Details Section */}
+                {selectedComplaint.workflow && (selectedComplaint.workflow.currentLevel !== 'coordinator' || selectedComplaint.workflow.escalatedAt) && (
+                  <>
+                    <Divider sx={{ my: 2.5 }} />
+                    <Box sx={{ mb: 3 }}>
+                      <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+                        {/* Show forwarding path based on current level */}
+                        {selectedComplaint.workflow.currentLevel === 'additional_hod' && (
+                          <Paper
+                            elevation={0}
+                            sx={{
+                              p: 2,
+                              bgcolor: isDarkMode ? 'rgba(25, 118, 210, 0.15)' : 'rgba(25, 118, 210, 0.08)',
+                              borderRadius: 1,
+                              borderLeft: '4px solid',
+                              borderColor: 'info.main',
+                              transition: 'background-color 0.3s ease'
+                            }}
+                          >
+                            <Typography variant="body2" sx={{ fontWeight: 600, mb: 0.5, color: 'text.primary' }}>
+                              Forwarded from Coordinator to Additional HOD
+                            </Typography>
+                            {selectedComplaint.workflow.escalatedAt && (
+                              <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mt: 0.5 }}>
+                                Forwarded on: {new Date(selectedComplaint.workflow.escalatedAt).toLocaleString()}
+                              </Typography>
+                            )}
+                          </Paper>
+                        )}
+                        {selectedComplaint.workflow.currentLevel === 'dean' && (
+                          <>
+                            {selectedComplaint.workflow.additionalHodAssigned ? (
+                              <>
+                                <Paper
+                                  elevation={0}
+                                  sx={{
+                                    p: 2,
+                                    bgcolor: isDarkMode ? 'rgba(25, 118, 210, 0.15)' : 'rgba(25, 118, 210, 0.08)',
+                                    borderRadius: 1,
+                                    borderLeft: '4px solid',
+                                    borderColor: 'info.main',
+                                    transition: 'background-color 0.3s ease'
+                                  }}
+                                >
+                                  <Typography variant="body2" sx={{ fontWeight: 600, mb: 0.5, color: 'text.primary' }}>
+                                    Forwarded from Coordinator to Additional HOD
                                   </Typography>
-                                }
-                              />
-                            </ListItem>
-                            {index < selectedComplaint.comments.filter(c => {
-                              const currentLevel = selectedComplaint.workflow?.currentLevel || 'coordinator'
-                              const commentRole = c.commentedBy?.role || ''
-                              if (currentLevel === 'coordinator') return commentRole === 'coordinator'
-                              if (currentLevel === 'additional_hod') return commentRole === 'coordinator' || commentRole === 'additional_hod'
-                              if (currentLevel === 'dean') return commentRole === 'coordinator' || commentRole === 'additional_hod' || commentRole === 'dean'
-                              return false
-                            }).length - 1 && <Divider component="li" />}
-                          </React.Fragment>
-                        ))}
-                    </List>
-                  </Box>
+                                </Paper>
+                                <Paper
+                                  elevation={0}
+                                  sx={{
+                                    p: 2,
+                                    bgcolor: isDarkMode ? 'rgba(237, 108, 2, 0.15)' : 'rgba(237, 108, 2, 0.08)',
+                                    borderRadius: 1,
+                                    borderLeft: '4px solid',
+                                    borderColor: 'warning.main',
+                                    transition: 'background-color 0.3s ease'
+                                  }}
+                                >
+                                  <Typography variant="body2" sx={{ fontWeight: 600, mb: 0.5, color: 'text.primary' }}>
+                                    Forwarded from Additional HOD to Dean
+                                  </Typography>
+                                  {selectedComplaint.workflow.escalatedAt && (
+                                    <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mt: 0.5 }}>
+                                      Forwarded on: {new Date(selectedComplaint.workflow.escalatedAt).toLocaleString()}
+                                    </Typography>
+                                  )}
+                                </Paper>
+                              </>
+                            ) : (
+                              <Paper
+                                elevation={0}
+                                sx={{
+                                  p: 2,
+                                  bgcolor: isDarkMode ? 'rgba(25, 118, 210, 0.15)' : 'rgba(25, 118, 210, 0.08)',
+                                  borderRadius: 1,
+                                  borderLeft: '4px solid',
+                                  borderColor: 'info.main',
+                                  transition: 'background-color 0.3s ease'
+                                }}
+                              >
+                                <Typography variant="body2" sx={{ fontWeight: 600, mb: 0.5, color: 'text.primary' }}>
+                                  Forwarded from Coordinator to Dean
+                                </Typography>
+                                {selectedComplaint.workflow.escalatedAt && (
+                                  <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mt: 0.5 }}>
+                                    Forwarded on: {new Date(selectedComplaint.workflow.escalatedAt).toLocaleString()}
+                                  </Typography>
+                                )}
+                              </Paper>
+                            )}
+                          </>
+                        )}
+                        {/* Escalation Reason if available */}
+                      </Box>
+                    </Box>
+                  </>
                 )}
+
+                {/* Attachments Section */}
+                {selectedComplaint.attachments && selectedComplaint.attachments.length > 0 && (
+                  <>
+                    <Divider sx={{ my: 2.5 }} />
+                    <Box sx={{ mb: 3 }}>
+                      <Typography variant="subtitle1" sx={{ fontWeight: 600, mb: 2.5, color: 'text.primary', display: 'flex', alignItems: 'center', gap: 1, fontSize: '1.1rem' }}>
+                        <AttachFile fontSize="small" />
+                        Attachments ({selectedComplaint.attachments.length})
+                      </Typography>
+                      <Grid container spacing={2.5}>
+                        {selectedComplaint.attachments.map((attachment, index) => {
+                          const isImage = attachment.path && /\.(jpg|jpeg|png|gif|webp)$/i.test(attachment.path);
+                          const isPDF = attachment.path && /\.pdf$/i.test(attachment.path);
+                          const fileName = attachment.originalName || attachment.filename || `attachment-${index + 1}`;
+
+                          return (
+                            <Grid item xs={12} sm={6} key={index}>
+                              <Paper
+                                elevation={1}
+                                sx={{
+                                  p: 2,
+                                  borderRadius: 2,
+                                  display: 'flex',
+                                  flexDirection: 'column',
+                                  gap: 1.5,
+                                  border: '1px solid',
+                                  borderColor: 'divider',
+                                  '&:hover': {
+                                    boxShadow: 3,
+                                    borderColor: 'primary.main'
+                                  }
+                                }}
+                              >
+                                <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 1.5 }}>
+                                  {isPDF ? (
+                                    <PictureAsPdf sx={{ color: '#d32f2f', fontSize: 36, mt: 0.5 }} />
+                                  ) : isImage ? (
+                                    <ImageIcon sx={{ color: '#1976d2', fontSize: 36, mt: 0.5 }} />
+                                  ) : (
+                                    <InsertDriveFile sx={{ color: '#666', fontSize: 36, mt: 0.5 }} />
+                                  )}
+                                  <Box sx={{ flex: 1, minWidth: 0 }}>
+                                    <Typography variant="body2" sx={{ fontWeight: 600, mb: 0.5, wordBreak: 'break-word' }}>
+                                      {fileName}
+                                    </Typography>
+                                    {attachment.size && (
+                                      <Typography variant="caption" color="text.secondary">
+                                        {(attachment.size / 1024 / 1024).toFixed(2)} MB
+                                      </Typography>
+                                    )}
+                                  </Box>
+                                </Box>
+
+                                {isImage && attachment.path && (
+                                  <Box
+                                    sx={{
+                                      width: '100%',
+                                      height: 60,
+                                      borderRadius: 1,
+                                      display: 'flex',
+                                      alignItems: 'center',
+                                      justifyContent: 'center',
+                                      border: '1px solid',
+                                      borderColor: 'divider',
+                                      backgroundColor: 'rgba(25, 118, 210, 0.08)'
+                                    }}
+                                  >
+                                    <ImageIcon sx={{ color: '#1976d2', fontSize: 32 }} />
+                                  </Box>
+                                )}
+
+                                {attachment.path && (
+                                  <Box sx={{ display: 'flex', gap: 1, mt: 'auto' }}>
+                                    <Button
+                                      size="small"
+                                      variant={isImage ? "outlined" : "contained"}
+                                      startIcon={<Download />}
+                                      onClick={() => {
+                                        if (isPDF) {
+                                          // For PDFs, use proxy URL
+                                          const proxyUrl = getPdfProxyUrl(attachment.path);
+                                          window.open(proxyUrl || attachment.path, '_blank');
+                                        } else {
+                                          // For other files, open directly
+                                          window.open(attachment.path, '_blank');
+                                        }
+                                      }}
+                                      fullWidth={!isImage}
+                                      sx={isImage ? { flex: 1 } : {}}
+                                    >
+                                      {isImage ? 'Download' : isPDF ? 'Download PDF' : 'Download'}
+                                    </Button>
+                                  </Box>
+                                )}
+                              </Paper>
+                            </Grid>
+                          );
+                        })}
+                      </Grid>
+                    </Box>
+                  </>
+                )}
+
               </Box>
             )}
           </DialogContent>
           <DialogActions>
             <Button onClick={() => setViewDialogOpen(false)}>Close</Button>
+          </DialogActions>
+        </Dialog>
+
+        {/* Image Preview Dialog */}
+        <Dialog
+          open={imagePreviewOpen}
+          onClose={() => setImagePreviewOpen(false)}
+          maxWidth="md"
+          fullWidth
+          PaperProps={{
+            sx: {
+              borderRadius: '16px',
+              overflow: 'hidden'
+            }
+          }}
+        >
+          <DialogTitle sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <Typography variant="h6" sx={{ fontWeight: 'bold' }}>
+              {previewImageName}
+            </Typography>
+            <IconButton onClick={() => setImagePreviewOpen(false)}>
+              <Close />
+            </IconButton>
+          </DialogTitle>
+          <DialogContent sx={{ p: 0, display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: 400 }}>
+            {previewImageUrl && (
+              <img
+                src={getImageProxyUrl(previewImageUrl)}
+                alt={previewImageName}
+                style={{
+                  maxWidth: '100%',
+                  maxHeight: '70vh',
+                  objectFit: 'contain'
+                }}
+                onError={(e) => {
+                  console.error('Error loading image:', e);
+                  e.target.style.display = 'none';
+                }}
+              />
+            )}
+          </DialogContent>
+          <DialogActions>
+            <Button onClick={() => window.open(previewImageUrl, '_blank')} startIcon={<Download />}>
+              Download
+            </Button>
+            <Button onClick={() => setImagePreviewOpen(false)}>Close</Button>
+          </DialogActions>
+        </Dialog>
+
+        {/* PDF Preview Dialog */}
+        <Dialog
+          open={pdfPreviewOpen}
+          onClose={() => setPdfPreviewOpen(false)}
+          maxWidth="lg"
+          fullWidth
+          PaperProps={{
+            sx: {
+              borderRadius: '16px',
+              overflow: 'hidden',
+              maxHeight: '90vh'
+            }
+          }}
+        >
+          <DialogTitle sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <Typography variant="h6" sx={{ fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: 1 }}>
+              <PictureAsPdf sx={{ color: '#d32f2f' }} />
+              {previewPdfName}
+            </Typography>
+            <IconButton onClick={() => setPdfPreviewOpen(false)}>
+              <Close />
+            </IconButton>
+          </DialogTitle>
+          <DialogContent sx={{ p: 0, display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: 500 }}>
+            {previewPdfUrl ? (
+              <Box sx={{ width: '100%', height: '75vh', display: 'flex', flexDirection: 'column' }}>
+                <iframe
+                  src={`${getPdfProxyUrl(previewPdfUrl)}#toolbar=1`}
+                  title={previewPdfName}
+                  style={{
+                    width: '100%',
+                    height: '100%',
+                    border: 'none',
+                    flex: 1
+                  }}
+                  onLoad={() => {
+                    setPdfLoading(false);
+                  }}
+                  onError={(e) => {
+                    console.error('Error loading PDF in iframe:', e);
+                    setPdfLoading(false);
+                  }}
+                />
+                {pdfLoading && (
+                  <Box sx={{
+                    position: 'absolute',
+                    top: '50%',
+                    left: '50%',
+                    transform: 'translate(-50%, -50%)',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    alignItems: 'center',
+                    gap: 2
+                  }}>
+                    <CircularProgress />
+                    <Typography variant="body1" color="text.secondary">
+                      Loading PDF...
+                    </Typography>
+                  </Box>
+                )}
+              </Box>
+            ) : (
+              <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2, py: 8 }}>
+                <Typography variant="body1" color="error">
+                  Unable to load PDF. Please try downloading it instead.
+                </Typography>
+              </Box>
+            )}
+          </DialogContent>
+          <DialogActions>
+            <Button
+              onClick={async () => {
+                try {
+                  if (previewPdfUrl) {
+                    setPdfLoading(true);
+                    // Fetch through proxy and download
+                    const response = await api.get('/api/complaints/attachments/pdf', {
+                      params: { url: previewPdfUrl },
+                      responseType: 'blob'
+                    });
+                    const blob = new Blob([response.data], { type: 'application/pdf' });
+                    const blobUrl = URL.createObjectURL(blob);
+                    const link = document.createElement('a');
+                    link.href = blobUrl;
+                    link.download = previewPdfName;
+                    document.body.appendChild(link);
+                    link.click();
+                    document.body.removeChild(link);
+                    URL.revokeObjectURL(blobUrl);
+                    setPdfLoading(false);
+                  }
+                } catch (error) {
+                  console.error('Error downloading PDF:', error);
+                  setPdfLoading(false);
+                  // Fallback to opening proxy URL in new tab
+                  if (previewPdfUrl) {
+                    window.open(getPdfProxyUrl(previewPdfUrl), '_blank');
+                  }
+                }
+              }}
+              startIcon={<Download />}
+              disabled={!previewPdfUrl || pdfLoading}
+            >
+              Download
+            </Button>
+            <Button
+              onClick={() => {
+                if (previewPdfUrl) {
+                  window.open(getPdfProxyUrl(previewPdfUrl), '_blank');
+                }
+              }}
+              startIcon={<OpenInNew />}
+              disabled={!previewPdfUrl}
+            >
+              Open in New Tab
+            </Button>
+            <Button onClick={() => setPdfPreviewOpen(false)}>Close</Button>
           </DialogActions>
         </Dialog>
 
@@ -1355,26 +1843,68 @@ export default function CoordinatorDashboard() {
           anchorEl={anchorEl}
           open={Boolean(anchorEl)}
           onClose={() => setAnchorEl(null)}
+          anchorOrigin={{
+            vertical: 'bottom',
+            horizontal: 'right',
+          }}
+          transformOrigin={{
+            vertical: 'top',
+            horizontal: 'right',
+          }}
+          PaperProps={{
+            sx: {
+              mt: 1.5,
+              minWidth: 180,
+              boxShadow: '0 4px 16px rgba(0, 0, 0, 0.15)',
+              border: '1px solid',
+              borderColor: 'divider'
+            }
+          }}
         >
-          <MenuItem onClick={() => {
-            handleStatusUpdate(selectedComplaint?._id, 'In Progress')
-            setAnchorEl(null)
-          }}>
-            Mark as In Progress
-          </MenuItem>
-          <MenuItem onClick={() => {
-            handleStatusUpdate(selectedComplaint?._id, 'Resolved')
-            setAnchorEl(null)
-          }}>
-            Mark as Resolved
-          </MenuItem>
-          <MenuItem onClick={() => {
-            handleStatusUpdate(selectedComplaint?._id, 'Rejected')
-            setAnchorEl(null)
-          }}>
-            Mark as Rejected
-          </MenuItem>
-          <MenuItem 
+          {(() => {
+            const isForwarded = selectedComplaint?.workflow?.currentLevel !== 'coordinator' || selectedComplaint?.workflow?.escalatedAt;
+            const isRejected = selectedComplaint?.status?.toLowerCase() === 'rejected';
+            
+            if (isForwarded) {
+              return (
+                <MenuItem disabled>
+                  No operations allowed on forwarded complaints
+                </MenuItem>
+              );
+            }
+            
+            if (isRejected) {
+              return (
+                <MenuItem disabled>
+                  No operations allowed on rejected complaints
+                </MenuItem>
+              );
+            }
+            
+            return (
+              <>
+                <MenuItem onClick={() => {
+                  handleStatusUpdate(selectedComplaint?._id, 'In Progress')
+                  setAnchorEl(null)
+                }}>
+                  Mark as In Progress
+                </MenuItem>
+                <MenuItem onClick={() => {
+                  handleStatusUpdate(selectedComplaint?._id, 'Resolved')
+                  setAnchorEl(null)
+                }}>
+                  Mark as Resolved
+                </MenuItem>
+                <MenuItem onClick={() => {
+                  handleStatusUpdate(selectedComplaint?._id, 'Rejected')
+                  setAnchorEl(null)
+                }}>
+                  Mark as Rejected
+                </MenuItem>
+              </>
+            );
+          })()}
+          <MenuItem
             onClick={() => {
               setDeleteDialogOpen(true)
               setAnchorEl(null)
@@ -1410,9 +1940,9 @@ export default function CoordinatorDashboard() {
             <Button onClick={() => setDeleteDialogOpen(false)}>
               Cancel
             </Button>
-            <Button 
-              onClick={handleDelete} 
-              color="error" 
+            <Button
+              onClick={handleDelete}
+              color="error"
               variant="contained"
             >
               Delete

@@ -1,5 +1,5 @@
-import React, { createContext, useContext, useEffect, useMemo, useState } from 'react'
-import api from '../lib/api.js'
+import React, { createContext, useContext, useEffect, useMemo, useState, useCallback } from 'react'
+import api, { clearApiCache } from '../lib/api.js'
 
 const AuthContext = createContext()
 
@@ -20,18 +20,31 @@ export function AuthProvider({ children }) {
     else localStorage.removeItem('user')
   }, [user])
 
+  // Create stable wrapper functions using useCallback
+  const setTokenWrapper = useCallback((newToken) => {
+    setToken(newToken)
+  }, [])
+
+  const setUserWrapper = useCallback((newUser) => {
+    setUser(newUser)
+  }, [])
+
+  const logoutWrapper = useCallback(() => {
+    console.log('AuthContext logout called, clearing token and user')
+    // Clear cache on logout
+    clearApiCache()
+    setToken('')
+    setUser(null)
+  }, [])
+
   const value = useMemo(() => ({
     token,
-    setToken,
+    setToken: setTokenWrapper,
     user,
-    setUser,
+    setUser: setUserWrapper,
     isStaff: user?.role ? true : false,
-    logout: () => { 
-      console.log('AuthContext logout called, clearing token and user')
-      setToken(''); 
-      setUser(null) 
-    },
-  }), [token, user])
+    logout: logoutWrapper,
+  }), [token, user, setTokenWrapper, setUserWrapper, logoutWrapper])
 
   // attach token to axios
   useEffect(() => {

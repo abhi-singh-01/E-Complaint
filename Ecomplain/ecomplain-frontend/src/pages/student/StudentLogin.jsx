@@ -1,8 +1,9 @@
 import { useState } from 'react'
 import { useNavigate, Link as RouterLink } from 'react-router-dom'
-import api from '../../lib/api.js'
+import api, { clearApiCache } from '../../lib/api.js'
 import { useAuth } from '../../auth/AuthContext.jsx'
 import { useTheme as useCustomTheme } from '../../contexts/ThemeContext.jsx'
+import { useToast } from '../../contexts/ToastContext.jsx'
 import {
   Container,
   TextField,
@@ -30,12 +31,12 @@ export default function StudentLogin() {
   const nav = useNavigate()
   const { setToken, setUser } = useAuth()
   const { isDarkMode } = useCustomTheme()
+  const { showSuccess, showError } = useToast()
   const [form, setForm] = useState({
     email: '',
     password: ''
   })
   const [error, setError] = useState('')
-  const [success, setSuccess] = useState('')
   const [showPassword, setShowPassword] = useState(false)
   const [loading, setLoading] = useState(false)
   const [errors, setErrors] = useState({})
@@ -79,10 +80,11 @@ export default function StudentLogin() {
   async function submit(e) {
     e.preventDefault()
     setError('')
-    setSuccess('')
 
     if (!validateForm()) {
-      setError('Please fix the errors below')
+      const errorMsg = 'Please fix the errors below'
+      setError(errorMsg)
+      showError(errorMsg)
       return
     }
 
@@ -93,15 +95,20 @@ export default function StudentLogin() {
         password: form.password
       })
       
+      // Clear all cached data before setting new auth credentials
+      clearApiCache()
+      
       setToken(data.token)
       setUser(data.student)
-      setSuccess('Login successful! Redirecting...')
+      showSuccess('Login successful! Redirecting...')
       
-      setTimeout(() => {
+      // Navigate immediately after clearing cache and setting credentials
+      // The dashboard will load fresh data without cache interference
       nav('/dashboard')
-      }, 1500)
     } catch (err) {
-      setError(err.response?.data?.message || 'Invalid credentials. Please try again.')
+      const errorMsg = err.response?.data?.message || 'Invalid credentials. Please try again.'
+      setError(errorMsg)
+      showError(errorMsg)
     } finally {
       setLoading(false)
     }
@@ -163,12 +170,6 @@ export default function StudentLogin() {
             {error && (
             <Alert color="error" sx={{ mb: 3 }}>
               {error}
-            </Alert>
-            )}
-
-            {success && (
-            <Alert color="success" sx={{ mb: 3 }}>
-              {success}
             </Alert>
             )}
 

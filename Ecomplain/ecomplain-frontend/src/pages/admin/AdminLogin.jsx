@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useNavigate, Link as RouterLink } from 'react-router-dom'
-import api from '../../lib/api.js'
+import api, { clearApiCache } from '../../lib/api.js'
 import { useAuth } from '../../auth/AuthContext.jsx'
 import { useTheme as useCustomTheme } from '../../contexts/ThemeContext.jsx'
 import AdminLoginNavbar from '../../components/AdminLoginNavbar.jsx'
@@ -173,13 +173,16 @@ export default function AdminLogin() {
 
       const { data } = await api.post('/api/auth/admin/login', loginData)
       
+      // Clear all cached data before setting new auth credentials
+      clearApiCache()
+      
       setToken(data.token)
       setUser(data.admin)
       setSuccess('Login successful! Redirecting...')
       
-      setTimeout(() => {
-        nav('/admin/dashboard')
-      }, 1500)
+      // Navigate immediately after clearing cache and setting credentials
+      // The dashboard will load fresh data without cache interference
+      nav('/admin/dashboard')
     } catch (err) {
       console.error('Login error:', err)
       console.error('Error response:', err.response?.data)

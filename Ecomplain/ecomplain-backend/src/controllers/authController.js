@@ -3,6 +3,13 @@ const crypto = require('crypto');
 const Student = require('../models/Student');
 const Admin = require('../models/Admin');
 const { asyncHandler } = require('../middleware/errorHandler');
+const { setCache, getCache, deleteCache } = require('../middleware/cache');
+const { sendOTPEmail } = require('../utils/emailService');
+
+// Generate 6-digit OTP
+const generateOTP = () => {
+  return Math.floor(100000 + Math.random() * 900000).toString();
+};
 
 // Generate JWT Token
 const generateToken = (userId, userType) => {
@@ -22,7 +29,308 @@ const generateRefreshToken = (userId, userType) => {
   );
 };
 
-// @desc    Register a new student
+// @desc    Send OTP for student registration
+// @route   POST /api/auth/send-otp
+// @access  Public
+const sendRegistrationOTP = asyncHandler(async (req, res) => {
+  try {
+    const { firstName, lastName, email, libraryId, rollNo, department, year, password } = req.body;
+
+    // Basic validation (validation middleware should handle this, but double-check)
+    if (!email || !firstName || !lastName || !password) {
+      return res.status(400).json({
+        success: false,
+        message: 'Missing required fields'
+      });
+    }
+
+    // Check if student already exists
+    const existingStudent = await Student.findOne({
+      $or: [{ email }, { libraryId }, { rollNo }]
+    });
+
+    if (existingStudent) {
+      let message = 'Student already exists with ';
+      if (existingStudent.email === email) message += 'this email';
+      else if (existingStudent.libraryId === libraryId) message += 'this library ID';
+      else if (existingStudent.rollNo === rollNo) message += 'this roll number';
+      
+      return res.status(400).json({
+        success: false,
+        message
+      });
+    }
+
+    // Generate OTP
+    const otp = generateOTP();
+    const otpExpiry = Date.now() + 10 * 60 * 1000; // 10 minutes
+
+    // Store registration data temporarily with OTP
+    const registrationData = {
+      firstName,
+      lastName,
+      email: email.toLowerCase(),
+      libraryId,
+      rollNo,
+      department,
+      year,
+      password,
+      otp,
+      otpExpiry,
+      attempts: 0 // Track OTP verification attempts
+    };
+
+    // Cache key based on email
+    const cacheKey = `registration:${email.toLowerCase()}`;
+    await setCache(cacheKey, registrationData, 10 * 60 * 1000); // 10 minutes TTL
+
+    // Send OTP email (with timeout and better error handling)
+    try {
+      // Send email with timeout protection
+      const emailPromise = sendOTPEmail({
+        email: email.toLowerCase(),
+        name: `${firstName} ${lastName}`,
+        otp
+      });
+      
+      // Set timeout for email sending (15 seconds)
+      const timeoutPromise = new Promise((_, reject) => {
+        setTimeout(() => reject(new Error('Email sending timeout')), 15000);
+      });
+      
+      await Promise.race([emailPromise, timeoutPromise]);
+    } catch (emailError) {
+      console.error('Failed to send OTP email:', emailError);
+      // Delete cached data if email fails
+      await deleteCache(cacheKey).catch(err => console.error('Failed to delete cache:', err));
+      
+      // In development mode or if email not configured, log OTP and continue
+      if (!process.env.EMAIL_USER || !process.env.EMAIL_PASSWORD) {
+        console.log('\n=== OTP VERIFICATION (Email not configured) ===');
+        console.log(`Email: ${email.toLowerCase()}`);
+        console.log(`OTP: ${otp}`);
+        console.log('================================================\n');
+        // Continue with response - OTP is logged to console
+      } else {
+        // Email is configured but failed to send
+        console.error('Email sending failed:', emailError.message);
+        await deleteCache(cacheKey).catch(err => console.error('Failed to delete cache:', err));
+        return res.status(500).json({
+          success: false,
+          message: 'Failed to send verification email. Please try again later.',
+          error: process.env.NODE_ENV === 'development' ? emailError.message : undefined
+        });
+      }
+    }
+
+    res.json({
+      success: true,
+      message: 'OTP sent to your email address. Please check your inbox.',
+      email: email.toLowerCase() // Return email for frontend use
+    });
+  } catch (error) {
+    console.error('Error in sendRegistrationOTP:', error);
+    throw error;
+  }
+});
+
+// @desc    Verify OTP and complete student registration
+// @route   POST /api/auth/verify-otp
+// @access  Public
+const verifyOTPAndRegister = asyncHandler(async (req, res) => {
+  try {
+    const { email, otp } = req.body;
+
+    if (!email || !otp) {
+      return res.status(400).json({
+        success: false,
+        message: 'Email and OTP are required'
+      });
+    }
+
+    // Get registration data from cache
+    const cacheKey = `registration:${email.toLowerCase()}`;
+    const registrationData = await getCache(cacheKey);
+
+    if (!registrationData) {
+      return res.status(400).json({
+        success: false,
+        message: 'OTP expired or invalid. Please register again.'
+      });
+    }
+
+    // Check if OTP has expired
+    if (registrationData.otpExpiry < Date.now()) {
+      await deleteCache(cacheKey);
+      return res.status(400).json({
+        success: false,
+        message: 'OTP has expired. Please request a new one.'
+      });
+    }
+
+    // Check OTP attempts (max 5 attempts)
+    if (registrationData.attempts >= 5) {
+      await deleteCache(cacheKey);
+      return res.status(400).json({
+        success: false,
+        message: 'Too many failed attempts. Please register again.'
+      });
+    }
+
+    // Verify OTP
+    if (registrationData.otp !== otp) {
+      registrationData.attempts += 1;
+      await setCache(cacheKey, registrationData, 10 * 60 * 1000);
+      return res.status(400).json({
+        success: false,
+        message: 'Invalid OTP. Please try again.',
+        attemptsRemaining: 5 - registrationData.attempts
+      });
+    }
+
+    // OTP is correct - create student account
+    const { firstName, lastName, libraryId, rollNo, department, year, password } = registrationData;
+
+    // Double-check if student already exists (race condition protection)
+    const existingStudent = await Student.findOne({
+      $or: [{ email: email.toLowerCase() }, { libraryId }, { rollNo }]
+    });
+
+    if (existingStudent) {
+      await deleteCache(cacheKey);
+      return res.status(400).json({
+        success: false,
+        message: 'Student already exists. Please login instead.'
+      });
+    }
+
+    // Create student
+    const student = await Student.create({
+      firstName,
+      lastName,
+      email: email.toLowerCase(),
+      libraryId,
+      rollNo,
+      department,
+      year,
+      password,
+      isEmailVerified: true
+    });
+
+    // Delete cached registration data
+    await deleteCache(cacheKey);
+
+    // Generate tokens
+    const token = generateToken(student._id, 'student');
+    const refreshToken = generateRefreshToken(student._id, 'student');
+
+    // Update last login
+    student.lastLogin = new Date();
+    await student.save();
+
+    res.status(201).json({
+      success: true,
+      message: 'Registration successful! Email verified.',
+      token,
+      refreshToken,
+      student: {
+        id: student._id,
+        firstName: student.firstName,
+        lastName: student.lastName,
+        email: student.email,
+        libraryId: student.libraryId,
+        rollNo: student.rollNo,
+        department: student.department,
+        year: student.year,
+        fullName: student.fullName
+      }
+    });
+  } catch (error) {
+    console.error('Error in verifyOTPAndRegister:', error);
+    
+    // Handle duplicate key errors
+    if (error.name === 'MongoServerError' && error.code === 11000) {
+      const field = Object.keys(error.keyPattern)[0];
+      return res.status(400).json({
+        success: false,
+        message: `Student already exists with this ${field === 'email' ? 'email' : field === 'libraryId' ? 'library ID' : 'roll number'}`
+      });
+    }
+    
+    // Handle validation errors
+    if (error.name === 'ValidationError') {
+      const messages = Object.values(error.errors).map(err => err.message).join(', ');
+      return res.status(400).json({
+        success: false,
+        message: messages || 'Validation error'
+      });
+    }
+    
+    throw error;
+  }
+});
+
+// @desc    Resend OTP for registration
+// @route   POST /api/auth/resend-otp
+// @access  Public
+const resendRegistrationOTP = asyncHandler(async (req, res) => {
+  try {
+    const { email } = req.body;
+
+    if (!email) {
+      return res.status(400).json({
+        success: false,
+        message: 'Email is required'
+      });
+    }
+
+    // Get registration data from cache
+    const cacheKey = `registration:${email.toLowerCase()}`;
+    const registrationData = await getCache(cacheKey);
+
+    if (!registrationData) {
+      return res.status(400).json({
+        success: false,
+        message: 'Registration session expired. Please register again.'
+      });
+    }
+
+    // Generate new OTP
+    const otp = generateOTP();
+    const otpExpiry = Date.now() + 10 * 60 * 1000; // 10 minutes
+
+    // Update registration data
+    registrationData.otp = otp;
+    registrationData.otpExpiry = otpExpiry;
+    registrationData.attempts = 0; // Reset attempts
+    await setCache(cacheKey, registrationData, 10 * 60 * 1000);
+
+    // Send OTP email
+    try {
+      await sendOTPEmail({
+        email: email.toLowerCase(),
+        name: `${registrationData.firstName} ${registrationData.lastName}`,
+        otp
+      });
+    } catch (emailError) {
+      console.error('Failed to send OTP email:', emailError);
+      return res.status(500).json({
+        success: false,
+        message: 'Failed to send verification email. Please try again.'
+      });
+    }
+
+    res.json({
+      success: true,
+      message: 'New OTP sent to your email address. Please check your inbox.'
+    });
+  } catch (error) {
+    console.error('Error in resendRegistrationOTP:', error);
+    throw error;
+  }
+});
+
+// @desc    Register a new student (old endpoint - kept for backwards compatibility, but now redirects to OTP flow)
 // @route   POST /api/auth/register
 // @access  Public
 const registerStudent = asyncHandler(async (req, res) => {
@@ -560,6 +868,9 @@ const resetPassword = asyncHandler(async (req, res) => {
 
 module.exports = {
   registerStudent,
+  sendRegistrationOTP,
+  verifyOTPAndRegister,
+  resendRegistrationOTP,
   loginStudent,
   loginAdmin,
   getMe,
