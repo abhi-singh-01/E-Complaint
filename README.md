@@ -89,25 +89,6 @@ Every status update is recorded with:
 - Updated by (user/admin/department)  
 - Timestamp  
 
-# 🧱 System Architecture
-
-Client (Browser)
-|
-| HTTP Requests
-v
-Express.js Server
-|
-| Routes → Controllers → Middleware
-v
-Business Logic Layer
-|
-v
-MongoDB (Mongoose Models)
-|
-v
-SMTP Email Service (Nodemailer)
-
-
 ### Includes:
 - MVC folder structure  
 - Authentication middleware  
@@ -166,18 +147,7 @@ SMTP Email Service (Nodemailer)
 
 # 🔄 Complaint Lifecycle
 
-Complaint Created
-↓
-Assigned to Department
-↓
-Under Processing
-↓
-Resolved
-↓
-Feedback Submitted
-↓
-Closed
-
+Complaint Created > Assigned to Department > Under Processing > Resolved > Feedback Submitted > Closed
 
 ⚠ Escalation can occur anytime before resolution.
 
