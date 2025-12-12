@@ -149,8 +149,8 @@ const sendEmail = async ({ to, subject, html, text }) => {
  */
 const sendPasswordResetEmail = async ({ email, name, resetToken, resetUrl }) => {
   try {
-    // If no email configuration (neither Resend nor Gmail), log for development
-    if (!process.env.RESEND_API_KEY && (!process.env.EMAIL_USER || !process.env.EMAIL_PASSWORD)) {
+    // If no email configuration (neither Brevo, Resend, nor Gmail), log for development
+    if (!process.env.BREVO_API_KEY && !process.env.RESEND_API_KEY && (!process.env.EMAIL_USER || !process.env.EMAIL_PASSWORD)) {
       console.log('\n=== PASSWORD RESET EMAIL (Development Mode) ===');
       console.log(`To: ${email}`);
       console.log(`Reset URL: ${resetUrl}`);
