@@ -10,7 +10,7 @@ const createTransporter = () => {
     secure: false, // true for 465, false for other ports
     auth: {
       user: process.env.EMAIL_USER,
-      pass: process.env.EMAIL_PASSWORD, // Use App Password for Gmail
+      pass: process.env.EMAIL_PASS || process.env.EMAIL_PASS, // Use App Password for Gmail
     },
   });
 
@@ -28,7 +28,7 @@ const createTransporter = () => {
 const sendPasswordResetEmail = async ({ email, name, resetToken, resetUrl }) => {
   try {
     // If no email configuration, log the reset link (for development)
-    if (!process.env.EMAIL_USER || !process.env.EMAIL_PASSWORD) {
+    if (!process.env.EMAIL_USER || !process.env.EMAIL_PASS) {
       console.log('\n=== PASSWORD RESET EMAIL (Development Mode) ===');
       console.log(`To: ${email}`);
       console.log(`Reset URL: ${resetUrl}`);
@@ -124,7 +124,7 @@ const sendPasswordResetEmail = async ({ email, name, resetToken, resetUrl }) => 
 
     const info = await transporter.sendMail(mailOptions);
     console.log('Password reset email sent:', info.messageId);
-    
+
     return { success: true, messageId: info.messageId };
   } catch (error) {
     console.error('Error sending password reset email:', error);
@@ -142,7 +142,7 @@ const sendPasswordResetEmail = async ({ email, name, resetToken, resetUrl }) => 
  */
 const sendComplaintCreatedEmail = async ({ email, name, complaint, complaintUrl }) => {
   try {
-    if (!process.env.EMAIL_USER || !process.env.EMAIL_PASSWORD) {
+    if (!process.env.EMAIL_USER || !process.env.EMAIL_PASS) {
       console.log('\n=== COMPLAINT CREATED EMAIL (Development Mode) ===');
       console.log(`To: ${email}`);
       console.log(`Complaint: ${complaint.title}`);
@@ -237,7 +237,7 @@ const sendComplaintCreatedEmail = async ({ email, name, complaint, complaintUrl 
 
     const info = await transporter.sendMail(mailOptions);
     console.log('Complaint created email sent:', info.messageId);
-    
+
     return { success: true, messageId: info.messageId };
   } catch (error) {
     console.error('Error sending complaint created email:', error);
@@ -258,7 +258,7 @@ const sendComplaintCreatedEmail = async ({ email, name, complaint, complaintUrl 
  */
 const sendComplaintStatusUpdateEmail = async ({ email, name, complaint, oldStatus, newStatus, complaintUrl }) => {
   try {
-    if (!process.env.EMAIL_USER || !process.env.EMAIL_PASSWORD) {
+    if (!process.env.EMAIL_USER || !process.env.EMAIL_PASS) {
       console.log('\n=== COMPLAINT STATUS UPDATE EMAIL (Development Mode) ===');
       console.log(`To: ${email}`);
       console.log(`Complaint: ${complaint.title}`);
@@ -352,7 +352,7 @@ const sendComplaintStatusUpdateEmail = async ({ email, name, complaint, oldStatu
 
     const info = await transporter.sendMail(mailOptions);
     console.log('Complaint status update email sent:', info.messageId);
-    
+
     return { success: true, messageId: info.messageId };
   } catch (error) {
     console.error('Error sending complaint status update email:', error);
@@ -372,7 +372,7 @@ const sendComplaintStatusUpdateEmail = async ({ email, name, complaint, oldStatu
  */
 const sendCommentAddedEmail = async ({ email, name, complaint, comment, commentedBy, complaintUrl }) => {
   try {
-    if (!process.env.EMAIL_USER || !process.env.EMAIL_PASSWORD) {
+    if (!process.env.EMAIL_USER || !process.env.EMAIL_PASS) {
       console.log('\n=== COMMENT ADDED EMAIL (Development Mode) ===');
       console.log(`To: ${email}`);
       console.log(`Complaint: ${complaint.title}`);
@@ -463,7 +463,7 @@ const sendCommentAddedEmail = async ({ email, name, complaint, comment, commente
 
     const info = await transporter.sendMail(mailOptions);
     console.log('Comment added email sent:', info.messageId);
-    
+
     return { success: true, messageId: info.messageId };
   } catch (error) {
     console.error('Error sending comment added email:', error);
@@ -480,7 +480,7 @@ const sendCommentAddedEmail = async ({ email, name, complaint, comment, commente
  */
 const sendOTPEmail = async ({ email, name, otp }) => {
   try {
-    if (!process.env.EMAIL_USER || !process.env.EMAIL_PASSWORD) {
+    if (!process.env.EMAIL_USER || !process.env.EMAIL_PASS) {
       console.log('\n=== OTP VERIFICATION EMAIL (Development Mode) ===');
       console.log(`To: ${email}`);
       console.log(`Name: ${name}`);
@@ -490,10 +490,10 @@ const sendOTPEmail = async ({ email, name, otp }) => {
     }
 
     const transporter = createTransporter();
-    
+
     // Skip verify() to prevent timeout - verification happens during sendMail anyway
     // If email credentials are wrong, sendMail will fail with clear error
-    
+
     const mailOptions = {
       from: `"E-Complaint System" <${process.env.EMAIL_USER}>`,
       to: email,
@@ -564,7 +564,7 @@ const sendOTPEmail = async ({ email, name, otp }) => {
 
     const info = await transporter.sendMail(mailOptions);
     console.log('OTP email sent:', info.messageId);
-    
+
     return { success: true, messageId: info.messageId };
   } catch (error) {
     console.error('Error sending OTP email:', error);
