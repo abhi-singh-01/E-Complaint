@@ -139,54 +139,6 @@ SMTP Email Service (Nodemailer)
 - Nodemailer (SMTP emails)  
 - Nodemon (dev auto-reload)  
 
-# 📂 Folder Structure
-
-E-Complaint/
-│
-├── config/
-│ └── db.js
-│
-├── controllers/
-│ ├── authController.js
-│ ├── complaintController.js
-│ ├── adminController.js
-│ └── departmentController.js
-│
-├── middleware/
-│ ├── authMiddleware.js
-│ └── uploadMiddleware.js
-│
-├── models/
-│ ├── User.js
-│ ├── Complaint.js
-│ ├── Department.js
-│ ├── Attachment.js
-│ ├── Feedback.js
-│ └── Escalation.js
-│
-├── public/
-│ ├── css/
-│ ├── js/
-│ └── uploads/
-│
-├── routes/
-│ ├── authRoutes.js
-│ ├── adminRoutes.js
-│ ├── complaintRoutes.js
-│ └── departmentRoutes.js
-│
-├── views/
-│ ├── login.ejs
-│ ├── register.ejs
-│ ├── userDashboard.ejs
-│ ├── adminDashboard.ejs
-│ ├── departmentDashboard.ejs
-│ └── complaintDetails.ejs
-│
-├── app.js
-├── package.json
-└── README.md
-
 
 # 🗄️ Database Schema
 
@@ -211,13 +163,6 @@ E-Complaint/
 ### ✔ Status History
 `_id, complaint_id, prev_status, new_status, changed_by, timestamp`
 
----
-
-# 🧩 ER Diagram
-
-> Add your PNG ER Diagram image here once uploaded to GitHub.
-
----
 
 # 🔄 Complaint Lifecycle
 
@@ -233,12 +178,9 @@ Feedback Submitted
 ↓
 Closed
 
-yaml
-Copy code
 
 ⚠ Escalation can occur anytime before resolution.
 
----
 
 # 🔌 API Documentation
 
@@ -261,7 +203,6 @@ Copy code
 | GET | `/admin/complaints` | View all complaints |
 | POST | `/admin/assign` | Assign complaint to department |
 
----
 
 # 🔐 Authentication & Authorization
 
@@ -271,8 +212,6 @@ Copy code
   - **User** → file & track complaints  
   - **Department** → process assigned complaints  
   - **Admin** → full system management  
-
----
 
 # 🛠 Installation
 
