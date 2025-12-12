@@ -5,7 +5,9 @@ import {
   Button,
   Toolbar,
   Typography,
-  IconButton
+  IconButton,
+  useMediaQuery,
+  useTheme
 } from '@mui/material'
 import {
   LightMode,
@@ -21,6 +23,9 @@ function AdminNavbar() {
   const { isDarkMode, toggleTheme } = useCustomTheme()
   const { user, logout } = useAuth()
   const navigate = useNavigate()
+  const theme = useTheme()
+  const isMobile = useMediaQuery(theme.breakpoints.down('sm'))
+  const isTablet = useMediaQuery(theme.breakpoints.down('md'))
 
   const handleLogout = () => {
     console.log('Admin logout clicked, navigating to about page for testing')
@@ -31,68 +36,74 @@ function AdminNavbar() {
   const getRoleIcon = () => {
     switch (user?.role) {
       case 'hod':
-        return <AdminPanelSettings sx={{ color: '#1976d2', fontSize: '1.8rem' }} />
+        return <AdminPanelSettings sx={{ color: '#1976d2', fontSize: { xs: '1.4rem', sm: '1.8rem' } }} />
       case 'assistant_hod':
-        return <SupervisorAccount sx={{ color: '#1976d2', fontSize: '1.8rem' }} />
+        return <SupervisorAccount sx={{ color: '#1976d2', fontSize: { xs: '1.4rem', sm: '1.8rem' } }} />
       default:
-        return <AdminPanelSettings sx={{ color: '#1976d2', fontSize: '1.8rem' }} />
+        return <AdminPanelSettings sx={{ color: '#1976d2', fontSize: { xs: '1.4rem', sm: '1.8rem' } }} />
     }
   }
 
   const getRoleTitle = () => {
     switch (user?.role) {
       case 'hod':
-        return 'HOD'
+        return isMobile ? 'HOD' : 'HOD'
       case 'assistant_hod':
-        return 'Assistant HOD'
+        return isMobile ? 'Asst. HOD' : 'Assistant HOD'
       case 'external':
         // For external departments, use department field to determine title
-        if (user?.department === 'accounts') return 'Accounts Department'
-        if (user?.department === 'librarian') return 'Librarian Department'
-        if (user?.department === 'maintenance') return 'Maintenance Department'
-        return 'External Department'
+        if (user?.department === 'accounts') return isMobile ? 'Accounts' : 'Accounts Department'
+        if (user?.department === 'librarian') return isMobile ? 'Library' : 'Librarian Department'
+        if (user?.department === 'maintenance') return isMobile ? 'Maintenance' : 'Maintenance Department'
+        return isMobile ? 'External' : 'External Department'
       default:
         return 'Admin'
     }
   }
 
   return (
-    <AppBar 
-      position="fixed" 
-      elevation={0} 
-      sx={{ 
+    <AppBar
+      position="fixed"
+      elevation={0}
+      sx={{
         backgroundColor: isDarkMode ? 'rgba(30, 30, 30, 0.95)' : 'rgba(255, 255, 255, 0.95)',
         backdropFilter: 'blur(10px)',
         borderBottom: isDarkMode ? '1px solid #333' : '1px solid rgba(0, 0, 0, 0.1)'
       }}
     >
-      <Toolbar sx={{ justifyContent: 'space-between', py: 1 }}>
+      <Toolbar sx={{ justifyContent: 'space-between', py: 1, px: { xs: 1, sm: 2 }, minHeight: { xs: 56, sm: 64 } }}>
         <Typography
           variant="h5"
           sx={{
             color: '#1976d2',
             fontWeight: 'bold',
-            fontSize: '1.5rem'
+            fontSize: { xs: '1rem', sm: '1.25rem', md: '1.5rem' }
           }}
         >
-          E-Complaint Admin
+          {isMobile ? 'E-Complaint' : 'E-Complaint Admin'}
         </Typography>
 
-        <Box sx={{ display: 'flex', gap: 2, alignItems: 'center' }}>
-          {/* Admin Info */}
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-            {getRoleIcon()}
-            <Typography
-              variant="body1"
-              sx={{
-                color: isDarkMode ? '#fff' : '#333',
-                fontWeight: '600',
-                fontSize: '1rem'
-              }}
-            >
-              {getRoleTitle()}
-            </Typography>
-          </Box>
+        <Box sx={{ display: 'flex', gap: { xs: 0.5, sm: 1, md: 2 }, alignItems: 'center' }}>
+          {/* Admin Info - Hide on very small screens */}
+          {!isMobile && (
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+              {getRoleIcon()}
+              <Typography
+                variant="body1"
+                sx={{
+                  color: isDarkMode ? '#fff' : '#333',
+                  fontWeight: '600',
+                  fontSize: { xs: '0.8rem', sm: '0.9rem', md: '1rem' },
+                  maxWidth: { sm: 100, md: 150 },
+                  overflow: 'hidden',
+                  textOverflow: 'ellipsis',
+                  whiteSpace: 'nowrap'
+                }}
+              >
+                {getRoleTitle()}
+              </Typography>
+            </Box>
+          )}
 
           {/* Theme Toggle */}
           <IconButton
@@ -101,7 +112,7 @@ function AdminNavbar() {
               color: 'primary.main',
               '&:hover': { backgroundColor: 'rgba(25, 118, 210, 0.1)' },
               '& .MuiSvgIcon-root': {
-                fontSize: '1.8rem'
+                fontSize: { xs: '1.4rem', sm: '1.6rem', md: '1.8rem' }
               }
             }}
           >
@@ -112,15 +123,16 @@ function AdminNavbar() {
           <Button
             variant="contained"
             onClick={handleLogout}
-            startIcon={<Logout sx={{ fontSize: '1.4rem' }} />}
+            startIcon={!isMobile && <Logout sx={{ fontSize: { xs: '1rem', sm: '1.2rem', md: '1.4rem' } }} />}
             sx={{
               fontWeight: 'bold',
               backgroundColor: '#d32f2f',
               color: 'white',
-              px: 2,
-              py: 1,
+              px: { xs: 1.5, sm: 2 },
+              py: { xs: 0.5, sm: 0.75, md: 1 },
               borderRadius: 2,
-              fontSize: '1rem',
+              fontSize: { xs: '0.75rem', sm: '0.85rem', md: '1rem' },
+              minWidth: { xs: 'auto', sm: 80, md: 100 },
               '&:hover': {
                 backgroundColor: '#b71c1c',
                 color: 'white',
@@ -135,7 +147,7 @@ function AdminNavbar() {
               }
             }}
           >
-            Logout
+            {isMobile ? <Logout sx={{ fontSize: '1.2rem' }} /> : 'Logout'}
           </Button>
         </Box>
       </Toolbar>
@@ -144,3 +156,4 @@ function AdminNavbar() {
 }
 
 export default AdminNavbar
+

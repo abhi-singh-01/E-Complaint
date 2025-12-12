@@ -5,7 +5,9 @@ import {
   Button,
   Toolbar,
   Typography,
-  IconButton
+  IconButton,
+  useMediaQuery,
+  useTheme
 } from '@mui/material'
 import {
   LightMode,
@@ -20,6 +22,8 @@ function StudentNavbar() {
   const { isDarkMode, toggleTheme } = useCustomTheme()
   const { user, logout } = useAuth()
   const navigate = useNavigate()
+  const theme = useTheme()
+  const isMobile = useMediaQuery(theme.breakpoints.down('sm'))
 
   const handleLogout = () => {
     logout()
@@ -27,42 +31,48 @@ function StudentNavbar() {
   }
 
   return (
-    <AppBar 
-      position="fixed" 
-      elevation={0} 
-      sx={{ 
+    <AppBar
+      position="fixed"
+      elevation={0}
+      sx={{
         backgroundColor: isDarkMode ? 'rgba(30, 30, 30, 0.95)' : 'rgba(255, 255, 255, 0.95)',
         backdropFilter: 'blur(10px)',
         borderBottom: isDarkMode ? '1px solid #333' : '1px solid rgba(0, 0, 0, 0.1)'
       }}
     >
-      <Toolbar sx={{ justifyContent: 'space-between', py: 1 }}>
+      <Toolbar sx={{ justifyContent: 'space-between', py: 1, px: { xs: 1, sm: 2 } }}>
         <Typography
           variant="h5"
           sx={{
             color: '#1976d2',
             fontWeight: 'bold',
-            fontSize: '1.5rem'
+            fontSize: { xs: '1.1rem', sm: '1.5rem' }
           }}
         >
           E-Complaint
         </Typography>
 
-        <Box sx={{ display: 'flex', gap: 2, alignItems: 'center' }}>
-          {/* Student Name */}
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-            <Person sx={{ color: '#1976d2', fontSize: '1.2rem' }} />
-            <Typography
-              variant="body1"
-              sx={{
-                color: isDarkMode ? '#fff' : '#333',
-                fontWeight: '600',
-                fontSize: '1rem'
-              }}
-            >
-              {user?.name || 'Student'}
-            </Typography>
-          </Box>
+        <Box sx={{ display: 'flex', gap: { xs: 0.5, sm: 2 }, alignItems: 'center' }}>
+          {/* Student Name - Hide on very small screens */}
+          {!isMobile && (
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+              <Person sx={{ color: '#1976d2', fontSize: '1.2rem' }} />
+              <Typography
+                variant="body1"
+                sx={{
+                  color: isDarkMode ? '#fff' : '#333',
+                  fontWeight: '600',
+                  fontSize: '1rem',
+                  maxWidth: 150,
+                  overflow: 'hidden',
+                  textOverflow: 'ellipsis',
+                  whiteSpace: 'nowrap'
+                }}
+              >
+                {user?.name || 'Student'}
+              </Typography>
+            </Box>
+          )}
 
           {/* Theme Toggle */}
           <IconButton
@@ -79,14 +89,16 @@ function StudentNavbar() {
           <Button
             variant="contained"
             onClick={handleLogout}
-            startIcon={<Logout />}
+            startIcon={!isMobile && <Logout />}
             sx={{
               fontWeight: 'bold',
               backgroundColor: '#d32f2f',
               color: 'white',
-              px: 2,
-              py: 1,
+              px: { xs: 1.5, sm: 2 },
+              py: { xs: 0.75, sm: 1 },
               borderRadius: 2,
+              fontSize: { xs: '0.85rem', sm: '1rem' },
+              minWidth: { xs: 'auto', sm: 100 },
               '&:hover': {
                 backgroundColor: '#b71c1c',
                 color: 'white',
@@ -101,7 +113,7 @@ function StudentNavbar() {
               }
             }}
           >
-            Logout
+            {isMobile ? <Logout /> : 'Logout'}
           </Button>
         </Box>
       </Toolbar>
@@ -110,3 +122,4 @@ function StudentNavbar() {
 }
 
 export default StudentNavbar
+

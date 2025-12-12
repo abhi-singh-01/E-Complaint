@@ -1,11 +1,11 @@
-import { 
-  Container, 
-  Typography, 
-  Box, 
-  Grid, 
-  Card, 
-  CardContent, 
-  Avatar, 
+import {
+  Container,
+  Typography,
+  Box,
+  Grid,
+  Card,
+  CardContent,
+  Avatar,
   Chip,
   Paper,
   useTheme,
@@ -14,12 +14,12 @@ import {
   Zoom,
   Grow
 } from '@mui/material'
-import { 
-  School, 
-  Security, 
-  Speed, 
-  Analytics, 
-  Support, 
+import {
+  School,
+  Security,
+  Speed,
+  Analytics,
+  Support,
   CheckCircle,
   TrendingUp,
   People,
@@ -112,9 +112,9 @@ function About() {
   ]
 
   return (
-    <Box sx={{ 
-      width: '100vw', 
-      minHeight: '100vh', 
+    <Box sx={{
+      width: '100vw',
+      minHeight: '100vh',
       margin: 0,
       padding: 0,
       background: isDarkMode
@@ -135,8 +135,8 @@ function About() {
         zIndex: 0
       }
     }}>
-      <Box sx={{ 
-        width: '100%', 
+      <Box sx={{
+        width: '100%',
         py: { xs: 4, sm: 6, md: 8 },
         px: { xs: 2, sm: 4, md: 6, lg: 8, xl: 12 },
         position: 'relative',
@@ -144,11 +144,11 @@ function About() {
       }}>
         {/* Hero Section */}
         <Fade in timeout={1000}>
-          <Paper 
-            elevation={0} 
-            sx={{ 
-              p: { xs: 4, sm: 6, md: 8 }, 
-              mb: { xs: 6, md: 8 }, 
+          <Paper
+            elevation={0}
+            sx={{
+              p: { xs: 4, sm: 6, md: 8 },
+              mb: { xs: 6, md: 8 },
               borderRadius: { xs: 2, md: 4 },
               background: isDarkMode
                 ? 'linear-gradient(135deg, rgba(30, 30, 30, 0.95) 0%, rgba(45, 45, 45, 0.95) 100%)'
@@ -164,23 +164,24 @@ function About() {
           >
             <Box sx={{ textAlign: 'center', mb: 4 }}>
               <Zoom in timeout={800}>
-                <Avatar sx={{ 
-                  bgcolor: isDarkMode ? '#1976d2' : 'linear-gradient(135deg, #1976d2 0%, #42a5f5 100%)',
+                <Avatar sx={{
+                  background: 'linear-gradient(135deg, #1976d2 0%, #9c27b0 100%)',
                   width: { xs: 80, sm: 100 },
                   height: { xs: 80, sm: 100 },
-                  mx: 'auto', 
+                  mx: 'auto',
                   mb: 3,
-                  boxShadow: `0 8px 24px ${alpha('#1976d2', 0.4)}`
+                  boxShadow: '0 8px 32px rgba(25, 118, 210, 0.5), 0 4px 16px rgba(156, 39, 176, 0.3)',
+                  border: '3px solid rgba(255, 255, 255, 0.3)'
                 }}>
-                  <School sx={{ fontSize: { xs: 40, sm: 50 } }} />
+                  <School sx={{ fontSize: { xs: 40, sm: 50 }, color: '#fff' }} />
                 </Avatar>
               </Zoom>
-              <Typography 
-                variant="h3" 
-                component="h1" 
-                gutterBottom 
-                sx={{ 
-                  fontWeight: 700, 
+              <Typography
+                variant="h3"
+                component="h1"
+                gutterBottom
+                sx={{
+                  fontWeight: 700,
                   color: isDarkMode ? '#ffffff' : '#1976d2',
                   mb: 2,
                   fontSize: { xs: '1.75rem', sm: '2.5rem', md: '3rem' }
@@ -189,20 +190,20 @@ function About() {
                 Our Mission
               </Typography>
             </Box>
-            <Typography 
-              variant="h6" 
-              sx={{ 
-                textAlign: 'justify', 
-                lineHeight: 1.8, 
+            <Typography
+              variant="h6"
+              sx={{
+                textAlign: 'justify',
+                lineHeight: 1.8,
                 color: theme.palette.text.primary,
                 maxWidth: '900px',
                 mx: 'auto',
                 fontSize: { xs: '1rem', sm: '1.1rem', md: '1.25rem' }
               }}
             >
-              We are committed to transforming how educational institutions handle complaints and feedback. 
-              Our platform bridges the gap between students and administration, ensuring every voice is heard, 
-              every concern is addressed, and every resolution is transparent. We believe in creating an 
+              We are committed to transforming how educational institutions handle complaints and feedback.
+              Our platform bridges the gap between students and administration, ensuring every voice is heard,
+              every concern is addressed, and every resolution is transparent. We believe in creating an
               environment where communication flows seamlessly, leading to better educational experiences for all.
             </Typography>
           </Paper>
@@ -211,13 +212,13 @@ function About() {
         {/* Statistics Section */}
         <Box sx={{ mb: { xs: 6, md: 8 } }}>
           <Fade in timeout={1200}>
-            <Typography 
-              variant="h4" 
-              component="h2" 
-              gutterBottom 
-              sx={{ 
-                textAlign: 'center', 
-                mb: { xs: 4, md: 6 }, 
+            <Typography
+              variant="h4"
+              component="h2"
+              gutterBottom
+              sx={{
+                textAlign: 'center',
+                mb: { xs: 4, md: 6 },
                 fontWeight: 700,
                 color: theme.palette.text.primary,
                 fontSize: { xs: '1.75rem', sm: '2rem', md: '2.5rem' }
@@ -226,15 +227,21 @@ function About() {
               Impact in Numbers
             </Typography>
           </Fade>
-          <Grid container spacing={{ xs: 3, md: 4 }} sx={{ justifyContent: 'center' }}>
+          <Grid container spacing={{ xs: 3, md: 4 }} sx={{ justifyContent: 'center', alignItems: 'stretch' }}>
             {stats.map((stat, index) => (
-              <Grid item xs={12} sm={6} md={3} key={index}>
+              <Grid item xs={6} sm={6} md={3} key={index} sx={{ display: 'flex' }}>
                 <Grow in timeout={1000 + index * 200}>
-                  <Card 
-                    sx={{ 
-                      textAlign: 'center', 
-                      p: { xs: 2, sm: 3 }, 
-                      height: '100%',
+                  <Card
+                    sx={{
+                      textAlign: 'center',
+                      p: { xs: 2, sm: 3 },
+                      width: '100%',
+                      display: 'flex',
+                      flexDirection: 'column',
+                      justifyContent: 'center',
+                      alignItems: 'center',
+                      aspectRatio: '1 / 1',
+                      minHeight: { xs: 180, sm: 220, md: 240 },
                       background: isDarkMode
                         ? `linear-gradient(135deg, rgba(30, 30, 30, 0.9) 0%, rgba(45, 45, 45, 0.9) 100%)`
                         : `linear-gradient(135deg, rgba(255, 255, 255, 0.9) 0%, rgba(248, 250, 252, 0.9) 100%)`,
@@ -249,13 +256,12 @@ function About() {
                       }
                     }}
                   >
-                    <CardContent>
-                      <Avatar sx={{ 
+                    <CardContent sx={{ p: { xs: 1, sm: 2 }, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', flex: 1 }}>
+                      <Avatar sx={{
                         bgcolor: `${alpha(stat.color, 0.2)}`,
-                        width: { xs: 60, sm: 70 },
-                        height: { xs: 60, sm: 70 },
-                        mx: 'auto', 
-                        mb: 2,
+                        width: { xs: 50, sm: 60, md: 70 },
+                        height: { xs: 50, sm: 60, md: 70 },
+                        mb: { xs: 1, sm: 2 },
                         color: stat.color,
                         transition: 'all 0.3s ease',
                         '&:hover': {
@@ -265,23 +271,24 @@ function About() {
                       }}>
                         {stat.icon}
                       </Avatar>
-                      <Typography 
-                        variant="h3" 
-                        component="div" 
-                        sx={{ 
-                          fontWeight: 700, 
-                          color: stat.color, 
-                          mb: 1,
-                          fontSize: { xs: '2rem', sm: '2.5rem', md: '3rem' }
+                      <Typography
+                        variant="h3"
+                        component="div"
+                        sx={{
+                          fontWeight: 700,
+                          color: stat.color,
+                          mb: 0.5,
+                          fontSize: { xs: '1.5rem', sm: '2rem', md: '2.5rem' }
                         }}
                       >
                         {stat.number}
                       </Typography>
-                      <Typography 
-                        variant="body1" 
+                      <Typography
+                        variant="body1"
                         sx={{
                           color: theme.palette.text.secondary,
-                          fontWeight: 500
+                          fontWeight: 500,
+                          fontSize: { xs: '0.75rem', sm: '0.875rem', md: '1rem' }
                         }}
                       >
                         {stat.label}
@@ -297,13 +304,13 @@ function About() {
         {/* Features Section */}
         <Box sx={{ mb: { xs: 6, md: 8 } }}>
           <Fade in timeout={1400}>
-            <Typography 
-              variant="h4" 
-              component="h2" 
-              gutterBottom 
-              sx={{ 
-                textAlign: 'center', 
-                mb: { xs: 4, md: 6 }, 
+            <Typography
+              variant="h4"
+              component="h2"
+              gutterBottom
+              sx={{
+                textAlign: 'center',
+                mb: { xs: 4, md: 6 },
                 fontWeight: 700,
                 color: theme.palette.text.primary,
                 fontSize: { xs: '1.75rem', sm: '2rem', md: '2.5rem' }
@@ -316,8 +323,8 @@ function About() {
             {features.map((feature, index) => (
               <Grid item xs={12} sm={6} md={4} key={index}>
                 <Grow in timeout={1200 + index * 150}>
-                  <Card 
-                    sx={{ 
+                  <Card
+                    sx={{
                       height: '100%',
                       p: { xs: 2, sm: 3 },
                       textAlign: 'center',
@@ -339,9 +346,9 @@ function About() {
                     }}
                   >
                     <CardContent>
-                      <Box 
-                        sx={{ 
-                          color: feature.color, 
+                      <Box
+                        sx={{
+                          color: feature.color,
                           mb: 2,
                           transition: 'all 0.3s ease',
                           '&:hover': {
@@ -351,11 +358,11 @@ function About() {
                       >
                         {feature.icon}
                       </Box>
-                      <Typography 
-                        variant="h6" 
-                        component="h3" 
-                        gutterBottom 
-                        sx={{ 
+                      <Typography
+                        variant="h6"
+                        component="h3"
+                        gutterBottom
+                        sx={{
                           fontWeight: 600,
                           color: theme.palette.text.primary,
                           mb: 1
@@ -363,8 +370,8 @@ function About() {
                       >
                         {feature.title}
                       </Typography>
-                      <Typography 
-                        variant="body2" 
+                      <Typography
+                        variant="body2"
                         sx={{
                           color: theme.palette.text.secondary,
                           lineHeight: 1.6
@@ -383,13 +390,13 @@ function About() {
         {/* Values Section */}
         <Box sx={{ mb: { xs: 6, md: 8 } }}>
           <Fade in timeout={1600}>
-            <Typography 
-              variant="h4" 
-              component="h2" 
-              gutterBottom 
-              sx={{ 
-                textAlign: 'center', 
-                mb: { xs: 4, md: 6 }, 
+            <Typography
+              variant="h4"
+              component="h2"
+              gutterBottom
+              sx={{
+                textAlign: 'center',
+                mb: { xs: 4, md: 6 },
                 fontWeight: 700,
                 color: theme.palette.text.primary,
                 fontSize: { xs: '1.75rem', sm: '2rem', md: '2.5rem' }
@@ -398,15 +405,18 @@ function About() {
               Our Core Values
             </Typography>
           </Fade>
-          <Grid container spacing={{ xs: 3, md: 4 }} sx={{ justifyContent: 'center' }}>
+          <Grid container spacing={{ xs: 3, md: 4 }} sx={{ justifyContent: 'center', alignItems: 'stretch' }}>
             {values.map((value, index) => (
-              <Grid item xs={12} md={6} key={index}>
+              <Grid item xs={12} sm={6} md={6} lg={3} key={index} sx={{ display: 'flex' }}>
                 <Grow in timeout={1400 + index * 200}>
-                  <Paper 
+                  <Paper
                     elevation={0}
-                    sx={{ 
-                      p: { xs: 3, sm: 4 }, 
-                      height: '100%',
+                    sx={{
+                      p: { xs: 3, sm: 4 },
+                      width: '100%',
+                      display: 'flex',
+                      flexDirection: 'column',
+                      minHeight: { xs: 180, sm: 200 },
                       background: isDarkMode
                         ? `linear-gradient(135deg, rgba(30, 30, 30, 0.9) 0%, rgba(45, 45, 45, 0.9) 100%)`
                         : `linear-gradient(135deg, rgba(255, 255, 255, 0.9) 0%, rgba(248, 250, 252, 0.9) 100%)`,
@@ -415,38 +425,41 @@ function About() {
                       transition: 'all 0.4s cubic-bezier(0.4, 0, 0.2, 1)',
                       cursor: 'pointer',
                       '&:hover': {
-                        transform: 'translateX(8px)',
-                        boxShadow: `0 8px 24px ${alpha(value.color, 0.3)}`,
+                        transform: 'translateY(-8px)',
+                        boxShadow: `0 12px 32px ${alpha(value.color, 0.3)}`,
                         border: `2px solid ${alpha(value.color, 0.5)}`
                       }
                     }}
                   >
                     <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
-                      <Avatar sx={{ 
+                      <Avatar sx={{
                         bgcolor: `${alpha(value.color, 0.2)}`,
                         width: { xs: 50, sm: 60 },
                         height: { xs: 50, sm: 60 },
                         mr: 2,
-                        color: value.color
+                        color: value.color,
+                        flexShrink: 0
                       }}>
                         {value.icon}
                       </Avatar>
-                      <Typography 
-                        variant="h5" 
-                        component="h3" 
-                        sx={{ 
-                          fontWeight: 600, 
-                          color: value.color
+                      <Typography
+                        variant="h5"
+                        component="h3"
+                        sx={{
+                          fontWeight: 600,
+                          color: value.color,
+                          fontSize: { xs: '1.1rem', sm: '1.25rem', md: '1.5rem' }
                         }}
                       >
                         {value.title}
                       </Typography>
                     </Box>
-                    <Typography 
-                      variant="body1" 
-                      sx={{ 
+                    <Typography
+                      variant="body1"
+                      sx={{
                         color: theme.palette.text.secondary,
-                        lineHeight: 1.7
+                        lineHeight: 1.7,
+                        flexGrow: 1
                       }}
                     >
                       {value.description}
@@ -460,10 +473,10 @@ function About() {
 
         {/* Contact Section */}
         <Fade in timeout={1800}>
-          <Paper 
-            elevation={0} 
-            sx={{ 
-              p: { xs: 4, sm: 6, md: 8 }, 
+          <Paper
+            elevation={0}
+            sx={{
+              p: { xs: 4, sm: 6, md: 8 },
               textAlign: 'center',
               background: isDarkMode
                 ? `linear-gradient(135deg, ${alpha('#1976d2', 0.15)} 0%, ${alpha('#9c27b0', 0.15)} 100%)`
@@ -477,23 +490,24 @@ function About() {
             }}
           >
             <Zoom in timeout={2000}>
-              <Avatar sx={{ 
-                bgcolor: isDarkMode ? '#1976d2' : 'linear-gradient(135deg, #1976d2 0%, #42a5f5 100%)',
+              <Avatar sx={{
+                background: 'linear-gradient(135deg, #1976d2 0%, #9c27b0 100%)',
                 width: { xs: 80, sm: 100 },
                 height: { xs: 80, sm: 100 },
-                mx: 'auto', 
+                mx: 'auto',
                 mb: 3,
-                boxShadow: `0 8px 24px ${alpha('#1976d2', 0.4)}`
+                boxShadow: '0 8px 32px rgba(25, 118, 210, 0.5), 0 4px 16px rgba(156, 39, 176, 0.3)',
+                border: '3px solid rgba(255, 255, 255, 0.3)'
               }}>
-                <Support sx={{ fontSize: { xs: 40, sm: 50 } }} />
+                <Support sx={{ fontSize: { xs: 40, sm: 50 }, color: '#fff' }} />
               </Avatar>
             </Zoom>
-            <Typography 
-              variant="h4" 
-              component="h2" 
-              gutterBottom 
-              sx={{ 
-                fontWeight: 700, 
+            <Typography
+              variant="h4"
+              component="h2"
+              gutterBottom
+              sx={{
+                fontWeight: 700,
                 color: '#1976d2',
                 mb: 2,
                 fontSize: { xs: '1.75rem', sm: '2rem', md: '2.5rem' }
@@ -501,20 +515,20 @@ function About() {
             >
               Get in Touch
             </Typography>
-            <Typography 
-              variant="h6" 
-              sx={{ 
-                mb: 3, 
+            <Typography
+              variant="h6"
+              sx={{
+                mb: 3,
                 color: theme.palette.text.secondary,
                 fontSize: { xs: '1rem', sm: '1.1rem', md: '1.25rem' }
               }}
             >
               Ready to transform your institution's complaint management?
             </Typography>
-            <Typography 
-              variant="body1" 
-              sx={{ 
-                mb: 4, 
+            <Typography
+              variant="body1"
+              sx={{
+                mb: 4,
                 color: theme.palette.text.secondary,
                 maxWidth: '600px',
                 mx: 'auto'
@@ -522,18 +536,18 @@ function About() {
             >
               For technical support, general inquiries, or to schedule a demo, our team is here to help.
             </Typography>
-            <Box sx={{ 
-              display: 'flex', 
-              justifyContent: 'center', 
-              gap: 2, 
-              flexWrap: 'wrap' 
+            <Box sx={{
+              display: 'flex',
+              justifyContent: 'center',
+              gap: 2,
+              flexWrap: 'wrap'
             }}>
-              <Chip 
+              <Chip
                 icon={<Email />}
-                label="support@ecomplaint.edu" 
-                sx={{ 
-                  bgcolor: isDarkMode 
-                    ? alpha('#1976d2', 0.2) 
+                label="support@ecomplaint.edu"
+                sx={{
+                  bgcolor: isDarkMode
+                    ? alpha('#1976d2', 0.2)
                     : alpha('#1976d2', 0.1),
                   color: '#1976d2',
                   fontSize: { xs: '0.875rem', sm: '1rem' },
@@ -546,14 +560,14 @@ function About() {
                     bgcolor: alpha('#1976d2', 0.3),
                     transform: 'scale(1.05)'
                   }
-                }} 
+                }}
               />
-              <Chip 
+              <Chip
                 icon={<Phone />}
-                label="+1 (555) 123-4567" 
-                sx={{ 
-                  bgcolor: isDarkMode 
-                    ? alpha('#9c27b0', 0.2) 
+                label="+1 (555) 123-4567"
+                sx={{
+                  bgcolor: isDarkMode
+                    ? alpha('#9c27b0', 0.2)
                     : alpha('#9c27b0', 0.1),
                   color: '#9c27b0',
                   fontSize: { xs: '0.875rem', sm: '1rem' },
@@ -566,14 +580,14 @@ function About() {
                     bgcolor: alpha('#9c27b0', 0.3),
                     transform: 'scale(1.05)'
                   }
-                }} 
+                }}
               />
-              <Chip 
+              <Chip
                 icon={<LocationOn />}
-                label="123 University Ave, Campus" 
-                sx={{ 
-                  bgcolor: isDarkMode 
-                    ? alpha('#2e7d32', 0.2) 
+                label="123 University Ave, Campus"
+                sx={{
+                  bgcolor: isDarkMode
+                    ? alpha('#2e7d32', 0.2)
                     : alpha('#2e7d32', 0.1),
                   color: '#2e7d32',
                   fontSize: { xs: '0.875rem', sm: '1rem' },
@@ -586,7 +600,7 @@ function About() {
                     bgcolor: alpha('#2e7d32', 0.3),
                     transform: 'scale(1.05)'
                   }
-                }} 
+                }}
               />
             </Box>
           </Paper>
