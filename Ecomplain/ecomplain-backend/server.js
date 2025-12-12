@@ -77,27 +77,28 @@ const corsOptions = {
   origin: function (origin, callback) {
     // Allow requests with no origin (mobile apps, curl, etc.)
     if (!origin) return callback(null, true);
-    
+
     const allowedOrigins = [
       process.env.FRONTEND_URL || 'http://localhost:3000',
       'http://localhost:3000',
       'http://localhost:3002',
-      'http://localhost:5173'
+      'http://localhost:5173',
+      'http://localhost:5174'
     ];
-    
+
     // Allow Vercel deployments (both preview and production)
-    const isVercelDomain = origin.includes('.vercel.app') || 
-                          origin.includes('vercel.app') ||
-                          (process.env.VERCEL_URL && origin.includes(process.env.VERCEL_URL));
-    
+    const isVercelDomain = origin.includes('.vercel.app') ||
+      origin.includes('vercel.app') ||
+      (process.env.VERCEL_URL && origin.includes(process.env.VERCEL_URL));
+
     // Allow custom domains from environment variable (comma-separated)
-    const customDomains = process.env.ALLOWED_ORIGINS 
+    const customDomains = process.env.ALLOWED_ORIGINS
       ? process.env.ALLOWED_ORIGINS.split(',').map(domain => domain.trim())
       : [];
-    
-    if (allowedOrigins.indexOf(origin) !== -1 || 
-        isVercelDomain || 
-        customDomains.includes(origin)) {
+
+    if (allowedOrigins.indexOf(origin) !== -1 ||
+      isVercelDomain ||
+      customDomains.includes(origin)) {
       callback(null, true);
     } else {
       callback(new Error('Not allowed by CORS'));
@@ -111,15 +112,15 @@ const corsOptions = {
 app.use(cors(corsOptions));
 
 // Body parsing middleware - optimized settings
-app.use(express.json({ 
+app.use(express.json({
   limit: '10mb',
   verify: (req, res, buf) => {
     // Store raw body for potential use
     req.rawBody = buf;
   }
 }));
-app.use(express.urlencoded({ 
-  extended: true, 
+app.use(express.urlencoded({
+  extended: true,
   limit: '10mb',
   parameterLimit: 100 // Limit number of parameters
 }));
