@@ -460,7 +460,7 @@ export default function DeanDashboard() {
     total: allComplaints.length,
     pending: allComplaints.filter(c => c.status.toLowerCase() === 'pending').length,
     inProgress: allComplaints.filter(c => c.status.toLowerCase() === 'in progress').length,
-    resolved: allComplaints.filter(c => 
+    resolved: allComplaints.filter(c =>
       c.status.toLowerCase() === 'resolved' || c.status.toLowerCase() === 'closed'
     ).length,
     rejected: allComplaints.filter(c => c.status.toLowerCase() === 'rejected').length,
@@ -488,13 +488,13 @@ export default function DeanDashboard() {
   return (
     <>
       <AdminNavbar />
-      <Container maxWidth="xl" sx={{ py: 2, pt: 2 }}>
+      <Container maxWidth="xl" sx={{ py: 2, pt: 2, px: { xs: 1, sm: 2, md: 3 } }}>
         {/* Header */}
         <Box sx={{ mb: 3 }}>
-          <Typography variant="h3" gutterBottom sx={{ fontWeight: 'bold', color: '#1976d2', fontSize: '2.5rem' }}>
+          <Typography variant="h3" gutterBottom sx={{ fontWeight: 'bold', color: '#1976d2', fontSize: { xs: '1.5rem', sm: '2rem', md: '2.5rem' } }}>
             Dean Dashboard
           </Typography>
-          <Typography variant="h5" color="text.secondary" sx={{ fontSize: '1.5rem', fontWeight: '500' }}>
+          <Typography variant="h5" color="text.secondary" sx={{ fontSize: { xs: '0.9rem', sm: '1.2rem', md: '1.5rem' }, fontWeight: '500' }}>
             {user?.department} Department - Welcome, {user?.firstName} {user?.lastName}
           </Typography>
         </Box>
@@ -513,8 +513,7 @@ export default function DeanDashboard() {
               boxShadow: '0 4px 12px rgba(0, 0, 0, 0.1)',
               transition: 'transform 0.2s ease',
               width: '100%',
-              minHeight: '200px',
-              aspectRatio: '1',
+              minHeight: { xs: '100px', sm: '130px', md: '160px' },
               display: 'flex',
               flexDirection: 'column',
               '&:hover': { transform: 'translateY(-4px)' }
@@ -529,11 +528,11 @@ export default function DeanDashboard() {
                 flexGrow: 1,
                 height: '100%'
               }}>
-                <Assignment sx={{ fontSize: 40, color: '#1976d2', mb: 1 }} />
-                <Typography variant="h2" sx={{ fontWeight: 'bold', color: '#1976d2', fontSize: '2rem' }}>
+                <Assignment sx={{ fontSize: { xs: 28, sm: 34, md: 40 }, color: '#1976d2', mb: 1 }} />
+                <Typography variant="h2" sx={{ fontWeight: 'bold', color: '#1976d2', fontSize: { xs: '1.5rem', sm: '1.75rem', md: '2rem' } }}>
                   {stats.total}
                 </Typography>
-                <Typography variant="h6" color="text.secondary" sx={{ fontSize: '1rem', fontWeight: '600' }}>
+                <Typography variant="h6" color="text.secondary" sx={{ fontSize: { xs: '0.75rem', sm: '0.875rem', md: '1rem' }, fontWeight: '600' }}>
                   Total Complaints
                 </Typography>
               </CardContent>
@@ -546,8 +545,7 @@ export default function DeanDashboard() {
               boxShadow: '0 4px 12px rgba(0, 0, 0, 0.1)',
               transition: 'transform 0.2s ease',
               width: '100%',
-              minHeight: '200px',
-              aspectRatio: '1',
+              minHeight: { xs: '100px', sm: '130px', md: '160px' },
               display: 'flex',
               flexDirection: 'column',
               '&:hover': { transform: 'translateY(-4px)' }
@@ -562,11 +560,11 @@ export default function DeanDashboard() {
                 flexGrow: 1,
                 height: '100%'
               }}>
-                <Forward sx={{ fontSize: 40, color: '#f57c00', mb: 1 }} />
-                <Typography variant="h2" sx={{ fontWeight: 'bold', color: '#f57c00', fontSize: '2rem' }}>
+                <Forward sx={{ fontSize: { xs: 28, sm: 34, md: 40 }, color: '#f57c00', mb: 1 }} />
+                <Typography variant="h2" sx={{ fontWeight: 'bold', color: '#f57c00', fontSize: { xs: '1.5rem', sm: '1.75rem', md: '2rem' } }}>
                   {stats.escalated}
                 </Typography>
-                <Typography variant="h6" color="text.secondary" sx={{ fontSize: '1rem', fontWeight: '600' }}>
+                <Typography variant="h6" color="text.secondary" sx={{ fontSize: { xs: '0.75rem', sm: '0.875rem', md: '1rem' }, fontWeight: '600' }}>
                   Forwarded
                 </Typography>
               </CardContent>
@@ -579,8 +577,7 @@ export default function DeanDashboard() {
               boxShadow: '0 4px 12px rgba(0, 0, 0, 0.1)',
               transition: 'transform 0.2s ease',
               width: '100%',
-              minHeight: '200px',
-              aspectRatio: '1',
+              minHeight: { xs: '100px', sm: '130px', md: '160px' },
               display: 'flex',
               flexDirection: 'column',
               '&:hover': { transform: 'translateY(-4px)' }
@@ -595,11 +592,11 @@ export default function DeanDashboard() {
                 flexGrow: 1,
                 height: '100%'
               }}>
-                <CheckCircle sx={{ fontSize: 40, color: '#2e7d32', mb: 1 }} />
-                <Typography variant="h2" sx={{ fontWeight: 'bold', color: '#2e7d32', fontSize: '2rem' }}>
+                <CheckCircle sx={{ fontSize: { xs: 28, sm: 34, md: 40 }, color: '#2e7d32', mb: 1 }} />
+                <Typography variant="h2" sx={{ fontWeight: 'bold', color: '#2e7d32', fontSize: { xs: '1.5rem', sm: '1.75rem', md: '2rem' } }}>
                   {stats.resolved}
                 </Typography>
-                <Typography variant="h6" color="text.secondary" sx={{ fontSize: '1rem', fontWeight: '600' }}>
+                <Typography variant="h6" color="text.secondary" sx={{ fontSize: { xs: '0.75rem', sm: '0.875rem', md: '1rem' }, fontWeight: '600' }}>
                   Resolved
                 </Typography>
               </CardContent>
@@ -612,8 +609,7 @@ export default function DeanDashboard() {
               boxShadow: '0 4px 12px rgba(0, 0, 0, 0.1)',
               transition: 'transform 0.2s ease',
               width: '100%',
-              minHeight: '200px',
-              aspectRatio: '1',
+              minHeight: { xs: '100px', sm: '130px', md: '160px' },
               display: 'flex',
               flexDirection: 'column',
               '&:hover': { transform: 'translateY(-4px)' }
@@ -628,11 +624,11 @@ export default function DeanDashboard() {
                 flexGrow: 1,
                 height: '100%'
               }}>
-                <TrendingUp sx={{ fontSize: 40, color: '#00acc1', mb: 1 }} />
-                <Typography variant="h2" sx={{ fontWeight: 'bold', color: '#00acc1', fontSize: '2rem' }}>
+                <TrendingUp sx={{ fontSize: { xs: 28, sm: 34, md: 40 }, color: '#00acc1', mb: 1 }} />
+                <Typography variant="h2" sx={{ fontWeight: 'bold', color: '#00acc1', fontSize: { xs: '1.5rem', sm: '1.75rem', md: '2rem' } }}>
                   {stats.inProgress}
                 </Typography>
-                <Typography variant="h6" color="text.secondary" sx={{ fontSize: '1rem', fontWeight: '600' }}>
+                <Typography variant="h6" color="text.secondary" sx={{ fontSize: { xs: '0.75rem', sm: '0.875rem', md: '1rem' }, fontWeight: '600' }}>
                   In Progress
                 </Typography>
               </CardContent>
@@ -645,8 +641,7 @@ export default function DeanDashboard() {
               boxShadow: '0 4px 12px rgba(0, 0, 0, 0.1)',
               transition: 'transform 0.2s ease',
               width: '100%',
-              minHeight: '200px',
-              aspectRatio: '1',
+              minHeight: { xs: '100px', sm: '130px', md: '160px' },
               display: 'flex',
               flexDirection: 'column',
               '&:hover': { transform: 'translateY(-4px)' }
@@ -661,11 +656,11 @@ export default function DeanDashboard() {
                 flexGrow: 1,
                 height: '100%'
               }}>
-                <Cancel sx={{ fontSize: 40, color: '#d32f2f', mb: 1 }} />
-                <Typography variant="h2" sx={{ fontWeight: 'bold', color: '#d32f2f', fontSize: '2rem' }}>
+                <Cancel sx={{ fontSize: { xs: 28, sm: 34, md: 40 }, color: '#d32f2f', mb: 1 }} />
+                <Typography variant="h2" sx={{ fontWeight: 'bold', color: '#d32f2f', fontSize: { xs: '1.5rem', sm: '1.75rem', md: '2rem' } }}>
                   {stats.rejected}
                 </Typography>
-                <Typography variant="h6" color="text.secondary" sx={{ fontSize: '1rem', fontWeight: '600' }}>
+                <Typography variant="h6" color="text.secondary" sx={{ fontSize: { xs: '0.75rem', sm: '0.875rem', md: '1rem' }, fontWeight: '600' }}>
                   Rejected
                 </Typography>
               </CardContent>
@@ -678,12 +673,17 @@ export default function DeanDashboard() {
           <Tabs
             value={activeTab}
             onChange={(e, newValue) => setActiveTab(newValue)}
+            variant="scrollable"
+            scrollButtons="auto"
+            allowScrollButtonsMobile
             sx={{
               '& .MuiTab-root': {
                 textTransform: 'none',
-                fontSize: '1.1rem',
+                fontSize: { xs: '0.8rem', sm: '0.9rem', md: '1.1rem' },
                 fontWeight: '600',
-                minHeight: 56,
+                minHeight: { xs: 48, sm: 56 },
+                minWidth: { xs: 'auto', sm: 100 },
+                px: { xs: 1, sm: 2 },
                 color: isDarkMode ? '#b0b0b0' : '#666666',
                 transition: 'all 0.3s ease',
                 '&.Mui-selected': {
@@ -705,11 +705,11 @@ export default function DeanDashboard() {
               }
             }}
           >
-            <Tab label="Dean Level Complaints" />
-            <Tab label="Forwarded Complaints" />
-            <Tab label="All Complaints" />
+            <Tab label="Dean" />
+            <Tab label="Forwarded" />
+            <Tab label="All" />
             <Tab label="Completed" />
-            <Tab label="Analytics & Reports" />
+            <Tab label="Analytics" />
           </Tabs>
         </Box>
 
@@ -717,11 +717,12 @@ export default function DeanDashboard() {
         {activeTab === 0 && (
           <Box>
             {/* Filter and Actions */}
-            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
-              <Box sx={{ display: 'flex', gap: 2, alignItems: 'center' }}>
+            <Box sx={{ display: 'flex', flexDirection: { xs: 'column', sm: 'row' }, justifyContent: 'space-between', alignItems: { xs: 'stretch', sm: 'center' }, gap: 2, mb: 3 }}>
+              <Box sx={{ display: 'flex', gap: 1, alignItems: 'center', flexWrap: 'wrap' }}>
                 <Button
                   variant={filterStatus === 'all' ? 'contained' : 'outlined'}
                   size="small"
+                  sx={{ fontSize: { xs: '0.7rem', sm: '0.8rem' } }}
                   onClick={() => setFilterStatus('all')}
                 >
                   All ({complaints.filter(c => c.status.toLowerCase() !== 'resolved' && c.status.toLowerCase() !== 'closed').length})
@@ -730,6 +731,7 @@ export default function DeanDashboard() {
                   variant={filterStatus === 'pending' ? 'contained' : 'outlined'}
                   size="small"
                   color="warning"
+                  sx={{ fontSize: { xs: '0.7rem', sm: '0.8rem' } }}
                   onClick={() => setFilterStatus('pending')}
                 >
                   Pending ({complaints.filter(c => c.status.toLowerCase() === 'pending').length})
@@ -865,15 +867,15 @@ export default function DeanDashboard() {
                                   const isRejected = complaint.status.toLowerCase() === 'rejected';
                                   const isResolved = complaint.status.toLowerCase() === 'resolved' || complaint.status.toLowerCase() === 'closed';
                                   const isDisabled = isForwarded || isRejected || isResolved;
-                                  
+
                                   return (
                                     <>
                                       <Tooltip title={
-                                        isForwarded 
-                                          ? 'Cannot operate on forwarded complaints' 
+                                        isForwarded
+                                          ? 'Cannot operate on forwarded complaints'
                                           : isResolved || isRejected
-                                          ? 'Cannot comment on resolved/rejected complaints' 
-                                          : 'Add Comment'
+                                            ? 'Cannot comment on resolved/rejected complaints'
+                                            : 'Add Comment'
                                       }>
                                         <span>
                                           <IconButton
@@ -900,7 +902,7 @@ export default function DeanDashboard() {
                                       {!isForwarded && (
                                         <Tooltip title={
                                           isResolved || isRejected
-                                            ? 'Cannot forward resolved/rejected complaints' 
+                                            ? 'Cannot forward resolved/rejected complaints'
                                             : 'Forward to External Department'
                                         }>
                                           <IconButton
@@ -951,11 +953,11 @@ export default function DeanDashboard() {
                                           </Tooltip>
                                         )}
                                       <Tooltip title={
-                                        isForwarded 
-                                          ? 'No operations allowed on forwarded complaints' 
-                                          : isRejected 
-                                          ? 'No operations allowed on rejected complaints' 
-                                          : 'More Options'
+                                        isForwarded
+                                          ? 'No operations allowed on forwarded complaints'
+                                          : isRejected
+                                            ? 'No operations allowed on rejected complaints'
+                                            : 'More Options'
                                       }>
                                         <span>
                                           <IconButton
@@ -2292,7 +2294,7 @@ export default function DeanDashboard() {
           {(() => {
             const isForwarded = selectedComplaint?.externalForward?.isForwarded;
             const isRejected = selectedComplaint?.status?.toLowerCase() === 'rejected';
-            
+
             if (isForwarded) {
               return (
                 <MenuItem disabled>
@@ -2300,7 +2302,7 @@ export default function DeanDashboard() {
                 </MenuItem>
               );
             }
-            
+
             if (isRejected) {
               return (
                 <MenuItem disabled>
@@ -2308,7 +2310,7 @@ export default function DeanDashboard() {
                 </MenuItem>
               );
             }
-            
+
             return (
               <>
                 <MenuItem onClick={() => {

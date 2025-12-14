@@ -170,10 +170,10 @@ export default function ExternalDepartmentDashboard() {
       const filtered = filterStatus === 'all'
         ? allComplaints
         : filterStatus.toLowerCase() === 'resolved'
-        ? allComplaints.filter(c =>
+          ? allComplaints.filter(c =>
             c.status.toLowerCase() === 'resolved' || c.externalForward?.acknowledged === true
           )
-        : allComplaints.filter(c =>
+          : allComplaints.filter(c =>
             c.status.toLowerCase() === filterStatus.toLowerCase()
           )
 
@@ -191,10 +191,10 @@ export default function ExternalDepartmentDashboard() {
         const filtered = filterStatus === 'all'
           ? allComplaints
           : filterStatus.toLowerCase() === 'resolved'
-          ? allComplaints.filter(c =>
+            ? allComplaints.filter(c =>
               c.status.toLowerCase() === 'resolved' || c.externalForward?.acknowledged === true
             )
-          : allComplaints.filter(c =>
+            : allComplaints.filter(c =>
               c.status.toLowerCase() === filterStatus.toLowerCase()
             )
         setComplaints(filtered)
@@ -279,11 +279,11 @@ export default function ExternalDepartmentDashboard() {
   const stats = {
     total: complaints.length,
     pending: complaints.filter(c => c.status.toLowerCase() === 'pending').length,
-    inProgress: complaints.filter(c => 
-      c.status.toLowerCase() === 'in progress' && 
+    inProgress: complaints.filter(c =>
+      c.status.toLowerCase() === 'in progress' &&
       c.externalForward?.acknowledged !== true
     ).length,
-    resolved: complaints.filter(c => 
+    resolved: complaints.filter(c =>
       c.status.toLowerCase() === 'resolved' || c.externalForward?.acknowledged === true
     ).length
   }
@@ -291,9 +291,9 @@ export default function ExternalDepartmentDashboard() {
   return (
     <Box sx={{ minHeight: '100vh', backgroundColor: isDarkMode ? '#121212' : '#f5f5f5' }}>
       <AdminNavbar />
-      <Container maxWidth="xl" sx={{ py: 2, pt: 2 }}>
+      <Container maxWidth="xl" sx={{ py: 2, pt: 2, px: { xs: 1, sm: 2, md: 3 } }}>
         <Box sx={{ mb: 4 }}>
-          <Typography variant="h4" sx={{ fontWeight: 'bold', mb: 1 }}>
+          <Typography variant="h4" sx={{ fontWeight: 'bold', mb: 1, fontSize: { xs: '1.3rem', sm: '1.75rem', md: '2.125rem' } }}>
             {departmentName} Dashboard
           </Typography>
         </Box>
@@ -345,12 +345,13 @@ export default function ExternalDepartmentDashboard() {
         </Grid>
 
         {/* Filter and Refresh */}
-        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
-          <Box sx={{ display: 'flex', gap: 2 }}>
+        <Box sx={{ display: 'flex', flexDirection: { xs: 'column', sm: 'row' }, justifyContent: 'space-between', alignItems: { xs: 'stretch', sm: 'center' }, gap: 2, mb: 3 }}>
+          <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
             <Button
               variant={filterStatus === 'all' ? 'contained' : 'outlined'}
               onClick={() => setFilterStatus('all')}
               size="small"
+              sx={{ fontSize: { xs: '0.7rem', sm: '0.8rem' } }}
             >
               All
             </Button>
@@ -358,6 +359,7 @@ export default function ExternalDepartmentDashboard() {
               variant={filterStatus === 'pending' ? 'contained' : 'outlined'}
               onClick={() => setFilterStatus('pending')}
               size="small"
+              sx={{ fontSize: { xs: '0.7rem', sm: '0.8rem' } }}
             >
               Pending
             </Button>
@@ -365,6 +367,7 @@ export default function ExternalDepartmentDashboard() {
               variant={filterStatus === 'in progress' ? 'contained' : 'outlined'}
               onClick={() => setFilterStatus('in progress')}
               size="small"
+              sx={{ fontSize: { xs: '0.7rem', sm: '0.8rem' } }}
             >
               In Progress
             </Button>
@@ -372,6 +375,7 @@ export default function ExternalDepartmentDashboard() {
               variant={filterStatus === 'resolved' ? 'contained' : 'outlined'}
               onClick={() => setFilterStatus('resolved')}
               size="small"
+              sx={{ fontSize: { xs: '0.7rem', sm: '0.8rem' } }}
             >
               Resolved
             </Button>

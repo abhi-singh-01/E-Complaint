@@ -337,7 +337,7 @@ export default function StudentRegister() {
               : 'white'
           }}
         >
-          <CardContent sx={{ p: 4 }}>
+          <CardContent sx={{ p: { xs: 2, sm: 4 } }}>
             <Box sx={{ textAlign: 'center', mb: 4 }}>
               <Typography variant="h5" component="h2" gutterBottom sx={{ fontWeight: 'bold', color: '#1976d2' }}>
                 Create Your Account
@@ -401,7 +401,7 @@ export default function StudentRegister() {
                     <Paper
                       elevation={3}
                       sx={{
-                        p: 4,
+                        p: { xs: 2, sm: 3, md: 4 },
                         borderRadius: 3,
                         border: (theme) => theme.palette.mode === 'dark'
                           ? '2px solid rgba(25, 118, 210, 0.3)'
@@ -416,7 +416,7 @@ export default function StudentRegister() {
                         }
                       }}
                     >
-                      <Box sx={{ display: 'flex', alignItems: 'center', mb: 4 }}>
+                      <Box sx={{ display: 'flex', alignItems: 'center', mb: { xs: 2, sm: 4 }, flexWrap: 'wrap', gap: 1 }}>
                         <Box sx={{
                           p: 1.5,
                           borderRadius: '50%',
@@ -592,7 +592,7 @@ export default function StudentRegister() {
                     <Paper
                       elevation={3}
                       sx={{
-                        p: 4,
+                        p: { xs: 2, sm: 3, md: 4 },
                         borderRadius: 3,
                         border: (theme) => theme.palette.mode === 'dark'
                           ? '2px solid rgba(76, 175, 80, 0.3)'
@@ -607,7 +607,7 @@ export default function StudentRegister() {
                         }
                       }}
                     >
-                      <Box sx={{ display: 'flex', alignItems: 'center', mb: 4 }}>
+                      <Box sx={{ display: 'flex', alignItems: 'center', mb: { xs: 2, sm: 4 }, flexWrap: 'wrap', gap: 1 }}>
                         <Box sx={{
                           p: 1.5,
                           borderRadius: '50%',
@@ -849,7 +849,7 @@ export default function StudentRegister() {
                     <Paper
                       elevation={3}
                       sx={{
-                        p: 4,
+                        p: { xs: 2, sm: 3, md: 4 },
                         borderRadius: 3,
                         border: (theme) => theme.palette.mode === 'dark'
                           ? '2px solid rgba(255, 152, 0, 0.3)'
@@ -864,7 +864,7 @@ export default function StudentRegister() {
                         }
                       }}
                     >
-                      <Box sx={{ display: 'flex', alignItems: 'center', mb: 4 }}>
+                      <Box sx={{ display: 'flex', alignItems: 'center', mb: { xs: 2, sm: 4 }, flexWrap: 'wrap', gap: 1 }}>
                         <Box sx={{
                           p: 1.5,
                           borderRadius: '50%',
@@ -1038,7 +1038,7 @@ export default function StudentRegister() {
                   <Paper
                     elevation={4}
                     sx={{
-                      p: 4,
+                      p: { xs: 2, sm: 3, md: 4 },
                       borderRadius: 3,
                       backgroundColor: (theme) => theme.palette.mode === 'dark'
                         ? 'rgba(30, 30, 30, 0.9)'

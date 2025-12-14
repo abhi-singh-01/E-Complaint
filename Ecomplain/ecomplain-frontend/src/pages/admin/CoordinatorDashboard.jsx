@@ -486,13 +486,13 @@ export default function CoordinatorDashboard() {
   return (
     <>
       <AdminNavbar />
-      <Container maxWidth="xl" sx={{ py: 2, pt: 2 }}>
+      <Container maxWidth="xl" sx={{ py: 2, pt: 2, px: { xs: 1, sm: 2, md: 3 } }}>
         {/* Header */}
         <Box sx={{ mb: 3 }}>
-          <Typography variant="h3" gutterBottom sx={{ fontWeight: 'bold', color: '#1976d2', fontSize: '2.5rem' }}>
+          <Typography variant="h3" gutterBottom sx={{ fontWeight: 'bold', color: '#1976d2', fontSize: { xs: '1.5rem', sm: '2rem', md: '2.5rem' } }}>
             Coordinator Dashboard
           </Typography>
-          <Typography variant="h5" color="text.secondary" sx={{ fontSize: '1.5rem', fontWeight: '500' }}>
+          <Typography variant="h5" color="text.secondary" sx={{ fontSize: { xs: '0.9rem', sm: '1.2rem', md: '1.5rem' }, fontWeight: '500' }}>
             {user?.department || 'Unknown'} Department - Welcome, {user?.fullName || `${user?.firstName || ''} ${user?.lastName || ''}`.trim() || 'User'}
           </Typography>
         </Box>
@@ -511,8 +511,7 @@ export default function CoordinatorDashboard() {
               boxShadow: '0 4px 12px rgba(0, 0, 0, 0.1)',
               transition: 'transform 0.2s ease',
               width: '100%',
-              minHeight: '200px',
-              aspectRatio: '1',
+              minHeight: { xs: '100px', sm: '130px', md: '160px' },
               display: 'flex',
               flexDirection: 'column',
               '&:hover': { transform: 'translateY(-4px)' }
@@ -527,11 +526,11 @@ export default function CoordinatorDashboard() {
                 flexGrow: 1,
                 height: '100%'
               }}>
-                <Assignment sx={{ fontSize: 40, color: '#1976d2', mb: 1 }} />
-                <Typography variant="h2" sx={{ fontWeight: 'bold', color: '#1976d2', fontSize: '2rem' }}>
+                <Assignment sx={{ fontSize: { xs: 28, sm: 34, md: 40 }, color: '#1976d2', mb: 1 }} />
+                <Typography variant="h2" sx={{ fontWeight: 'bold', color: '#1976d2', fontSize: { xs: '1.5rem', sm: '1.75rem', md: '2rem' } }}>
                   {stats.total}
                 </Typography>
-                <Typography variant="h6" color="text.secondary" sx={{ fontSize: '1rem', fontWeight: '600' }}>
+                <Typography variant="h6" color="text.secondary" sx={{ fontSize: { xs: '0.75rem', sm: '0.875rem', md: '1rem' }, fontWeight: '600' }}>
                   Total Assigned
                 </Typography>
               </CardContent>
@@ -544,8 +543,7 @@ export default function CoordinatorDashboard() {
               boxShadow: '0 4px 12px rgba(0, 0, 0, 0.1)',
               transition: 'transform 0.2s ease',
               width: '100%',
-              minHeight: '200px',
-              aspectRatio: '1',
+              minHeight: { xs: '100px', sm: '130px', md: '160px' },
               display: 'flex',
               flexDirection: 'column',
               '&:hover': { transform: 'translateY(-4px)' }
@@ -560,11 +558,11 @@ export default function CoordinatorDashboard() {
                 flexGrow: 1,
                 height: '100%'
               }}>
-                <Pending sx={{ fontSize: 40, color: '#f57c00', mb: 1 }} />
-                <Typography variant="h2" sx={{ fontWeight: 'bold', color: '#f57c00', fontSize: '2rem' }}>
+                <Pending sx={{ fontSize: { xs: 28, sm: 34, md: 40 }, color: '#f57c00', mb: 1 }} />
+                <Typography variant="h2" sx={{ fontWeight: 'bold', color: '#f57c00', fontSize: { xs: '1.5rem', sm: '1.75rem', md: '2rem' } }}>
                   {stats.pending}
                 </Typography>
-                <Typography variant="h6" color="text.secondary" sx={{ fontSize: '1rem', fontWeight: '600' }}>
+                <Typography variant="h6" color="text.secondary" sx={{ fontSize: { xs: '0.75rem', sm: '0.875rem', md: '1rem' }, fontWeight: '600' }}>
                   Pending
                 </Typography>
               </CardContent>
@@ -577,8 +575,7 @@ export default function CoordinatorDashboard() {
               boxShadow: '0 4px 12px rgba(0, 0, 0, 0.1)',
               transition: 'transform 0.2s ease',
               width: '100%',
-              minHeight: '200px',
-              aspectRatio: '1',
+              minHeight: { xs: '100px', sm: '130px', md: '160px' },
               display: 'flex',
               flexDirection: 'column',
               '&:hover': { transform: 'translateY(-4px)' }
@@ -593,11 +590,11 @@ export default function CoordinatorDashboard() {
                 flexGrow: 1,
                 height: '100%'
               }}>
-                <TrendingUp sx={{ fontSize: 40, color: '#00acc1', mb: 1 }} />
-                <Typography variant="h2" sx={{ fontWeight: 'bold', color: '#00acc1', fontSize: '2rem' }}>
+                <TrendingUp sx={{ fontSize: { xs: 28, sm: 34, md: 40 }, color: '#00acc1', mb: 1 }} />
+                <Typography variant="h2" sx={{ fontWeight: 'bold', color: '#00acc1', fontSize: { xs: '1.5rem', sm: '1.75rem', md: '2rem' } }}>
                   {stats.inProgress}
                 </Typography>
-                <Typography variant="h6" color="text.secondary" sx={{ fontSize: '1rem', fontWeight: '600' }}>
+                <Typography variant="h6" color="text.secondary" sx={{ fontSize: { xs: '0.75rem', sm: '0.875rem', md: '1rem' }, fontWeight: '600' }}>
                   In Progress
                 </Typography>
               </CardContent>
@@ -610,8 +607,7 @@ export default function CoordinatorDashboard() {
               boxShadow: '0 4px 12px rgba(0, 0, 0, 0.1)',
               transition: 'transform 0.2s ease',
               width: '100%',
-              minHeight: '200px',
-              aspectRatio: '1',
+              minHeight: { xs: '100px', sm: '130px', md: '160px' },
               display: 'flex',
               flexDirection: 'column',
               '&:hover': { transform: 'translateY(-4px)' }
@@ -626,11 +622,11 @@ export default function CoordinatorDashboard() {
                 flexGrow: 1,
                 height: '100%'
               }}>
-                <CheckCircle sx={{ fontSize: 40, color: '#2e7d32', mb: 1 }} />
-                <Typography variant="h2" sx={{ fontWeight: 'bold', color: '#2e7d32', fontSize: '2rem' }}>
+                <CheckCircle sx={{ fontSize: { xs: 28, sm: 34, md: 40 }, color: '#2e7d32', mb: 1 }} />
+                <Typography variant="h2" sx={{ fontWeight: 'bold', color: '#2e7d32', fontSize: { xs: '1.5rem', sm: '1.75rem', md: '2rem' } }}>
                   {stats.resolved}
                 </Typography>
-                <Typography variant="h6" color="text.secondary" sx={{ fontSize: '1rem', fontWeight: '600' }}>
+                <Typography variant="h6" color="text.secondary" sx={{ fontSize: { xs: '0.75rem', sm: '0.875rem', md: '1rem' }, fontWeight: '600' }}>
                   Resolved
                 </Typography>
               </CardContent>
@@ -643,8 +639,7 @@ export default function CoordinatorDashboard() {
               boxShadow: '0 4px 12px rgba(0, 0, 0, 0.1)',
               transition: 'transform 0.2s ease',
               width: '100%',
-              minHeight: '200px',
-              aspectRatio: '1',
+              minHeight: { xs: '100px', sm: '130px', md: '160px' },
               display: 'flex',
               flexDirection: 'column',
               '&:hover': { transform: 'translateY(-4px)' }
@@ -659,11 +654,11 @@ export default function CoordinatorDashboard() {
                 flexGrow: 1,
                 height: '100%'
               }}>
-                <Cancel sx={{ fontSize: 40, color: '#d32f2f', mb: 1 }} />
-                <Typography variant="h2" sx={{ fontWeight: 'bold', color: '#d32f2f', fontSize: '2rem' }}>
+                <Cancel sx={{ fontSize: { xs: 28, sm: 34, md: 40 }, color: '#d32f2f', mb: 1 }} />
+                <Typography variant="h2" sx={{ fontWeight: 'bold', color: '#d32f2f', fontSize: { xs: '1.5rem', sm: '1.75rem', md: '2rem' } }}>
                   {stats.rejected}
                 </Typography>
-                <Typography variant="h6" color="text.secondary" sx={{ fontSize: '1rem', fontWeight: '600' }}>
+                <Typography variant="h6" color="text.secondary" sx={{ fontSize: { xs: '0.75rem', sm: '0.875rem', md: '1rem' }, fontWeight: '600' }}>
                   Rejected
                 </Typography>
               </CardContent>
@@ -676,16 +671,21 @@ export default function CoordinatorDashboard() {
           <Tabs
             value={activeTab}
             onChange={handleTabChange}
+            variant="scrollable"
+            scrollButtons="auto"
+            allowScrollButtonsMobile
             sx={{
               '& .MuiTab-root': {
                 textTransform: 'none',
-                fontSize: '1rem',
+                fontSize: { xs: '0.8rem', sm: '0.9rem', md: '1rem' },
                 fontWeight: '600',
-                minHeight: 48
+                minHeight: 48,
+                minWidth: { xs: 'auto', sm: 120 },
+                px: { xs: 1, sm: 2 }
               }
             }}
           >
-            <Tab label="Assigned Complaints" />
+            <Tab label="Assigned" />
             <Tab label="Completed" />
             <Tab label="Analytics" />
           </Tabs>
@@ -695,11 +695,12 @@ export default function CoordinatorDashboard() {
         {activeTab === 0 && (
           <Box>
             {/* Filter and Actions */}
-            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
-              <Box sx={{ display: 'flex', gap: 2, alignItems: 'center' }}>
+            <Box sx={{ display: 'flex', flexDirection: { xs: 'column', sm: 'row' }, justifyContent: 'space-between', alignItems: { xs: 'stretch', sm: 'center' }, gap: 2, mb: 3 }}>
+              <Box sx={{ display: 'flex', gap: 1, alignItems: 'center', flexWrap: 'wrap' }}>
                 <Button
                   variant={filterStatus === 'all' ? 'contained' : 'outlined'}
                   size="small"
+                  sx={{ fontSize: { xs: '0.7rem', sm: '0.8rem' } }}
                   onClick={() => {
                     setFilterStatus('all')
                     fetchComplaints('all')
@@ -711,6 +712,7 @@ export default function CoordinatorDashboard() {
                   variant={filterStatus === 'pending' ? 'contained' : 'outlined'}
                   size="small"
                   color="warning"
+                  sx={{ fontSize: { xs: '0.7rem', sm: '0.8rem' } }}
                   onClick={() => {
                     setFilterStatus('pending')
                     fetchComplaints('pending')
@@ -722,6 +724,7 @@ export default function CoordinatorDashboard() {
                   variant={filterStatus === 'in progress' ? 'contained' : 'outlined'}
                   size="small"
                   color="info"
+                  sx={{ fontSize: { xs: '0.7rem', sm: '0.8rem' } }}
                   onClick={() => {
                     setFilterStatus('in progress')
                     fetchComplaints('in progress')
@@ -867,15 +870,15 @@ export default function CoordinatorDashboard() {
                                 const isRejected = complaint.status.toLowerCase() === 'rejected';
                                 const isResolved = complaint.status.toLowerCase() === 'resolved' || complaint.status.toLowerCase() === 'closed';
                                 const isDisabled = isForwarded || isRejected || isResolved;
-                                
+
                                 return (
                                   <>
                                     <Tooltip title={
-                                      isForwarded 
-                                        ? 'Cannot operate on forwarded complaints' 
+                                      isForwarded
+                                        ? 'Cannot operate on forwarded complaints'
                                         : isResolved || isRejected
-                                        ? 'Cannot comment on resolved/rejected complaints' 
-                                        : 'Add Comment'
+                                          ? 'Cannot comment on resolved/rejected complaints'
+                                          : 'Add Comment'
                                     }>
                                       <span>
                                         <IconButton
@@ -890,11 +893,11 @@ export default function CoordinatorDashboard() {
                                       </span>
                                     </Tooltip>
                                     <Tooltip title={
-                                      isForwarded 
-                                        ? 'Cannot forward already forwarded complaints' 
+                                      isForwarded
+                                        ? 'Cannot forward already forwarded complaints'
                                         : isResolved || isRejected
-                                        ? 'Cannot forward resolved/rejected complaints' 
-                                        : 'Forward Complaint'
+                                          ? 'Cannot forward resolved/rejected complaints'
+                                          : 'Forward Complaint'
                                     }>
                                       <IconButton
                                         onClick={() => {
@@ -907,11 +910,11 @@ export default function CoordinatorDashboard() {
                                       </IconButton>
                                     </Tooltip>
                                     <Tooltip title={
-                                      isForwarded 
-                                        ? 'No operations allowed on forwarded complaints' 
-                                        : isRejected 
-                                        ? 'No operations allowed on rejected complaints' 
-                                        : 'More Options'
+                                      isForwarded
+                                        ? 'No operations allowed on forwarded complaints'
+                                        : isRejected
+                                          ? 'No operations allowed on rejected complaints'
+                                          : 'More Options'
                                     }>
                                       <span>
                                         <IconButton
@@ -1864,7 +1867,7 @@ export default function CoordinatorDashboard() {
           {(() => {
             const isForwarded = selectedComplaint?.workflow?.currentLevel !== 'coordinator' || selectedComplaint?.workflow?.escalatedAt;
             const isRejected = selectedComplaint?.status?.toLowerCase() === 'rejected';
-            
+
             if (isForwarded) {
               return (
                 <MenuItem disabled>
@@ -1872,7 +1875,7 @@ export default function CoordinatorDashboard() {
                 </MenuItem>
               );
             }
-            
+
             if (isRejected) {
               return (
                 <MenuItem disabled>
@@ -1880,7 +1883,7 @@ export default function CoordinatorDashboard() {
                 </MenuItem>
               );
             }
-            
+
             return (
               <>
                 <MenuItem onClick={() => {
