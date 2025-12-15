@@ -227,47 +227,47 @@ function About() {
               Impact in Numbers
             </Typography>
           </Fade>
-          <Grid container spacing={{ xs: 3, md: 4 }} sx={{ justifyContent: 'center', alignItems: 'stretch' }}>
+          <Grid container spacing={{ xs: 2, sm: 3, md: 4 }} sx={{ justifyContent: 'center', alignItems: 'stretch' }}>
             {stats.map((stat, index) => (
               <Grid item xs={6} sm={6} md={3} key={index} sx={{ display: 'flex' }}>
                 <Grow in timeout={1000 + index * 200}>
                   <Card
                     sx={{
                       textAlign: 'center',
-                      p: { xs: 2, sm: 3 },
+                      p: { xs: 1.5, sm: 2, md: 3 },
                       width: '100%',
                       display: 'flex',
                       flexDirection: 'column',
                       justifyContent: 'center',
                       alignItems: 'center',
-                      aspectRatio: '1 / 1',
-                      minHeight: { xs: 180, sm: 220, md: 240 },
+                      height: { xs: 150, sm: 180, md: 200 },
                       background: isDarkMode
                         ? `linear-gradient(135deg, rgba(30, 30, 30, 0.9) 0%, rgba(45, 45, 45, 0.9) 100%)`
                         : `linear-gradient(135deg, rgba(255, 255, 255, 0.9) 0%, rgba(248, 250, 252, 0.9) 100%)`,
                       border: `1px solid ${alpha(stat.color, isDarkMode ? 0.3 : 0.2)}`,
                       borderRadius: { xs: 2, md: 3 },
+                      boxShadow: isDarkMode
+                        ? `0 4px 20px ${alpha(stat.color, 0.15)}`
+                        : `0 4px 20px ${alpha(stat.color, 0.1)}`,
                       transition: 'all 0.4s cubic-bezier(0.4, 0, 0.2, 1)',
                       cursor: 'pointer',
-                      '&:hover': {
-                        transform: 'translateY(-12px) scale(1.02)',
-                        boxShadow: `0 16px 40px ${alpha(stat.color, 0.4)}`,
-                        border: `2px solid ${alpha(stat.color, 0.6)}`
+                      '@media (hover: hover)': {
+                        '&:hover': {
+                          transform: 'translateY(-8px) scale(1.02)',
+                          boxShadow: `0 16px 40px ${alpha(stat.color, 0.4)}`,
+                          border: `2px solid ${alpha(stat.color, 0.6)}`
+                        }
                       }
                     }}
                   >
-                    <CardContent sx={{ p: { xs: 1, sm: 2 }, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', flex: 1 }}>
+                    <CardContent sx={{ p: { xs: 0.5, sm: 1, md: 2 }, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', flex: 1, '&:last-child': { pb: { xs: 0.5, sm: 1, md: 2 } } }}>
                       <Avatar sx={{
-                        bgcolor: `${alpha(stat.color, 0.2)}`,
-                        width: { xs: 50, sm: 60, md: 70 },
-                        height: { xs: 50, sm: 60, md: 70 },
-                        mb: { xs: 1, sm: 2 },
+                        bgcolor: `${alpha(stat.color, isDarkMode ? 0.3 : 0.2)}`,
+                        width: { xs: 40, sm: 50, md: 60 },
+                        height: { xs: 40, sm: 50, md: 60 },
+                        mb: { xs: 0.5, sm: 1, md: 1.5 },
                         color: stat.color,
-                        transition: 'all 0.3s ease',
-                        '&:hover': {
-                          transform: 'rotate(360deg) scale(1.1)',
-                          bgcolor: `${alpha(stat.color, 0.3)}`
-                        }
+                        transition: 'all 0.3s ease'
                       }}>
                         {stat.icon}
                       </Avatar>
@@ -277,8 +277,9 @@ function About() {
                         sx={{
                           fontWeight: 700,
                           color: stat.color,
-                          mb: 0.5,
-                          fontSize: { xs: '1.5rem', sm: '2rem', md: '2.5rem' }
+                          mb: 0.25,
+                          fontSize: { xs: '1.25rem', sm: '1.75rem', md: '2.25rem' },
+                          lineHeight: 1.2
                         }}
                       >
                         {stat.number}
@@ -288,7 +289,9 @@ function About() {
                         sx={{
                           color: theme.palette.text.secondary,
                           fontWeight: 500,
-                          fontSize: { xs: '0.75rem', sm: '0.875rem', md: '1rem' }
+                          fontSize: { xs: '0.65rem', sm: '0.8rem', md: '0.95rem' },
+                          lineHeight: 1.3,
+                          textAlign: 'center'
                         }}
                       >
                         {stat.label}
@@ -319,40 +322,48 @@ function About() {
               Powerful Features
             </Typography>
           </Fade>
-          <Grid container spacing={{ xs: 3, md: 4 }} sx={{ justifyContent: 'center' }}>
+          <Grid container spacing={{ xs: 2, sm: 3, md: 4 }} sx={{ justifyContent: 'center', alignItems: 'stretch' }}>
             {features.map((feature, index) => (
-              <Grid item xs={12} sm={6} md={4} key={index}>
+              <Grid item xs={6} sm={6} md={4} key={index} sx={{ display: 'flex' }}>
                 <Grow in timeout={1200 + index * 150}>
                   <Card
                     sx={{
-                      height: '100%',
-                      p: { xs: 2, sm: 3 },
+                      width: '100%',
+                      height: { xs: 180, sm: 220, md: 240 },
+                      p: { xs: 1.5, sm: 2, md: 3 },
                       textAlign: 'center',
+                      display: 'flex',
+                      flexDirection: 'column',
+                      justifyContent: 'center',
                       background: isDarkMode
                         ? `linear-gradient(135deg, rgba(30, 30, 30, 0.9) 0%, rgba(45, 45, 45, 0.9) 100%)`
                         : `linear-gradient(135deg, rgba(255, 255, 255, 0.9) 0%, rgba(248, 250, 252, 0.9) 100%)`,
                       border: `1px solid ${alpha(feature.color, isDarkMode ? 0.3 : 0.2)}`,
                       borderRadius: { xs: 2, md: 3 },
+                      boxShadow: isDarkMode
+                        ? `0 4px 20px ${alpha(feature.color, 0.15)}`
+                        : `0 4px 20px ${alpha(feature.color, 0.1)}`,
                       transition: 'all 0.4s cubic-bezier(0.4, 0, 0.2, 1)',
                       cursor: 'pointer',
-                      '&:hover': {
-                        transform: 'translateY(-8px) scale(1.03)',
-                        boxShadow: `0 12px 32px ${alpha(feature.color, 0.3)}`,
-                        border: `2px solid ${alpha(feature.color, 0.5)}`,
-                        background: isDarkMode
-                          ? `linear-gradient(135deg, rgba(30, 30, 30, 0.95) 0%, ${alpha(feature.color, 0.1)} 100%)`
-                          : `linear-gradient(135deg, rgba(255, 255, 255, 0.95) 0%, ${alpha(feature.color, 0.05)} 100%)`
+                      '@media (hover: hover)': {
+                        '&:hover': {
+                          transform: 'translateY(-6px) scale(1.02)',
+                          boxShadow: `0 12px 32px ${alpha(feature.color, 0.3)}`,
+                          border: `2px solid ${alpha(feature.color, 0.5)}`,
+                          background: isDarkMode
+                            ? `linear-gradient(135deg, rgba(30, 30, 30, 0.95) 0%, ${alpha(feature.color, 0.1)} 100%)`
+                            : `linear-gradient(135deg, rgba(255, 255, 255, 0.95) 0%, ${alpha(feature.color, 0.05)} 100%)`
+                        }
                       }
                     }}
                   >
-                    <CardContent>
+                    <CardContent sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', flex: 1, p: { xs: 1, sm: 2 }, '&:last-child': { pb: { xs: 1, sm: 2 } } }}>
                       <Box
                         sx={{
                           color: feature.color,
-                          mb: 2,
-                          transition: 'all 0.3s ease',
-                          '&:hover': {
-                            transform: 'scale(1.2) rotate(5deg)'
+                          mb: { xs: 1, sm: 1.5, md: 2 },
+                          '& .MuiSvgIcon-root': {
+                            fontSize: { xs: 32, sm: 40, md: 50 }
                           }
                         }}
                       >
@@ -365,7 +376,9 @@ function About() {
                         sx={{
                           fontWeight: 600,
                           color: theme.palette.text.primary,
-                          mb: 1
+                          mb: { xs: 0.5, sm: 1 },
+                          fontSize: { xs: '0.85rem', sm: '1rem', md: '1.15rem' },
+                          lineHeight: 1.3
                         }}
                       >
                         {feature.title}
@@ -374,7 +387,12 @@ function About() {
                         variant="body2"
                         sx={{
                           color: theme.palette.text.secondary,
-                          lineHeight: 1.6
+                          lineHeight: 1.4,
+                          fontSize: { xs: '0.7rem', sm: '0.8rem', md: '0.9rem' },
+                          display: '-webkit-box',
+                          WebkitLineClamp: 2,
+                          WebkitBoxOrient: 'vertical',
+                          overflow: 'hidden'
                         }}
                       >
                         {feature.description}
@@ -405,40 +423,48 @@ function About() {
               Our Core Values
             </Typography>
           </Fade>
-          <Grid container spacing={{ xs: 3, md: 4 }} sx={{ justifyContent: 'center', alignItems: 'stretch' }}>
+          <Grid container spacing={{ xs: 2, sm: 3, md: 4 }} sx={{ justifyContent: 'center', alignItems: 'stretch' }}>
             {values.map((value, index) => (
-              <Grid item xs={12} sm={6} md={6} lg={3} key={index} sx={{ display: 'flex' }}>
+              <Grid item xs={6} sm={6} md={6} lg={3} key={index} sx={{ display: 'flex' }}>
                 <Grow in timeout={1400 + index * 200}>
                   <Paper
                     elevation={0}
                     sx={{
-                      p: { xs: 3, sm: 4 },
+                      p: { xs: 1.5, sm: 2.5, md: 3 },
                       width: '100%',
                       display: 'flex',
                       flexDirection: 'column',
-                      minHeight: { xs: 180, sm: 200 },
+                      height: { xs: 160, sm: 190, md: 220 },
                       background: isDarkMode
                         ? `linear-gradient(135deg, rgba(30, 30, 30, 0.9) 0%, rgba(45, 45, 45, 0.9) 100%)`
                         : `linear-gradient(135deg, rgba(255, 255, 255, 0.9) 0%, rgba(248, 250, 252, 0.9) 100%)`,
                       border: `1px solid ${alpha(value.color, isDarkMode ? 0.3 : 0.2)}`,
                       borderRadius: { xs: 2, md: 3 },
+                      boxShadow: isDarkMode
+                        ? `0 4px 20px ${alpha(value.color, 0.15)}`
+                        : `0 4px 20px ${alpha(value.color, 0.1)}`,
                       transition: 'all 0.4s cubic-bezier(0.4, 0, 0.2, 1)',
                       cursor: 'pointer',
-                      '&:hover': {
-                        transform: 'translateY(-8px)',
-                        boxShadow: `0 12px 32px ${alpha(value.color, 0.3)}`,
-                        border: `2px solid ${alpha(value.color, 0.5)}`
+                      '@media (hover: hover)': {
+                        '&:hover': {
+                          transform: 'translateY(-6px)',
+                          boxShadow: `0 12px 32px ${alpha(value.color, 0.3)}`,
+                          border: `2px solid ${alpha(value.color, 0.5)}`
+                        }
                       }
                     }}
                   >
-                    <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
+                    <Box sx={{ display: 'flex', alignItems: 'center', mb: { xs: 1, sm: 1.5, md: 2 } }}>
                       <Avatar sx={{
-                        bgcolor: `${alpha(value.color, 0.2)}`,
-                        width: { xs: 50, sm: 60 },
-                        height: { xs: 50, sm: 60 },
-                        mr: 2,
+                        bgcolor: `${alpha(value.color, isDarkMode ? 0.3 : 0.2)}`,
+                        width: { xs: 36, sm: 45, md: 55 },
+                        height: { xs: 36, sm: 45, md: 55 },
+                        mr: { xs: 1, sm: 1.5, md: 2 },
                         color: value.color,
-                        flexShrink: 0
+                        flexShrink: 0,
+                        '& .MuiSvgIcon-root': {
+                          fontSize: { xs: 20, sm: 28, md: 36 }
+                        }
                       }}>
                         {value.icon}
                       </Avatar>
@@ -448,7 +474,8 @@ function About() {
                         sx={{
                           fontWeight: 600,
                           color: value.color,
-                          fontSize: { xs: '1.1rem', sm: '1.25rem', md: '1.5rem' }
+                          fontSize: { xs: '0.85rem', sm: '1.05rem', md: '1.25rem' },
+                          lineHeight: 1.2
                         }}
                       >
                         {value.title}
@@ -458,8 +485,13 @@ function About() {
                       variant="body1"
                       sx={{
                         color: theme.palette.text.secondary,
-                        lineHeight: 1.7,
-                        flexGrow: 1
+                        lineHeight: 1.5,
+                        flexGrow: 1,
+                        overflow: 'hidden',
+                        fontSize: { xs: '0.7rem', sm: '0.85rem', md: '0.95rem' },
+                        display: '-webkit-box',
+                        WebkitLineClamp: 3,
+                        WebkitBoxOrient: 'vertical'
                       }}
                     >
                       {value.description}
@@ -539,66 +571,80 @@ function About() {
             <Box sx={{
               display: 'flex',
               justifyContent: 'center',
-              gap: 2,
-              flexWrap: 'wrap'
+              gap: { xs: 1, sm: 2 },
+              flexWrap: 'wrap',
+              flexDirection: { xs: 'column', sm: 'row' },
+              alignItems: 'center'
             }}>
               <Chip
-                icon={<Email />}
+                icon={<Email sx={{ fontSize: { xs: 16, sm: 20 } }} />}
                 label="support@ecomplaint.edu"
                 sx={{
                   bgcolor: isDarkMode
                     ? alpha('#1976d2', 0.2)
                     : alpha('#1976d2', 0.1),
                   color: '#1976d2',
-                  fontSize: { xs: '0.875rem', sm: '1rem' },
-                  py: { xs: 2, sm: 2.5 },
-                  px: { xs: 2, sm: 3 },
+                  fontSize: { xs: '0.75rem', sm: '0.9rem', md: '1rem' },
+                  py: { xs: 1.5, sm: 2, md: 2.5 },
+                  px: { xs: 1.5, sm: 2, md: 3 },
                   fontWeight: 600,
                   border: `1px solid ${alpha('#1976d2', 0.3)}`,
                   transition: 'all 0.3s ease',
-                  '&:hover': {
-                    bgcolor: alpha('#1976d2', 0.3),
-                    transform: 'scale(1.05)'
+                  width: { xs: '100%', sm: 'auto' },
+                  maxWidth: { xs: 280, sm: 'none' },
+                  '@media (hover: hover)': {
+                    '&:hover': {
+                      bgcolor: alpha('#1976d2', 0.3),
+                      transform: 'scale(1.05)'
+                    }
                   }
                 }}
               />
               <Chip
-                icon={<Phone />}
+                icon={<Phone sx={{ fontSize: { xs: 16, sm: 20 } }} />}
                 label="+1 (555) 123-4567"
                 sx={{
                   bgcolor: isDarkMode
                     ? alpha('#9c27b0', 0.2)
                     : alpha('#9c27b0', 0.1),
                   color: '#9c27b0',
-                  fontSize: { xs: '0.875rem', sm: '1rem' },
-                  py: { xs: 2, sm: 2.5 },
-                  px: { xs: 2, sm: 3 },
+                  fontSize: { xs: '0.75rem', sm: '0.9rem', md: '1rem' },
+                  py: { xs: 1.5, sm: 2, md: 2.5 },
+                  px: { xs: 1.5, sm: 2, md: 3 },
                   fontWeight: 600,
                   border: `1px solid ${alpha('#9c27b0', 0.3)}`,
                   transition: 'all 0.3s ease',
-                  '&:hover': {
-                    bgcolor: alpha('#9c27b0', 0.3),
-                    transform: 'scale(1.05)'
+                  width: { xs: '100%', sm: 'auto' },
+                  maxWidth: { xs: 280, sm: 'none' },
+                  '@media (hover: hover)': {
+                    '&:hover': {
+                      bgcolor: alpha('#9c27b0', 0.3),
+                      transform: 'scale(1.05)'
+                    }
                   }
                 }}
               />
               <Chip
-                icon={<LocationOn />}
+                icon={<LocationOn sx={{ fontSize: { xs: 16, sm: 20 } }} />}
                 label="123 University Ave, Campus"
                 sx={{
                   bgcolor: isDarkMode
                     ? alpha('#2e7d32', 0.2)
                     : alpha('#2e7d32', 0.1),
                   color: '#2e7d32',
-                  fontSize: { xs: '0.875rem', sm: '1rem' },
-                  py: { xs: 2, sm: 2.5 },
-                  px: { xs: 2, sm: 3 },
+                  fontSize: { xs: '0.75rem', sm: '0.9rem', md: '1rem' },
+                  py: { xs: 1.5, sm: 2, md: 2.5 },
+                  px: { xs: 1.5, sm: 2, md: 3 },
                   fontWeight: 600,
                   border: `1px solid ${alpha('#2e7d32', 0.3)}`,
                   transition: 'all 0.3s ease',
-                  '&:hover': {
-                    bgcolor: alpha('#2e7d32', 0.3),
-                    transform: 'scale(1.05)'
+                  width: { xs: '100%', sm: 'auto' },
+                  maxWidth: { xs: 280, sm: 'none' },
+                  '@media (hover: hover)': {
+                    '&:hover': {
+                      bgcolor: alpha('#2e7d32', 0.3),
+                      transform: 'scale(1.05)'
+                    }
                   }
                 }}
               />
