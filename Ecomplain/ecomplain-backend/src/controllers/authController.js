@@ -4,7 +4,7 @@ const Student = require('../models/Student');
 const Admin = require('../models/Admin');
 const { asyncHandler } = require('../middleware/errorHandler');
 const { setCache, getCache, deleteCache } = require('../middleware/cache');
-const { sendOTPEmail } = require('../utils/emailService');
+const { sendOTPEmail, sendPasswordResetOTPEmail } = require('../utils/emailService');
 
 // Generate 6-digit OTP
 const generateOTP = () => {
@@ -54,7 +54,7 @@ const sendRegistrationOTP = asyncHandler(async (req, res) => {
       if (existingStudent.email === email) message += 'this email';
       else if (existingStudent.libraryId === libraryId) message += 'this library ID';
       else if (existingStudent.rollNo === rollNo) message += 'this roll number';
-      
+
       return res.status(400).json({
         success: false,
         message
@@ -92,18 +92,18 @@ const sendRegistrationOTP = asyncHandler(async (req, res) => {
         name: `${firstName} ${lastName}`,
         otp
       });
-      
+
       // Set timeout for email sending (15 seconds)
       const timeoutPromise = new Promise((_, reject) => {
         setTimeout(() => reject(new Error('Email sending timeout')), 15000);
       });
-      
+
       await Promise.race([emailPromise, timeoutPromise]);
     } catch (emailError) {
       console.error('Failed to send OTP email:', emailError);
       // Delete cached data if email fails
       await deleteCache(cacheKey).catch(err => console.error('Failed to delete cache:', err));
-      
+
       // In development mode or if email not configured, log OTP and continue
       if (!process.env.EMAIL_USER || !process.env.EMAIL_PASSWORD) {
         console.log('\n=== OTP VERIFICATION (Email not configured) ===');
@@ -247,7 +247,7 @@ const verifyOTPAndRegister = asyncHandler(async (req, res) => {
     });
   } catch (error) {
     console.error('Error in verifyOTPAndRegister:', error);
-    
+
     // Handle duplicate key errors
     if (error.name === 'MongoServerError' && error.code === 11000) {
       const field = Object.keys(error.keyPattern)[0];
@@ -256,7 +256,7 @@ const verifyOTPAndRegister = asyncHandler(async (req, res) => {
         message: `Student already exists with this ${field === 'email' ? 'email' : field === 'libraryId' ? 'library ID' : 'roll number'}`
       });
     }
-    
+
     // Handle validation errors
     if (error.name === 'ValidationError') {
       const messages = Object.values(error.errors).map(err => err.message).join(', ');
@@ -265,7 +265,7 @@ const verifyOTPAndRegister = asyncHandler(async (req, res) => {
         message: messages || 'Validation error'
       });
     }
-    
+
     throw error;
   }
 });
@@ -347,7 +347,7 @@ const registerStudent = asyncHandler(async (req, res) => {
       if (existingStudent.email === email) message += 'this email';
       else if (existingStudent.libraryId === libraryId) message += 'this library ID';
       else if (existingStudent.rollNo === rollNo) message += 'this roll number';
-      
+
       return res.status(400).json({
         success: false,
         message
@@ -399,32 +399,32 @@ const registerStudent = asyncHandler(async (req, res) => {
     console.error('Error stack:', error.stack);
     console.error('Request body:', JSON.stringify(req.body, null, 2));
     console.error('Environment:', process.env.VERCEL ? 'Vercel' : process.env.NODE_ENV || 'Unknown');
-    
+
     // Handle MongoDB connection errors
     if (error.name === 'MongoServerError' || error.name === 'MongoNetworkError' || error.name === 'MongoTimeoutError' || error.name === 'MongooseError') {
       console.error('💡 MongoDB connection issue detected');
-      
+
       // Check if it's a network/connection issue
-      if (error.message.includes('timeout') || 
-          error.message.includes('ECONNREFUSED') || 
-          error.message.includes('ENOTFOUND') ||
-          error.message.includes('whitelist') ||
-          error.message.includes('connection') ||
-          error.message.includes('network')) {
+      if (error.message.includes('timeout') ||
+        error.message.includes('ECONNREFUSED') ||
+        error.message.includes('ENOTFOUND') ||
+        error.message.includes('whitelist') ||
+        error.message.includes('connection') ||
+        error.message.includes('network')) {
         return res.status(503).json({
           success: false,
           message: 'Database connection error. Please check your MongoDB Atlas network settings and ensure IP whitelist includes 0.0.0.0/0 for Vercel deployments.',
           error: process.env.NODE_ENV === 'development' ? error.message : undefined
         });
       }
-      
+
       return res.status(503).json({
         success: false,
         message: 'Database connection error. Please try again later.',
         error: process.env.NODE_ENV === 'development' ? error.message : undefined
       });
     }
-    
+
     // Handle duplicate key errors (email, libraryId, rollNo already exists)
     if (error.name === 'MongoServerError' && error.code === 11000) {
       const field = Object.keys(error.keyPattern)[0];
@@ -434,7 +434,7 @@ const registerStudent = asyncHandler(async (req, res) => {
         message: `Student already exists with this ${field === 'email' ? 'email' : field === 'libraryId' ? 'library ID' : 'roll number'}`
       });
     }
-    
+
     // Handle validation errors
     if (error.name === 'ValidationError') {
       const messages = Object.values(error.errors).map(err => err.message).join(', ');
@@ -444,7 +444,7 @@ const registerStudent = asyncHandler(async (req, res) => {
         message: messages || 'Validation error'
       });
     }
-    
+
     // Handle other errors
     console.error('💡 Unknown error type, re-throwing to asyncHandler');
     // Re-throw to be handled by asyncHandler
@@ -490,7 +490,7 @@ const loginStudent = asyncHandler(async (req, res) => {
   if (!isPasswordValid) {
     // Increment login attempts
     await student.incLoginAttempts();
-    
+
     return res.status(401).json({
       success: false,
       message: 'Invalid email or password'
@@ -549,10 +549,10 @@ const loginAdmin = asyncHandler(async (req, res) => {
     });
   }
 
-  console.log('Admin found:', { 
-    id: admin._id, 
-    email: admin.email, 
-    role: admin.role, 
+  console.log('Admin found:', {
+    id: admin._id,
+    email: admin.email,
+    role: admin.role,
     department: admin.department,
     isActive: admin.isActive,
     isLocked: admin.isLocked
@@ -599,7 +599,7 @@ const loginAdmin = asyncHandler(async (req, res) => {
     console.log('Password validation failed for admin:', admin.email);
     // Increment login attempts
     await admin.incLoginAttempts();
-    
+
     return res.status(401).json({
       success: false,
       message: 'Invalid email or password'
@@ -829,10 +829,10 @@ const resetPassword = asyncHandler(async (req, res) => {
 
   if (!user) {
     // Check if token exists but expired
-    const expiredUser = userType === 'student' 
+    const expiredUser = userType === 'student'
       ? await Student.findOne({ passwordResetToken: hashedToken })
       : await Admin.findOne({ passwordResetToken: hashedToken });
-    
+
     if (expiredUser) {
       const now = Date.now();
       const expires = expiredUser.passwordResetExpires?.getTime() || 0;
@@ -843,7 +843,7 @@ const resetPassword = asyncHandler(async (req, res) => {
         });
       }
     }
-    
+
     return res.status(400).json({
       success: false,
       message: 'Invalid reset token. Please use the link from your email or request a new one.'
@@ -866,6 +866,269 @@ const resetPassword = asyncHandler(async (req, res) => {
   });
 });
 
+// @desc    Send OTP for password reset (university email only)
+// @route   POST /api/auth/forgot-password-otp
+// @access  Public
+const sendPasswordResetOTP = asyncHandler(async (req, res) => {
+  try {
+    const { email } = req.body;
+
+    if (!email) {
+      return res.status(400).json({
+        success: false,
+        message: 'Email is required'
+      });
+    }
+
+    const normalizedEmail = email.toLowerCase().trim();
+
+    // Validate university email (must end with .edu)
+    const universityEmailPattern = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.edu$/i;
+    if (!universityEmailPattern.test(normalizedEmail)) {
+      return res.status(400).json({
+        success: false,
+        message: 'Only university email addresses (ending with .edu) are allowed for password reset'
+      });
+    }
+
+    // Find student by email
+    const student = await Student.findOne({ email: normalizedEmail });
+
+    if (!student) {
+      // Don't reveal if email exists or not for security
+      return res.json({
+        success: true,
+        message: 'If your email is registered, you will receive an OTP shortly.',
+        email: normalizedEmail
+      });
+    }
+
+    // Check if there's a recent OTP request (rate limiting - 1 minute cooldown)
+    const cacheKey = `password-reset:${normalizedEmail}`;
+    const existingData = await getCache(cacheKey);
+
+    if (existingData && existingData.createdAt) {
+      const timeSinceLastRequest = Date.now() - existingData.createdAt;
+      if (timeSinceLastRequest < 60000) { // 1 minute cooldown
+        const remainingTime = Math.ceil((60000 - timeSinceLastRequest) / 1000);
+        return res.status(429).json({
+          success: false,
+          message: `Please wait ${remainingTime} seconds before requesting another OTP.`
+        });
+      }
+    }
+
+    // Generate OTP
+    const otp = generateOTP();
+    const otpExpiry = Date.now() + 10 * 60 * 1000; // 10 minutes
+
+    // Store OTP data in cache
+    const resetData = {
+      email: normalizedEmail,
+      studentId: student._id.toString(),
+      otp,
+      otpExpiry,
+      attempts: 0,
+      createdAt: Date.now()
+    };
+
+    await setCache(cacheKey, resetData, 10 * 60 * 1000); // 10 minutes TTL
+
+    // Send OTP email
+    try {
+      const emailPromise = sendPasswordResetOTPEmail({
+        email: normalizedEmail,
+        name: student.firstName || student.fullName || 'User',
+        otp
+      });
+
+      // Set timeout for email sending (15 seconds)
+      const timeoutPromise = new Promise((_, reject) => {
+        setTimeout(() => reject(new Error('Email sending timeout')), 15000);
+      });
+
+      await Promise.race([emailPromise, timeoutPromise]);
+    } catch (emailError) {
+      console.error('Failed to send password reset OTP email:', emailError);
+      await deleteCache(cacheKey).catch(err => console.error('Failed to delete cache:', err));
+
+      return res.status(500).json({
+        success: false,
+        message: 'Failed to send OTP email. Please try again later.',
+        error: process.env.NODE_ENV === 'development' ? emailError.message : undefined
+      });
+    }
+
+    res.json({
+      success: true,
+      message: 'OTP sent to your email address. Please check your inbox.',
+      email: normalizedEmail
+    });
+  } catch (error) {
+    console.error('Error in sendPasswordResetOTP:', error);
+    throw error;
+  }
+});
+
+// @desc    Verify OTP for password reset
+// @route   POST /api/auth/verify-password-reset-otp
+// @access  Public
+const verifyPasswordResetOTP = asyncHandler(async (req, res) => {
+  try {
+    const { email, otp } = req.body;
+
+    if (!email || !otp) {
+      return res.status(400).json({
+        success: false,
+        message: 'Email and OTP are required'
+      });
+    }
+
+    const normalizedEmail = email.toLowerCase().trim();
+    const cacheKey = `password-reset:${normalizedEmail}`;
+    const resetData = await getCache(cacheKey);
+
+    if (!resetData) {
+      return res.status(400).json({
+        success: false,
+        message: 'OTP expired or invalid. Please request a new OTP.'
+      });
+    }
+
+    // Check if OTP has expired
+    if (resetData.otpExpiry < Date.now()) {
+      await deleteCache(cacheKey);
+      return res.status(400).json({
+        success: false,
+        message: 'OTP has expired. Please request a new one.'
+      });
+    }
+
+    // Check OTP attempts (max 5 attempts)
+    if (resetData.attempts >= 5) {
+      await deleteCache(cacheKey);
+      return res.status(400).json({
+        success: false,
+        message: 'Too many failed attempts. Please request a new OTP.'
+      });
+    }
+
+    // Verify OTP
+    if (resetData.otp !== otp) {
+      resetData.attempts += 1;
+      await setCache(cacheKey, resetData, 10 * 60 * 1000);
+      return res.status(400).json({
+        success: false,
+        message: 'Invalid OTP. Please try again.',
+        attemptsRemaining: 5 - resetData.attempts
+      });
+    }
+
+    // OTP is correct - generate a short-lived reset token
+    const resetToken = crypto.randomBytes(32).toString('hex');
+    const hashedToken = crypto.createHash('sha256').update(resetToken).digest('hex');
+
+    // Store the verified reset token (valid for 5 minutes)
+    const verifiedResetData = {
+      email: normalizedEmail,
+      studentId: resetData.studentId,
+      resetToken: hashedToken,
+      expires: Date.now() + 5 * 60 * 1000 // 5 minutes
+    };
+
+    const verifiedCacheKey = `password-reset-verified:${normalizedEmail}`;
+    await setCache(verifiedCacheKey, verifiedResetData, 5 * 60 * 1000);
+
+    // Delete OTP cache
+    await deleteCache(cacheKey);
+
+    res.json({
+      success: true,
+      message: 'OTP verified successfully. You can now reset your password.',
+      resetToken: resetToken, // Send plain token, we store hashed version
+      email: normalizedEmail
+    });
+  } catch (error) {
+    console.error('Error in verifyPasswordResetOTP:', error);
+    throw error;
+  }
+});
+
+// @desc    Reset password with verified OTP token
+// @route   PUT /api/auth/reset-password-otp
+// @access  Public
+const resetPasswordWithOTP = asyncHandler(async (req, res) => {
+  try {
+    const { email, resetToken, password } = req.body;
+
+    if (!email || !resetToken || !password) {
+      return res.status(400).json({
+        success: false,
+        message: 'Email, reset token, and new password are required'
+      });
+    }
+
+    const normalizedEmail = email.toLowerCase().trim();
+    const verifiedCacheKey = `password-reset-verified:${normalizedEmail}`;
+    const verifiedData = await getCache(verifiedCacheKey);
+
+    if (!verifiedData) {
+      return res.status(400).json({
+        success: false,
+        message: 'Reset session expired. Please start the password reset process again.'
+      });
+    }
+
+    // Verify the reset token
+    const hashedToken = crypto.createHash('sha256').update(resetToken).digest('hex');
+
+    if (verifiedData.resetToken !== hashedToken) {
+      return res.status(400).json({
+        success: false,
+        message: 'Invalid reset token. Please start the password reset process again.'
+      });
+    }
+
+    // Check if token has expired
+    if (verifiedData.expires < Date.now()) {
+      await deleteCache(verifiedCacheKey);
+      return res.status(400).json({
+        success: false,
+        message: 'Reset session has expired. Please start the password reset process again.'
+      });
+    }
+
+    // Find and update the student's password
+    const student = await Student.findById(verifiedData.studentId);
+
+    if (!student) {
+      return res.status(404).json({
+        success: false,
+        message: 'User not found.'
+      });
+    }
+
+    // Update password
+    student.password = password;
+    await student.save();
+
+    // Clear the verified reset cache
+    await deleteCache(verifiedCacheKey);
+
+    // Generate new auth token
+    const token = generateToken(student._id, 'student');
+
+    res.json({
+      success: true,
+      message: 'Password reset successful! You can now login with your new password.',
+      token
+    });
+  } catch (error) {
+    console.error('Error in resetPasswordWithOTP:', error);
+    throw error;
+  }
+});
+
 module.exports = {
   registerStudent,
   sendRegistrationOTP,
@@ -877,5 +1140,8 @@ module.exports = {
   refreshToken,
   logout,
   forgotPassword,
-  resetPassword
+  resetPassword,
+  sendPasswordResetOTP,
+  verifyPasswordResetOTP,
+  resetPasswordWithOTP
 };

@@ -11,14 +11,20 @@ const {
   refreshToken,
   logout,
   forgotPassword,
-  resetPassword
+  resetPassword,
+  sendPasswordResetOTP,
+  verifyPasswordResetOTP,
+  resetPasswordWithOTP
 } = require('../controllers/authController');
 const {
   validateStudentRegistration,
   validateStudentLogin,
   validateAdminLogin,
   validatePasswordReset,
-  validateNewPassword
+  validateNewPassword,
+  validatePasswordResetOTP,
+  validateVerifyPasswordResetOTP,
+  validateResetPasswordOTP
 } = require('../middleware/validation');
 const { authenticateToken } = require('../middleware/auth');
 
@@ -32,8 +38,15 @@ router.post('/register', validateStudentRegistration, sendRegistrationOTP);
 router.post('/login', validateStudentLogin, loginStudent);
 router.post('/admin/login', validateAdminLogin, loginAdmin);
 router.post('/refresh', refreshToken);
+
+// Token-based password reset (legacy - kept for admin)
 router.post('/forgot-password', validatePasswordReset, forgotPassword);
 router.put('/reset-password/:token', validateNewPassword, resetPassword);
+
+// OTP-based password reset (for students with university emails)
+router.post('/forgot-password-otp', validatePasswordResetOTP, sendPasswordResetOTP);
+router.post('/verify-password-reset-otp', validateVerifyPasswordResetOTP, verifyPasswordResetOTP);
+router.put('/reset-password-otp', validateResetPasswordOTP, resetPasswordWithOTP);
 
 // Debug endpoint to test registration data
 router.post('/register-debug', (req, res) => {

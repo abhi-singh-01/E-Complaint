@@ -311,7 +311,8 @@ const sendPasswordResetEmail = async ({ email, name, resetToken, resetUrl }) => 
  */
 const sendComplaintCreatedEmail = async ({ email, name, complaint, complaintUrl }) => {
   try {
-    if (!process.env.EMAIL_USER || !process.env.EMAIL_PASSWORD) {
+    // If no email configuration (neither SES, Brevo, Resend, nor Gmail), log for development
+    if (!process.env.AWS_SES_ACCESS_KEY && !process.env.BREVO_API_KEY && !process.env.RESEND_API_KEY && (!process.env.EMAIL_USER || !process.env.EMAIL_PASSWORD)) {
       console.log('\n=== COMPLAINT CREATED EMAIL (Development Mode) ===');
       console.log(`To: ${email}`);
       console.log(`Complaint: ${complaint.title}`);
@@ -321,93 +322,91 @@ const sendComplaintCreatedEmail = async ({ email, name, complaint, complaintUrl 
       return { success: true, message: 'Email logged to console (email not configured)' };
     }
 
-    const transporter = createTransporter();
-    await transporter.verify();
-
-    const mailOptions = {
-      from: getFromEmail(),
-      to: email,
-      subject: `Complaint Submitted - ${complaint.complaintNumber || complaint._id}`,
-      html: `
-        <!DOCTYPE html>
-        <html>
-        <head>
-          <meta charset="utf-8">
-          <meta name="viewport" content="width=device-width, initial-scale=1.0">
-          <title>Complaint Submitted</title>
-        </head>
-        <body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px;">
-          <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 30px; text-align: center; border-radius: 10px 10px 0 0;">
-            <h1 style="color: white; margin: 0;">E-Complaint System</h1>
+    const html = `
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Complaint Submitted</title>
+      </head>
+      <body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px;">
+        <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 30px; text-align: center; border-radius: 10px 10px 0 0;">
+          <h1 style="color: white; margin: 0;">E-Complaint System</h1>
+        </div>
+        
+        <div style="background: #f9f9f9; padding: 30px; border-radius: 0 0 10px 10px; border: 1px solid #e0e0e0;">
+          <h2 style="color: #333; margin-top: 0;">Complaint Submitted Successfully</h2>
+          
+          <p>Hello ${name || 'User'},</p>
+          
+          <p>Your complaint has been submitted successfully and is being reviewed by our team.</p>
+          
+          <div style="background: white; padding: 20px; border-radius: 5px; margin: 20px 0; border-left: 4px solid #1976d2;">
+            <p style="margin: 0 0 10px 0;"><strong>Complaint Number:</strong> ${complaint.complaintNumber || complaint._id}</p>
+            <p style="margin: 0 0 10px 0;"><strong>Title:</strong> ${complaint.title}</p>
+            <p style="margin: 0 0 10px 0;"><strong>Category:</strong> ${complaint.category}</p>
+            <p style="margin: 0 0 10px 0;"><strong>Priority:</strong> ${complaint.priority}</p>
+            <p style="margin: 0 0 10px 0;"><strong>Status:</strong> <span style="color: #ff9800; font-weight: bold;">${complaint.status || 'Pending'}</span></p>
           </div>
           
-          <div style="background: #f9f9f9; padding: 30px; border-radius: 0 0 10px 10px; border: 1px solid #e0e0e0;">
-            <h2 style="color: #333; margin-top: 0;">Complaint Submitted Successfully</h2>
-            
-            <p>Hello ${name || 'User'},</p>
-            
-            <p>Your complaint has been submitted successfully and is being reviewed by our team.</p>
-            
-            <div style="background: white; padding: 20px; border-radius: 5px; margin: 20px 0; border-left: 4px solid #1976d2;">
-              <p style="margin: 0 0 10px 0;"><strong>Complaint Number:</strong> ${complaint.complaintNumber || complaint._id}</p>
-              <p style="margin: 0 0 10px 0;"><strong>Title:</strong> ${complaint.title}</p>
-              <p style="margin: 0 0 10px 0;"><strong>Category:</strong> ${complaint.category}</p>
-              <p style="margin: 0 0 10px 0;"><strong>Priority:</strong> ${complaint.priority}</p>
-              <p style="margin: 0 0 10px 0;"><strong>Status:</strong> <span style="color: #ff9800; font-weight: bold;">${complaint.status || 'Pending'}</span></p>
-            </div>
-            
-            <div style="text-align: center; margin: 30px 0;">
-              <a href="${complaintUrl}" 
-                 style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); 
-                        color: white; 
-                        padding: 15px 30px; 
-                        text-decoration: none; 
-                        border-radius: 5px; 
-                        display: inline-block;
-                        font-weight: bold;">
-                View Complaint
-              </a>
-            </div>
-            
-            <p style="color: #666; font-size: 14px; margin-top: 30px;">
-              You will receive email notifications when there are updates to your complaint.
-            </p>
-            
-            <hr style="border: none; border-top: 1px solid #e0e0e0; margin: 30px 0;">
-            
-            <p style="color: #999; font-size: 12px; text-align: center; margin: 0;">
-              This is an automated message. Please do not reply to this email.<br>
-              © 2025 E-Complaint System. All rights reserved.
-            </p>
+          <div style="text-align: center; margin: 30px 0;">
+            <a href="${complaintUrl}" 
+               style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); 
+                      color: white; 
+                      padding: 15px 30px; 
+                      text-decoration: none; 
+                      border-radius: 5px; 
+                      display: inline-block;
+                      font-weight: bold;">
+              View Complaint
+            </a>
           </div>
-        </body>
-        </html>
-      `,
-      text: `
-        Complaint Submitted Successfully - E-Complaint System
-        
-        Hello ${name || 'User'},
-        
-        Your complaint has been submitted successfully.
-        
-        Complaint Number: ${complaint.complaintNumber || complaint._id}
-        Title: ${complaint.title}
-        Category: ${complaint.category}
-        Priority: ${complaint.priority}
-        Status: ${complaint.status || 'Pending'}
-        
-        View your complaint: ${complaintUrl}
-        
-        You will receive email notifications when there are updates to your complaint.
-        
-        © 2025 E-Complaint System. All rights reserved.
-      `,
-    };
+          
+          <p style="color: #666; font-size: 14px; margin-top: 30px;">
+            You will receive email notifications when there are updates to your complaint.
+          </p>
+          
+          <hr style="border: none; border-top: 1px solid #e0e0e0; margin: 30px 0;">
+          
+          <p style="color: #999; font-size: 12px; text-align: center; margin: 0;">
+            This is an automated message. Please do not reply to this email.<br>
+            © 2025 E-Complaint System. All rights reserved.
+          </p>
+        </div>
+      </body>
+      </html>
+    `;
 
-    const info = await transporter.sendMail(mailOptions);
-    console.log('Complaint created email sent:', info.messageId);
+    const text = `
+      Complaint Submitted Successfully - E-Complaint System
+      
+      Hello ${name || 'User'},
+      
+      Your complaint has been submitted successfully.
+      
+      Complaint Number: ${complaint.complaintNumber || complaint._id}
+      Title: ${complaint.title}
+      Category: ${complaint.category}
+      Priority: ${complaint.priority}
+      Status: ${complaint.status || 'Pending'}
+      
+      View your complaint: ${complaintUrl}
+      
+      You will receive email notifications when there are updates to your complaint.
+      
+      © 2025 E-Complaint System. All rights reserved.
+    `;
 
-    return { success: true, messageId: info.messageId };
+    const result = await sendEmail({
+      to: email,
+      subject: `Complaint Submitted - ${complaint.complaintNumber || complaint._id}`,
+      html,
+      text,
+    });
+
+    console.log('Complaint created email sent:', result.messageId);
+    return result;
   } catch (error) {
     console.error('Error sending complaint created email:', error);
     // Don't throw - email failures shouldn't break complaint creation
@@ -427,7 +426,8 @@ const sendComplaintCreatedEmail = async ({ email, name, complaint, complaintUrl 
  */
 const sendComplaintStatusUpdateEmail = async ({ email, name, complaint, oldStatus, newStatus, complaintUrl }) => {
   try {
-    if (!process.env.EMAIL_USER || !process.env.EMAIL_PASSWORD) {
+    // If no email configuration (neither SES, Brevo, Resend, nor Gmail), log for development
+    if (!process.env.AWS_SES_ACCESS_KEY && !process.env.BREVO_API_KEY && !process.env.RESEND_API_KEY && (!process.env.EMAIL_USER || !process.env.EMAIL_PASSWORD)) {
       console.log('\n=== COMPLAINT STATUS UPDATE EMAIL (Development Mode) ===');
       console.log(`To: ${email}`);
       console.log(`Complaint: ${complaint.title}`);
@@ -437,9 +437,6 @@ const sendComplaintStatusUpdateEmail = async ({ email, name, complaint, oldStatu
       return { success: true, message: 'Email logged to console (email not configured)' };
     }
 
-    const transporter = createTransporter();
-    await transporter.verify();
-
     const statusColors = {
       'Pending': '#ff9800',
       'In Progress': '#2196f3',
@@ -447,82 +444,83 @@ const sendComplaintStatusUpdateEmail = async ({ email, name, complaint, oldStatu
       'Rejected': '#f44336'
     };
 
-    const mailOptions = {
-      from: getFromEmail(),
-      to: email,
-      subject: `Complaint Status Updated - ${complaint.complaintNumber || complaint._id}`,
-      html: `
-        <!DOCTYPE html>
-        <html>
-        <head>
-          <meta charset="utf-8">
-          <meta name="viewport" content="width=device-width, initial-scale=1.0">
-          <title>Complaint Status Updated</title>
-        </head>
-        <body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px;">
-          <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 30px; text-align: center; border-radius: 10px 10px 0 0;">
-            <h1 style="color: white; margin: 0;">E-Complaint System</h1>
+    const html = `
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Complaint Status Updated</title>
+      </head>
+      <body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px;">
+        <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 30px; text-align: center; border-radius: 10px 10px 0 0;">
+          <h1 style="color: white; margin: 0;">E-Complaint System</h1>
+        </div>
+        
+        <div style="background: #f9f9f9; padding: 30px; border-radius: 0 0 10px 10px; border: 1px solid #e0e0e0;">
+          <h2 style="color: #333; margin-top: 0;">Complaint Status Updated</h2>
+          
+          <p>Hello ${name || 'User'},</p>
+          
+          <p>The status of your complaint has been updated.</p>
+          
+          <div style="background: white; padding: 20px; border-radius: 5px; margin: 20px 0; border-left: 4px solid ${statusColors[newStatus] || '#1976d2'};">
+            <p style="margin: 0 0 10px 0;"><strong>Complaint Number:</strong> ${complaint.complaintNumber || complaint._id}</p>
+            <p style="margin: 0 0 10px 0;"><strong>Title:</strong> ${complaint.title}</p>
+            <p style="margin: 0 0 10px 0;"><strong>Previous Status:</strong> ${oldStatus}</p>
+            <p style="margin: 0 0 10px 0;"><strong>New Status:</strong> <span style="color: ${statusColors[newStatus] || '#1976d2'}; font-weight: bold;">${newStatus}</span></p>
           </div>
           
-          <div style="background: #f9f9f9; padding: 30px; border-radius: 0 0 10px 10px; border: 1px solid #e0e0e0;">
-            <h2 style="color: #333; margin-top: 0;">Complaint Status Updated</h2>
-            
-            <p>Hello ${name || 'User'},</p>
-            
-            <p>The status of your complaint has been updated.</p>
-            
-            <div style="background: white; padding: 20px; border-radius: 5px; margin: 20px 0; border-left: 4px solid ${statusColors[newStatus] || '#1976d2'};">
-              <p style="margin: 0 0 10px 0;"><strong>Complaint Number:</strong> ${complaint.complaintNumber || complaint._id}</p>
-              <p style="margin: 0 0 10px 0;"><strong>Title:</strong> ${complaint.title}</p>
-              <p style="margin: 0 0 10px 0;"><strong>Previous Status:</strong> ${oldStatus}</p>
-              <p style="margin: 0 0 10px 0;"><strong>New Status:</strong> <span style="color: ${statusColors[newStatus] || '#1976d2'}; font-weight: bold;">${newStatus}</span></p>
-            </div>
-            
-            <div style="text-align: center; margin: 30px 0;">
-              <a href="${complaintUrl}" 
-                 style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); 
-                        color: white; 
-                        padding: 15px 30px; 
-                        text-decoration: none; 
-                        border-radius: 5px; 
-                        display: inline-block;
-                        font-weight: bold;">
-                View Complaint
-              </a>
-            </div>
-            
-            <hr style="border: none; border-top: 1px solid #e0e0e0; margin: 30px 0;">
-            
-            <p style="color: #999; font-size: 12px; text-align: center; margin: 0;">
-              This is an automated message. Please do not reply to this email.<br>
-              © 2025 E-Complaint System. All rights reserved.
-            </p>
+          <div style="text-align: center; margin: 30px 0;">
+            <a href="${complaintUrl}" 
+               style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); 
+                      color: white; 
+                      padding: 15px 30px; 
+                      text-decoration: none; 
+                      border-radius: 5px; 
+                      display: inline-block;
+                      font-weight: bold;">
+              View Complaint
+            </a>
           </div>
-        </body>
-        </html>
-      `,
-      text: `
-        Complaint Status Updated - E-Complaint System
-        
-        Hello ${name || 'User'},
-        
-        The status of your complaint has been updated.
-        
-        Complaint Number: ${complaint.complaintNumber || complaint._id}
-        Title: ${complaint.title}
-        Previous Status: ${oldStatus}
-        New Status: ${newStatus}
-        
-        View your complaint: ${complaintUrl}
-        
-        © 2025 E-Complaint System. All rights reserved.
-      `,
-    };
+          
+          <hr style="border: none; border-top: 1px solid #e0e0e0; margin: 30px 0;">
+          
+          <p style="color: #999; font-size: 12px; text-align: center; margin: 0;">
+            This is an automated message. Please do not reply to this email.<br>
+            © 2025 E-Complaint System. All rights reserved.
+          </p>
+        </div>
+      </body>
+      </html>
+    `;
 
-    const info = await transporter.sendMail(mailOptions);
-    console.log('Complaint status update email sent:', info.messageId);
+    const text = `
+      Complaint Status Updated - E-Complaint System
+      
+      Hello ${name || 'User'},
+      
+      The status of your complaint has been updated.
+      
+      Complaint Number: ${complaint.complaintNumber || complaint._id}
+      Title: ${complaint.title}
+      Previous Status: ${oldStatus}
+      New Status: ${newStatus}
+      
+      View your complaint: ${complaintUrl}
+      
+      © 2025 E-Complaint System. All rights reserved.
+    `;
 
-    return { success: true, messageId: info.messageId };
+    const result = await sendEmail({
+      to: email,
+      subject: `Complaint Status Updated - ${complaint.complaintNumber || complaint._id}`,
+      html,
+      text,
+    });
+
+    console.log('Complaint status update email sent:', result.messageId);
+    return result;
   } catch (error) {
     console.error('Error sending complaint status update email:', error);
     return { success: false, error: error.message };
@@ -541,7 +539,8 @@ const sendComplaintStatusUpdateEmail = async ({ email, name, complaint, oldStatu
  */
 const sendCommentAddedEmail = async ({ email, name, complaint, comment, commentedBy, complaintUrl }) => {
   try {
-    if (!process.env.EMAIL_USER || !process.env.EMAIL_PASSWORD) {
+    // If no email configuration (neither SES, Brevo, Resend, nor Gmail), log for development
+    if (!process.env.AWS_SES_ACCESS_KEY && !process.env.BREVO_API_KEY && !process.env.RESEND_API_KEY && (!process.env.EMAIL_USER || !process.env.EMAIL_PASSWORD)) {
       console.log('\n=== COMMENT ADDED EMAIL (Development Mode) ===');
       console.log(`To: ${email}`);
       console.log(`Complaint: ${complaint.title}`);
@@ -551,89 +550,87 @@ const sendCommentAddedEmail = async ({ email, name, complaint, comment, commente
       return { success: true, message: 'Email logged to console (email not configured)' };
     }
 
-    const transporter = createTransporter();
-    await transporter.verify();
-
-    const mailOptions = {
-      from: getFromEmail(),
-      to: email,
-      subject: `New Comment on Complaint - ${complaint.complaintNumber || complaint._id}`,
-      html: `
-        <!DOCTYPE html>
-        <html>
-        <head>
-          <meta charset="utf-8">
-          <meta name="viewport" content="width=device-width, initial-scale=1.0">
-          <title>New Comment</title>
-        </head>
-        <body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px;">
-          <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 30px; text-align: center; border-radius: 10px 10px 0 0;">
-            <h1 style="color: white; margin: 0;">E-Complaint System</h1>
+    const html = `
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>New Comment</title>
+      </head>
+      <body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px;">
+        <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 30px; text-align: center; border-radius: 10px 10px 0 0;">
+          <h1 style="color: white; margin: 0;">E-Complaint System</h1>
+        </div>
+        
+        <div style="background: #f9f9f9; padding: 30px; border-radius: 0 0 10px 10px; border: 1px solid #e0e0e0;">
+          <h2 style="color: #333; margin-top: 0;">New Comment Added</h2>
+          
+          <p>Hello ${name || 'User'},</p>
+          
+          <p>A new comment has been added to your complaint.</p>
+          
+          <div style="background: white; padding: 20px; border-radius: 5px; margin: 20px 0; border-left: 4px solid #1976d2;">
+            <p style="margin: 0 0 10px 0;"><strong>Complaint:</strong> ${complaint.title}</p>
+            <p style="margin: 0 0 10px 0;"><strong>Complaint Number:</strong> ${complaint.complaintNumber || complaint._id}</p>
+            <p style="margin: 10px 0 5px 0;"><strong>Comment by:</strong> ${commentedBy}</p>
+            <div style="background: #f5f5f5; padding: 15px; border-radius: 5px; margin-top: 10px;">
+              <p style="margin: 0; font-style: italic;">"${comment}"</p>
+            </div>
           </div>
           
-          <div style="background: #f9f9f9; padding: 30px; border-radius: 0 0 10px 10px; border: 1px solid #e0e0e0;">
-            <h2 style="color: #333; margin-top: 0;">New Comment Added</h2>
-            
-            <p>Hello ${name || 'User'},</p>
-            
-            <p>A new comment has been added to your complaint.</p>
-            
-            <div style="background: white; padding: 20px; border-radius: 5px; margin: 20px 0; border-left: 4px solid #1976d2;">
-              <p style="margin: 0 0 10px 0;"><strong>Complaint:</strong> ${complaint.title}</p>
-              <p style="margin: 0 0 10px 0;"><strong>Complaint Number:</strong> ${complaint.complaintNumber || complaint._id}</p>
-              <p style="margin: 10px 0 5px 0;"><strong>Comment by:</strong> ${commentedBy}</p>
-              <div style="background: #f5f5f5; padding: 15px; border-radius: 5px; margin-top: 10px;">
-                <p style="margin: 0; font-style: italic;">"${comment}"</p>
-              </div>
-            </div>
-            
-            <div style="text-align: center; margin: 30px 0;">
-              <a href="${complaintUrl}" 
-                 style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); 
-                        color: white; 
-                        padding: 15px 30px; 
-                        text-decoration: none; 
-                        border-radius: 5px; 
-                        display: inline-block;
-                        font-weight: bold;">
-                View Complaint & Comment
-              </a>
-            </div>
-            
-            <hr style="border: none; border-top: 1px solid #e0e0e0; margin: 30px 0;">
-            
-            <p style="color: #999; font-size: 12px; text-align: center; margin: 0;">
-              This is an automated message. Please do not reply to this email.<br>
-              © 2025 E-Complaint System. All rights reserved.
-            </p>
+          <div style="text-align: center; margin: 30px 0;">
+            <a href="${complaintUrl}" 
+               style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); 
+                      color: white; 
+                      padding: 15px 30px; 
+                      text-decoration: none; 
+                      border-radius: 5px; 
+                      display: inline-block;
+                      font-weight: bold;">
+              View Complaint & Comment
+            </a>
           </div>
-        </body>
-        </html>
-      `,
-      text: `
-        New Comment Added - E-Complaint System
-        
-        Hello ${name || 'User'},
-        
-        A new comment has been added to your complaint.
-        
-        Complaint: ${complaint.title}
-        Complaint Number: ${complaint.complaintNumber || complaint._id}
-        Comment by: ${commentedBy}
-        
-        Comment:
-        "${comment}"
-        
-        View your complaint: ${complaintUrl}
-        
-        © 2025 E-Complaint System. All rights reserved.
-      `,
-    };
+          
+          <hr style="border: none; border-top: 1px solid #e0e0e0; margin: 30px 0;">
+          
+          <p style="color: #999; font-size: 12px; text-align: center; margin: 0;">
+            This is an automated message. Please do not reply to this email.<br>
+            © 2025 E-Complaint System. All rights reserved.
+          </p>
+        </div>
+      </body>
+      </html>
+    `;
 
-    const info = await transporter.sendMail(mailOptions);
-    console.log('Comment added email sent:', info.messageId);
+    const text = `
+      New Comment Added - E-Complaint System
+      
+      Hello ${name || 'User'},
+      
+      A new comment has been added to your complaint.
+      
+      Complaint: ${complaint.title}
+      Complaint Number: ${complaint.complaintNumber || complaint._id}
+      Comment by: ${commentedBy}
+      
+      Comment:
+      "${comment}"
+      
+      View your complaint: ${complaintUrl}
+      
+      © 2025 E-Complaint System. All rights reserved.
+    `;
 
-    return { success: true, messageId: info.messageId };
+    const result = await sendEmail({
+      to: email,
+      subject: `New Comment on Complaint - ${complaint.complaintNumber || complaint._id}`,
+      html,
+      text,
+    });
+
+    console.log('Comment added email sent:', result.messageId);
+    return result;
   } catch (error) {
     console.error('Error sending comment added email:', error);
     return { success: false, error: error.message };
@@ -738,6 +735,104 @@ const sendOTPEmail = async ({ email, name, otp }) => {
   }
 };
 
+/**
+ * Send OTP for password reset
+ * @param {Object} options - Email options
+ * @param {String} options.email - Recipient email
+ * @param {String} options.name - Recipient name
+ * @param {String} options.otp - OTP code
+ */
+const sendPasswordResetOTPEmail = async ({ email, name, otp }) => {
+  try {
+    // If no email configuration (neither SES, Brevo, Resend, nor Gmail), log for development
+    if (!process.env.AWS_SES_ACCESS_KEY && !process.env.BREVO_API_KEY && !process.env.RESEND_API_KEY && (!process.env.EMAIL_USER || !process.env.EMAIL_PASSWORD)) {
+      console.log('\n=== PASSWORD RESET OTP EMAIL (Development Mode) ===');
+      console.log(`To: ${email}`);
+      console.log(`Name: ${name}`);
+      console.log(`OTP: ${otp}`);
+      console.log('====================================================\n');
+      return { success: true, message: 'OTP logged to console (email not configured)' };
+    }
+
+    const html = `
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Password Reset OTP</title>
+      </head>
+      <body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px;">
+        <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 30px; text-align: center; border-radius: 10px 10px 0 0;">
+          <h1 style="color: white; margin: 0;">E-Complaint System</h1>
+        </div>
+        
+        <div style="background: #f9f9f9; padding: 30px; border-radius: 0 0 10px 10px; border: 1px solid #e0e0e0;">
+          <h2 style="color: #333; margin-top: 0;">Password Reset Request</h2>
+          
+          <p>Hello ${name || 'User'},</p>
+          
+          <p>We received a request to reset your password for your E-Complaint System account. Please use the OTP code below to verify your identity and reset your password.</p>
+          
+          <div style="background: white; padding: 30px; border-radius: 5px; margin: 30px 0; text-align: center; border: 2px dashed #764ba2;">
+            <p style="margin: 0; font-size: 14px; color: #666; margin-bottom: 10px;">Your Password Reset Code:</p>
+            <p style="margin: 0; font-size: 36px; font-weight: bold; color: #764ba2; letter-spacing: 8px; font-family: monospace;">
+              ${otp}
+            </p>
+          </div>
+          
+          <div style="background: #fff3cd; border-left: 4px solid #ffc107; padding: 15px; margin: 20px 0; border-radius: 4px;">
+            <p style="margin: 0; color: #856404;">
+              <strong>⚠️ Important:</strong> This OTP will expire in 10 minutes. If you didn't request a password reset, please ignore this email and your password will remain unchanged.
+            </p>
+          </div>
+          
+          <p style="color: #666; font-size: 14px; margin-top: 30px;">
+            Enter this code on the password reset page to continue.
+          </p>
+          
+          <hr style="border: none; border-top: 1px solid #e0e0e0; margin: 30px 0;">
+          
+          <p style="color: #999; font-size: 12px; text-align: center; margin: 0;">
+            This is an automated message. Please do not reply to this email.<br>
+            © 2025 E-Complaint System. All rights reserved.
+          </p>
+        </div>
+      </body>
+      </html>
+    `;
+
+    const text = `
+      Password Reset Request - E-Complaint System
+      
+      Hello ${name || 'User'},
+      
+      We received a request to reset your password for your E-Complaint System account. Please use the OTP code below to verify your identity and reset your password.
+      
+      Your Password Reset Code: ${otp}
+      
+      This OTP will expire in 10 minutes. If you didn't request a password reset, please ignore this email and your password will remain unchanged.
+      
+      Enter this code on the password reset page to continue.
+      
+      © 2025 E-Complaint System. All rights reserved.
+    `;
+
+    const result = await sendEmail({
+      to: email,
+      subject: 'Password Reset OTP - E-Complaint System',
+      html,
+      text,
+    });
+
+    console.log('Password reset OTP email sent:', result.messageId);
+    return result;
+  } catch (error) {
+    console.error('Error sending password reset OTP email:', error);
+    throw error;
+  }
+}
+
 
 module.exports = {
   sendPasswordResetEmail,
@@ -745,6 +840,7 @@ module.exports = {
   sendComplaintStatusUpdateEmail,
   sendCommentAddedEmail,
   sendOTPEmail,
+  sendPasswordResetOTPEmail,
 };
 
 
