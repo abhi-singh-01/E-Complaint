@@ -177,8 +177,8 @@ function About() {
             <Grid item xs={6} md={3} key={index}>
               <Card sx={{
                 ...getCardStyle(item.color),
-                p: { xs: 2, md: 3 },
-                height: { xs: 160, md: 180 },
+                p: { xs: 1.5, md: 2.5 },
+                height: { xs: 130, md: 150 },
                 display: 'flex',
                 flexDirection: 'column',
                 alignItems: 'center',
@@ -188,9 +188,9 @@ function About() {
                 <Avatar sx={{
                   bgcolor: alpha(item.color, isDarkMode ? 0.3 : 0.15),
                   color: item.color,
-                  width: { xs: 45, md: 55 },
-                  height: { xs: 45, md: 55 },
-                  mb: 1.5,
+                  width: { xs: 38, md: 45 },
+                  height: { xs: 38, md: 45 },
+                  mb: 1,
                   animation: `${float} 3s ease-in-out infinite`,
                   animationDelay: `${index * 0.2}s`
                 }}>
@@ -232,8 +232,8 @@ function About() {
             <Grid item xs={6} md={3} key={index}>
               <Card sx={{
                 ...getCardStyle(item.color),
-                p: { xs: 2, md: 3 },
-                height: { xs: 140, md: 160 },
+                p: { xs: 1.5, md: 2.5 },
+                height: { xs: 120, md: 140 },
                 display: 'flex',
                 flexDirection: 'column',
                 alignItems: 'center',
@@ -243,11 +243,11 @@ function About() {
                 <Avatar sx={{
                   bgcolor: item.color,
                   color: '#fff',
-                  width: { xs: 40, md: 50 },
-                  height: { xs: 40, md: 50 },
-                  mb: 1.5,
+                  width: { xs: 35, md: 42 },
+                  height: { xs: 35, md: 42 },
+                  mb: 1,
                   fontWeight: 700,
-                  fontSize: { xs: '1.1rem', md: '1.3rem' }
+                  fontSize: { xs: '1rem', md: '1.1rem' }
                 }}>
                   {item.step}
                 </Avatar>
