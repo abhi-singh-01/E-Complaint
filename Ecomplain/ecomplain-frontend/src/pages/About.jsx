@@ -3,10 +3,10 @@ import {
   Box,
   Grid,
   Card,
+  CardContent,
   Avatar,
   Chip,
   IconButton,
-  useTheme,
   alpha
 } from '@mui/material'
 import {
@@ -32,455 +32,1109 @@ import {
 import { useTheme as useCustomTheme } from '../contexts/ThemeContext.jsx'
 import { keyframes } from '@mui/system'
 
-// Animations
+// Core animations
 const fadeInUp = keyframes`
   from { opacity: 0; transform: translateY(30px); }
   to { opacity: 1; transform: translateY(0); }
 `
 
 const float = keyframes`
-  0%, 100% { transform: translateY(0px); }
-  50% { transform: translateY(-8px); }
+  0% { transform: translateY(0) scale(1); }
+  50% { transform: translateY(-10px) scale(1.02); }
+  100% { transform: translateY(0) scale(1); }
 `
 
 const pulse = keyframes`
-  0%, 100% { transform: scale(1); }
-  50% { transform: scale(1.05); }
+  0%, 100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(59,130,246,0.45); }
+  50% { transform: scale(1.03); box-shadow: 0 0 40px 10px rgba(59,130,246,0.25); }
 `
 
-const glow = keyframes`
-  0%, 100% { box-shadow: 0 0 20px rgba(25, 118, 210, 0.3); }
-  50% { box-shadow: 0 0 40px rgba(25, 118, 210, 0.6); }
+const shimmer = keyframes`
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
 `
 
 function About() {
-  const theme = useTheme()
   const { isDarkMode } = useCustomTheme()
 
-  // Unique content - different from Home page
-  const whyChooseUs = [
-    { icon: <Visibility />, title: "100% Transparency", description: "Track every step of your complaint journey", color: "#1976d2" },
-    { icon: <Speed />, title: "Fast Resolution", description: "Average resolution time under 48 hours", color: "#2e7d32" },
-    { icon: <Security />, title: "Data Privacy", description: "Your information stays confidential", color: "#d32f2f" },
-    { icon: <Handshake />, title: "Fair Process", description: "Unbiased handling of all complaints", color: "#ed6c02" }
+  const stats = [
+    { label: 'Complaints Resolved', value: '1.2K+', icon: <EmojiEvents />, color: '#22c55e' },
+    { label: 'Avg. Response Time', value: '< 24 hrs', icon: <Speed />, color: '#f97316' },
+    { label: 'Departments Onboarded', value: '25+', icon: <School />, color: '#3b82f6' },
+    { label: 'Student Satisfaction', value: '4.8/5', icon: <Favorite />, color: '#ec4899' }
   ]
 
-  const howItWorks = [
-    { step: "1", title: "Register", description: "Create your account with college email", color: "#1976d2" },
-    { step: "2", title: "Submit", description: "File your complaint with details", color: "#9c27b0" },
-    { step: "3", title: "Track", description: "Monitor status in real-time", color: "#ed6c02" },
-    { step: "4", title: "Resolve", description: "Get timely resolution", color: "#2e7d32" }
-  ]
-
-  const developers = [
+  const values = [
     {
-      name: "Abhijeet Singh",
-      role: "Full Stack Developer",
-      avatar: "AS",
-      color: "#1976d2",
-      skills: ["React", "Node.js", "MongoDB"],
-      github: "https://github.com",
-      linkedin: "https://linkedin.com"
+      icon: <Visibility />,
+      title: 'Radical Transparency',
+      description: 'Every action is visible, every update is tracked, and every decision is documented. No more “lost” complaints.',
+      color: '#3b82f6'
     },
     {
-      name: "Abhishek Mishra",
-      role: "Full Stack Developer",
-      avatar: "AM",
-      color: "#9c27b0",
-      skills: ["React", "Express", "AWS"],
-      github: "https://github.com",
-      linkedin: "https://linkedin.com"
+      icon: <Security />,
+      title: 'Safe & Secure Voice',
+      description: 'Enterprise‑grade security and role‑based access ensure your identity and data stay protected.',
+      color: '#22c55e'
+    },
+    {
+      icon: <Lightbulb />,
+      title: 'Insight‑Driven Campus',
+      description: 'Analytics turn individual complaints into patterns that help institutions improve policies and culture.',
+      color: '#a855f7'
+    },
+    {
+      icon: <Handshake />,
+      title: 'Built For Collaboration',
+      description: 'Students, mentors and administrators work together in one intuitive, guided workflow.',
+      color: '#f97316'
     }
   ]
 
-  // Theme-responsive card style
-  const getCardStyle = (accentColor = theme.palette.primary.main) => ({
-    background: isDarkMode
-      ? `linear-gradient(145deg, ${alpha('#1e1e1e', 0.95)}, ${alpha('#2d2d2d', 0.95)})`
-      : `linear-gradient(145deg, ${alpha('#ffffff', 0.95)}, ${alpha('#f8fafc', 0.95)})`,
-    border: `1px solid ${alpha(accentColor, isDarkMode ? 0.3 : 0.15)}`,
-    borderRadius: { xs: 2, md: 3 },
-    boxShadow: isDarkMode
-      ? `0 8px 32px ${alpha('#000', 0.3)}`
-      : `0 8px 32px ${alpha(accentColor, 0.1)}`,
-    transition: 'all 0.3s ease',
-    '@media (hover: hover)': {
-      '&:hover': {
-        transform: 'translateY(-4px)',
-        boxShadow: isDarkMode
-          ? `0 16px 48px ${alpha(accentColor, 0.3)}`
-          : `0 16px 48px ${alpha(accentColor, 0.2)}`
-      }
+  const journeySteps = [
+    {
+      step: '01',
+      title: 'You share your concern',
+      description: 'Log in with your institute credentials and submit your issue with full context, category and attachments.',
+      icon: <HistoryEdu />
+    },
+    {
+      step: '02',
+      title: 'Smart routing engine',
+      description: 'Our logic routes the complaint directly to the correct department, HOD or authority – automatically.',
+      icon: <Gavel />
+    },
+    {
+      step: '03',
+      title: 'Live tracking & updates',
+      description: 'Track your case like a delivery – see which desk it is on, what changed and what is coming next.',
+      icon: <Visibility />
+    },
+    {
+      step: '04',
+      title: 'Resolution & feedback',
+      description: 'Get notified on every action and share feedback so we can keep improving the experience.',
+      icon: <Support />
     }
+  ]
+
+  const team = [
+    {
+      name: 'Abhijeet Singh',
+      role: 'Full Stack Architect',
+      avatar: 'AS',
+      color: '#3b82f6',
+      skills: ['React', 'Node.js', 'MongoDB'],
+      github: 'https://github.com/abhi-singh-01',
+      linkedin: 'https://linkedin.com'
+    },
+    {
+      name: 'Abhishek Mishra',
+      role: 'Full Stack Engineer',
+      avatar: 'AM',
+      color: '#a855f7',
+      skills: ['React', 'Express', 'AWS'],
+      github: 'https://github.com',
+      linkedin: 'https://linkedin.com'
+    }
+  ]
+
+  const getCardSx = (color) => ({
+    position: 'relative',
+    overflow: 'hidden',
+    borderRadius: 4,
+    p: 3,
+    height: '100%',
+    border: `1px solid ${alpha(color, isDarkMode ? 0.4 : 0.18)}`,
+    background: isDarkMode
+      ? `linear-gradient(135deg, ${alpha('#020617', 0.9)}, ${alpha(color, 0.18)})`
+      : `linear-gradient(135deg, rgba(255,255,255,0.98), ${alpha(color, 0.06)})`,
+    boxShadow: `0 20px 50px ${alpha('#020617', isDarkMode ? 0.9 : 0.15)}`,
+    backdropFilter: 'blur(18px)',
+    '&::before': {
+      content: '""',
+      position: 'absolute',
+      inset: '-40%',
+      background: `radial-gradient(circle at 0% 0%, ${alpha(color, 0.55)}, transparent 60%)`,
+      opacity: isDarkMode ? 0.35 : 0.18,
+      pointerEvents: 'none',
+      animation: `${float} 12s ease-in-out infinite`
+    },
+    '&:hover': {
+      transform: 'translateY(-8px)',
+      boxShadow: `0 28px 70px ${alpha(color, isDarkMode ? 0.7 : 0.25)}`,
+      borderColor: alpha(color, 0.75)
+    },
+    transition: 'all 0.35s cubic-bezier(0.22, 1, 0.36, 1)'
+  })
+
+  const chipSx = (color) => ({
+    bgcolor: alpha(color, isDarkMode ? 0.35 : 0.12),
+    color,
+    borderRadius: 999,
+    px: 1.8,
+    py: 0.4,
+    fontWeight: 600,
+    fontSize: 12,
+    letterSpacing: 0.6,
+    textTransform: 'uppercase',
+    display: 'inline-flex',
+    alignItems: 'center',
+    gap: 0.8,
+    border: `1px solid ${alpha(color, 0.6)}`
   })
 
   return (
-    <Box sx={{
-      width: '100%',
-      minHeight: '100vh',
-      background: isDarkMode
-        ? 'linear-gradient(180deg, #0d1117 0%, #161b22 50%, #1f2937 100%)'
-        : 'linear-gradient(180deg, #f0f4f8 0%, #e2e8f0 50%, #cbd5e1 100%)',
-      py: { xs: 4, sm: 6, md: 8 },
-      px: { xs: 2, sm: 3, md: 6 }
-    }}>
+    <Box
+      sx={{
+        position: 'relative',
+        width: '100%',
+        minHeight: '100vh',
+        overflow: 'hidden',
+        py: { xs: 6, md: 10 },
+        px: { xs: 2.5, sm: 4, md: 8 },
+        background: isDarkMode
+          ? 'radial-gradient(circle at 0% 0%, #1d4ed8 0, transparent 55%), radial-gradient(circle at 100% 100%, #22c55e 0, #020617 55%)'
+          : 'radial-gradient(circle at 0% 0%, #bfdbfe 0, transparent 55%), radial-gradient(circle at 100% 100%, #fee2e2 0, #f9fafb 55%)'
+      }}
+    >
+      {/* Soft animated sheen */}
+      <Box
+        sx={{
+          position: 'absolute',
+          inset: '-20%',
+          backgroundImage:
+            'linear-gradient(120deg, transparent, rgba(255,255,255,0.18), transparent)',
+          backgroundSize: '200% 100%',
+          mixBlendMode: isDarkMode ? 'screen' : 'overlay',
+          opacity: 0.5,
+          animation: `${shimmer} 18s linear infinite`,
+          pointerEvents: 'none'
+        }}
+      />
 
-      {/* Hero Section - Different from Home */}
-      <Box sx={{
-        textAlign: 'center',
-        mb: { xs: 6, md: 8 },
-        animation: `${fadeInUp} 0.8s ease-out`
-      }}>
-        <Avatar sx={{
-          width: { xs: 80, md: 100 },
-          height: { xs: 80, md: 100 },
+      <Box
+        sx={{
+          position: 'relative',
+          maxWidth: 1240,
           mx: 'auto',
-          mb: 3,
-          background: 'linear-gradient(135deg, #1976d2 0%, #9c27b0 100%)',
-          animation: `${glow} 3s ease-in-out infinite`
-        }}>
-          <HistoryEdu sx={{ fontSize: { xs: 40, md: 50 }, color: '#fff' }} />
-        </Avatar>
-        <Typography variant="h3" sx={{
-          fontWeight: 800,
-          color: isDarkMode ? '#fff' : '#1e293b',
-          mb: 2,
-          fontSize: { xs: '1.75rem', sm: '2.25rem', md: '3rem' }
-        }}>
-          About Our Platform
-        </Typography>
-        <Typography variant="body1" sx={{
-          color: isDarkMode ? alpha('#fff', 0.7) : '#64748b',
-          maxWidth: 600,
-          mx: 'auto',
-          fontSize: { xs: '0.95rem', md: '1.1rem' },
-          lineHeight: 1.7
-        }}>
-          Built by students, for students. We understand your challenges and created
-          a platform that makes your voice heard.
-        </Typography>
-      </Box>
+          display: 'flex',
+          flexDirection: 'column',
+          gap: { xs: 8, md: 10 }
+        }}
+      >
+        {/* HERO SECTION */}
+        <Grid
+          container
+          spacing={{ xs: 4, md: 6 }}
+          alignItems="center"
+          sx={{ animation: `${fadeInUp} 0.8s ease-out` }}
+        >
+          <Grid item xs={12} md={6}>
+            <Box sx={{ mb: 2.5 }}>
+              <Box sx={chipSx('#3b82f6')}>
+                <Code fontSize="small" />
+                Built by students • Optimized for campus life
+              </Box>
+            </Box>
 
-      {/* Why Choose Us - Unique Section */}
-      <Box sx={{ mb: { xs: 6, md: 8 } }}>
-        <Typography variant="h4" sx={{
-          textAlign: 'center',
-          fontWeight: 700,
-          color: isDarkMode ? '#fff' : '#1e293b',
-          mb: { xs: 3, md: 4 },
-          fontSize: { xs: '1.5rem', md: '2rem' }
-        }}>
-          🎯 Why Choose Us?
-        </Typography>
-        <Grid container spacing={{ xs: 2, md: 3 }}>
-          {whyChooseUs.map((item, index) => (
-            <Grid item xs={6} md={3} key={index}>
-              <Card sx={{
-                ...getCardStyle(item.color),
-                p: { xs: 1.5, md: 2.5 },
-                height: { xs: 130, md: 150 },
-                display: 'flex',
-                flexDirection: 'column',
-                alignItems: 'center',
-                textAlign: 'center',
-                animation: `${fadeInUp} 0.6s ease-out ${index * 0.1}s both`
-              }}>
-                <Avatar sx={{
-                  bgcolor: alpha(item.color, isDarkMode ? 0.3 : 0.15),
-                  color: item.color,
-                  width: { xs: 38, md: 45 },
-                  height: { xs: 38, md: 45 },
-                  mb: 1,
-                  animation: `${float} 3s ease-in-out infinite`,
-                  animationDelay: `${index * 0.2}s`
-                }}>
-                  {item.icon}
-                </Avatar>
-                <Typography variant="h6" sx={{
-                  fontWeight: 600,
-                  color: isDarkMode ? '#fff' : '#1e293b',
-                  fontSize: { xs: '0.85rem', md: '1rem' },
-                  mb: 0.5
-                }}>
-                  {item.title}
-                </Typography>
-                <Typography variant="body2" sx={{
-                  color: isDarkMode ? alpha('#fff', 0.6) : '#64748b',
-                  fontSize: { xs: '0.7rem', md: '0.85rem' }
-                }}>
-                  {item.description}
-                </Typography>
-              </Card>
+            <Typography
+              variant="h3"
+              sx={{
+                fontWeight: 800,
+                letterSpacing: '-0.04em',
+                fontSize: { xs: '2.2rem', sm: '2.8rem', md: '3.4rem' },
+                lineHeight: 1.05,
+                mb: 2,
+                color: isDarkMode ? '#e5e7eb' : '#0f172a'
+              }}
+            >
+              Turn{' '}
+              <Box
+                component="span"
+                sx={{
+                  backgroundImage:
+                    'linear-gradient(120deg, #3b82f6, #8b5cf6, #ec4899)',
+                  backgroundClip: 'text',
+                  textFillColor: 'transparent',
+                  WebkitBackgroundClip: 'text',
+                  WebkitTextFillColor: 'transparent'
+                }}
+              >
+                every complaint
+              </Box>{' '}
+              into clear, trackable action.
+            </Typography>
+
+            <Typography
+              variant="body1"
+              sx={{
+                color: isDarkMode ? alpha('#e5e7eb', 0.8) : '#4b5563',
+                fontSize: { xs: '1rem', md: '1.1rem' },
+                lineHeight: 1.8,
+                maxWidth: 540,
+                mb: 3
+              }}
+            >
+              E‑Complain is your digital bridge between students and college
+              authorities. No more paper forms, office queues or wondering what
+              happened to your issue – just raise, track and resolve from
+              anywhere.
+            </Typography>
+
+            <Grid container spacing={2.5} sx={{ mb: 3 }}>
+              <Grid item xs={12} sm={6}>
+                <Box
+                  sx={{
+                    ...chipSx('#22c55e'),
+                    width: '100%',
+                    justifyContent: 'flex-start',
+                    animation: `${pulse} 3.2s ease-in-out infinite`
+                  }}
+                >
+                  <Speed fontSize="small" />
+                  Live status & instant updates
+                </Box>
+              </Grid>
+              <Grid item xs={12} sm={6}>
+                <Box
+                  sx={{
+                    ...chipSx('#a855f7'),
+                    width: '100%',
+                    justifyContent: 'flex-start'
+                  }}
+                >
+                  <Security fontSize="small" />
+                  Fully secure & role‑based
+                </Box>
+              </Grid>
             </Grid>
-          ))}
-        </Grid>
-      </Box>
 
-      {/* How It Works - Unique Process Section */}
-      <Box sx={{ mb: { xs: 6, md: 8 } }}>
-        <Typography variant="h4" sx={{
-          textAlign: 'center',
-          fontWeight: 700,
-          color: isDarkMode ? '#fff' : '#1e293b',
-          mb: { xs: 3, md: 4 },
-          fontSize: { xs: '1.5rem', md: '2rem' }
-        }}>
-          📋 How It Works
-        </Typography>
-        <Grid container spacing={{ xs: 2, md: 3 }}>
-          {howItWorks.map((item, index) => (
-            <Grid item xs={6} md={3} key={index}>
-              <Card sx={{
-                ...getCardStyle(item.color),
-                p: { xs: 1.5, md: 2.5 },
-                height: { xs: 120, md: 140 },
+            <Box
+              sx={{
                 display: 'flex',
-                flexDirection: 'column',
-                alignItems: 'center',
-                textAlign: 'center',
-                animation: `${fadeInUp} 0.6s ease-out ${index * 0.15}s both`
-              }}>
-                <Avatar sx={{
-                  bgcolor: item.color,
-                  color: '#fff',
-                  width: { xs: 35, md: 42 },
-                  height: { xs: 35, md: 42 },
-                  mb: 1,
+                flexDirection: { xs: 'column', sm: 'row' },
+                gap: 2,
+                alignItems: { xs: 'stretch', sm: 'center' }
+              }}
+            >
+              {/* CTA button (non‑navigating, just visual) */}
+              <Box
+                component="button"
+                sx={{
+                  border: 'none',
+                  cursor: 'pointer',
+                  borderRadius: 999,
+                  px: 4,
+                  py: 1.4,
                   fontWeight: 700,
-                  fontSize: { xs: '1rem', md: '1.1rem' }
-                }}>
-                  {item.step}
-                </Avatar>
-                <Typography variant="h6" sx={{
-                  fontWeight: 600,
-                  color: isDarkMode ? '#fff' : '#1e293b',
-                  fontSize: { xs: '0.9rem', md: '1.05rem' },
-                  mb: 0.5
-                }}>
-                  {item.title}
-                </Typography>
-                <Typography variant="body2" sx={{
-                  color: isDarkMode ? alpha('#fff', 0.6) : '#64748b',
-                  fontSize: { xs: '0.7rem', md: '0.8rem' }
-                }}>
-                  {item.description}
-                </Typography>
-              </Card>
-            </Grid>
-          ))}
-        </Grid>
-      </Box>
+                  fontSize: 15,
+                  letterSpacing: 0.6,
+                  textTransform: 'uppercase',
+                  color: '#0b1120',
+                  backgroundImage:
+                    'linear-gradient(120deg, #3b82f6, #6366f1, #ec4899)',
+                  backgroundSize: '200% 200%',
+                  boxShadow: '0 18px 45px rgba(79,70,229,0.5)',
+                  transition: 'all 0.25s ease',
+                  '&:hover': {
+                    backgroundPosition: '100% 0',
+                    transform: 'translateY(-2px) scale(1.01)',
+                    boxShadow: '0 22px 55px rgba(79,70,229,0.65)'
+                  }
+                }}
+              >
+                Start your first complaint
+              </Box>
 
-      {/* Developers Section */}
-      <Box sx={{ mb: { xs: 6, md: 8 } }}>
-        <Typography variant="h4" sx={{
-          textAlign: 'center',
-          fontWeight: 700,
-          color: isDarkMode ? '#fff' : '#1e293b',
-          mb: 1,
-          fontSize: { xs: '1.5rem', md: '2rem' }
-        }}>
-          👨‍💻 Meet The Team
-        </Typography>
-        <Typography variant="body2" sx={{
-          textAlign: 'center',
-          color: isDarkMode ? alpha('#fff', 0.6) : '#64748b',
-          mb: { xs: 3, md: 4 }
-        }}>
-          The developers behind this platform
-        </Typography>
-        <Grid container spacing={{ xs: 2, md: 4 }} justifyContent="center">
-          {developers.map((dev, index) => (
-            <Grid item xs={12} sm={6} md={5} key={index}>
-              <Card sx={{
-                ...getCardStyle(dev.color),
-                p: { xs: 3, md: 4 },
-                textAlign: 'center',
-                animation: `${fadeInUp} 0.8s ease-out ${index * 0.2}s both`,
-                position: 'relative',
-                overflow: 'hidden',
-                '&::before': {
-                  content: '""',
-                  position: 'absolute',
-                  top: 0,
-                  left: 0,
-                  right: 0,
-                  height: 4,
-                  background: `linear-gradient(90deg, ${dev.color}, ${alpha(dev.color, 0.3)})`
-                }
-              }}>
-                <Avatar sx={{
-                  width: { xs: 80, md: 100 },
-                  height: { xs: 80, md: 100 },
-                  mx: 'auto',
-                  mb: 2,
-                  bgcolor: dev.color,
-                  fontSize: { xs: '1.5rem', md: '2rem' },
-                  fontWeight: 700,
-                  boxShadow: `0 8px 24px ${alpha(dev.color, 0.4)}`,
-                  animation: `${pulse} 3s ease-in-out infinite`,
-                  animationDelay: `${index * 0.5}s`
-                }}>
-                  {dev.avatar}
-                </Avatar>
-                <Typography variant="h5" sx={{
-                  fontWeight: 700,
-                  color: isDarkMode ? '#fff' : '#1e293b',
-                  mb: 0.5,
-                  fontSize: { xs: '1.1rem', md: '1.3rem' }
-                }}>
-                  {dev.name}
-                </Typography>
-                <Typography variant="body2" sx={{
-                  color: dev.color,
-                  fontWeight: 500,
-                  mb: 2,
+              <Box
+                sx={{
                   display: 'flex',
                   alignItems: 'center',
-                  justifyContent: 'center',
-                  gap: 0.5
-                }}>
-                  <Code sx={{ fontSize: 16 }} />
-                  {dev.role}
-                </Typography>
-                <Box sx={{ mb: 2 }}>
-                  {dev.skills.map((skill, i) => (
-                    <Chip
-                      key={i}
-                      label={skill}
-                      size="small"
+                  gap: 1,
+                  color: isDarkMode ? '#9ca3af' : '#6b7280',
+                  fontSize: 13
+                }}
+              >
+                <Groups fontSize="small" sx={{ color: '#22c55e' }} />
+                <span>Trusted by students & faculties across campus</span>
+              </Box>
+            </Box>
+          </Grid>
+
+          {/* Animated glass panel illustration */}
+          <Grid item xs={12} md={6}>
+            <Box
+              sx={{
+                position: 'relative',
+                width: '100%',
+                maxWidth: 520,
+                mx: { xs: 'auto', md: 'unset' },
+                height: { xs: 320, sm: 380, md: 420 }
+              }}
+            >
+              {/* Main glass board */}
+              <Box
+                sx={{
+                  position: 'absolute',
+                  inset: { xs: '10%', md: '8%' },
+                  borderRadius: 5,
+                  background: isDarkMode
+                    ? alpha('#020617', 0.9)
+                    : 'rgba(255,255,255,0.9)',
+                  boxShadow: `0 25px 60px ${alpha('#020617', isDarkMode ? 0.9 : 0.18)}`,
+                  border: `1px solid ${alpha('#e5e7eb', isDarkMode ? 0.12 : 0.5)}`,
+                  backdropFilter: 'blur(22px)',
+                  p: 3.2,
+                  display: 'flex',
+                  flexDirection: 'column',
+                  justifyContent: 'space-between',
+                  animation: `${float} 14s ease-in-out infinite`
+                }}
+              >
+                <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 2.5 }}>
+                  <Box>
+                    <Typography
+                      variant="subtitle2"
+                      sx={{ color: isDarkMode ? '#9ca3af' : '#6b7280' }}
+                    >
+                      Live Case Board
+                    </Typography>
+                    <Typography
+                      variant="h6"
                       sx={{
-                        m: 0.3,
-                        bgcolor: alpha(dev.color, isDarkMode ? 0.2 : 0.1),
-                        color: dev.color,
-                        fontWeight: 500,
-                        fontSize: { xs: '0.7rem', md: '0.75rem' }
+                        fontWeight: 700,
+                        color: isDarkMode ? '#e5e7eb' : '#0f172a'
+                      }}
+                    >
+                      Today&apos;s Overview
+                    </Typography>
+                  </Box>
+                  <Chip
+                    icon={<Support fontSize="small" />}
+                    label="Real‑time"
+                    sx={chipSx('#22c55e')}
+                  />
+                </Box>
+
+                <Grid container spacing={2}>
+                  {stats.map((item) => (
+                    <Grid item xs={6} key={item.label}>
+                      <Box
+                        sx={{
+                          p: 1.5,
+                          borderRadius: 3,
+                          background: alpha(item.color, isDarkMode ? 0.24 : 0.08),
+                          border: `1px solid ${alpha(item.color, 0.4)}`,
+                          display: 'flex',
+                          flexDirection: 'column',
+                          gap: 0.6
+                        }}
+                      >
+                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                          <Box
+                            sx={{
+                              width: 26,
+                              height: 26,
+                              borderRadius: '999px',
+                              bgcolor: alpha(item.color, isDarkMode ? 0.5 : 0.2),
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                              color: '#0f172a'
+                            }}
+                          >
+                            {item.icon}
+                          </Box>
+                          <Typography
+                            variant="caption"
+                            sx={{
+                              color: isDarkMode ? '#e5e7eb' : '#111827',
+                              fontWeight: 600
+                            }}
+                          >
+                            {item.value}
+                          </Typography>
+                        </Box>
+                        <Typography
+                          variant="caption"
+                          sx={{ color: isDarkMode ? '#9ca3af' : '#6b7280' }}
+                        >
+                          {item.label}
+                        </Typography>
+                      </Box>
+                    </Grid>
+                  ))}
+                </Grid>
+
+                <Box
+                  sx={{
+                    mt: 2.5,
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between'
+                  }}
+                >
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.2 }}>
+                    <Avatar
+                      sx={{
+                        bgcolor: '#3b82f6',
+                        width: 30,
+                        height: 30,
+                        fontSize: 14,
+                        fontWeight: 700,
+                        boxShadow: '0 0 0 3px rgba(59,130,246,0.35)'
+                      }}
+                    >
+                      ES
+                    </Avatar>
+                    <Box>
+                      <Typography
+                        variant="caption"
+                        sx={{ color: isDarkMode ? '#e5e7eb' : '#0f172a', fontWeight: 600 }}
+                      >
+                        You just raised a ticket
+                      </Typography>
+                      <Typography
+                        variant="caption"
+                        sx={{ color: isDarkMode ? '#9ca3af' : '#6b7280' }}
+                      >
+                        Auto‑assigned to &quot;Hostel Admin&quot;
+                      </Typography>
+                    </Box>
+                  </Box>
+                  <Box sx={chipSx('#f97316')}>Tracking ID • EC‑2043</Box>
+                </Box>
+              </Box>
+
+              {/* Floating accent cards */}
+              <Box
+                sx={{
+                  position: 'absolute',
+                  top: '4%',
+                  right: { xs: '2%', md: '-4%' },
+                  width: 160,
+                  p: 1.5,
+                  borderRadius: 4,
+                  bgcolor: isDarkMode ? '#020617' : 'rgba(15,23,42,0.96)',
+                  color: '#e5e7eb',
+                  boxShadow: '0 18px 38px rgba(15,23,42,0.7)',
+                  display: { xs: 'none', sm: 'flex' },
+                  flexDirection: 'column',
+                  gap: 0.6,
+                  animation: `${float} 9s ease-in-out infinite`,
+                  animationDelay: '0.4s'
+                }}
+              >
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                  <Gavel fontSize="small" />
+                  <Typography variant="caption" sx={{ fontWeight: 600 }}>
+                    Dean Office
+                  </Typography>
+                </Box>
+                <Typography variant="caption" sx={{ color: '#9ca3af' }}>
+                  &quot;Issue acknowledged – under review&quot;
+                </Typography>
+              </Box>
+
+              <Box
+                sx={{
+                  position: 'absolute',
+                  bottom: '2%',
+                  left: { xs: '-2%', md: '-6%' },
+                  width: 185,
+                  p: 1.6,
+                  borderRadius: 4,
+                  bgcolor: isDarkMode
+                    ? 'rgba(15,23,42,0.96)'
+                    : 'rgba(255,255,255,0.98)',
+                  boxShadow: '0 20px 40px rgba(15,23,42,0.55)',
+                  display: { xs: 'none', sm: 'flex' },
+                  flexDirection: 'column',
+                  gap: 1,
+                  animation: `${float} 11s ease-in-out infinite`,
+                  animationDelay: '0.9s'
+                }}
+              >
+                <Typography
+                  variant="caption"
+                  sx={{ fontWeight: 600, color: isDarkMode ? '#e5e7eb' : '#111827' }}
+                >
+                  Campus Pulse
+                </Typography>
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                  <Box
+                    sx={{
+                      width: '100%',
+                      height: 4,
+                      borderRadius: 999,
+                      overflow: 'hidden',
+                      bgcolor: alpha('#6b7280', 0.25)
+                    }}
+                  >
+                    <Box
+                      sx={{
+                        width: '80%',
+                        height: '100%',
+                        borderRadius: 'inherit',
+                        backgroundImage:
+                          'linear-gradient(90deg,#22c55e,#a3e635,#facc15,#f97316)',
+                        animation: `${shimmer} 4s linear infinite`
                       }}
                     />
-                  ))}
+                  </Box>
+                  <Typography
+                    variant="caption"
+                    sx={{ fontWeight: 600, color: '#22c55e' }}
+                  >
+                    Live
+                  </Typography>
                 </Box>
-                <Box sx={{ display: 'flex', justifyContent: 'center', gap: 1 }}>
-                  <IconButton
-                    href={dev.github}
-                    target="_blank"
-                    size="small"
+              </Box>
+            </Box>
+          </Grid>
+        </Grid>
+
+        {/* VALUES SECTION */}
+        <Box>
+          <Typography
+            variant="h4"
+            sx={{
+              textAlign: 'center',
+              fontWeight: 700,
+              fontSize: { xs: '1.9rem', md: '2.3rem' },
+              mb: 1.2,
+              color: isDarkMode ? '#e5e7eb' : '#0f172a'
+            }}
+          >
+            What makes E‑Complain different?
+          </Typography>
+          <Typography
+            variant="body2"
+            sx={{
+              textAlign: 'center',
+              maxWidth: 620,
+              mx: 'auto',
+              color: isDarkMode ? '#9ca3af' : '#6b7280',
+              mb: 4
+            }}
+          >
+            More than a ticketing tool – it&apos;s a carefully crafted, student‑first
+            experience that brings clarity, empathy and speed to every
+            conversation.
+          </Typography>
+
+          <Grid container spacing={3.2}>
+            {values.map((item) => (
+              <Grid item xs={12} sm={6} md={3} key={item.title}>
+                <Card sx={getCardSx(item.color)}>
+                  <CardContent sx={{ position: 'relative', zIndex: 1, p: 0 }}>
+                    <Box
+                      sx={{
+                        mb: 2,
+                        width: 44,
+                        height: 44,
+                        borderRadius: '999px',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        bgcolor: alpha(item.color, isDarkMode ? 0.35 : 0.2),
+                        color: isDarkMode ? '#e5e7eb' : '#0f172a',
+                        boxShadow: `0 10px 26px ${alpha(item.color, 0.45)}`
+                      }}
+                    >
+                      {item.icon}
+                    </Box>
+                    <Typography
+                      variant="subtitle1"
+                      sx={{
+                        fontWeight: 700,
+                        mb: 1,
+                        color: isDarkMode ? '#e5e7eb' : '#0f172a'
+                      }}
+                    >
+                      {item.title}
+                    </Typography>
+                    <Typography
+                      variant="body2"
+                      sx={{
+                        color: isDarkMode ? '#9ca3af' : '#6b7280',
+                        lineHeight: 1.7,
+                        fontSize: 13.5
+                      }}
+                    >
+                      {item.description}
+                    </Typography>
+                  </CardContent>
+                </Card>
+              </Grid>
+            ))}
+          </Grid>
+        </Box>
+
+        {/* JOURNEY TIMELINE */}
+        <Box>
+          <Grid
+            container
+            spacing={{ xs: 4, md: 6 }}
+            alignItems="flex-start"
+          >
+            <Grid item xs={12} md={5}>
+              <Typography
+                variant="h4"
+                sx={{
+                  fontWeight: 700,
+                  fontSize: { xs: '1.9rem', md: '2.2rem' },
+                  mb: 1,
+                  color: isDarkMode ? '#e5e7eb' : '#0f172a'
+                }}
+              >
+                A simple journey from{' '}
+                <Box
+                  component="span"
+                  sx={{
+                    backgroundImage:
+                      'linear-gradient(120deg,#22c55e,#a855f7,#0ea5e9)',
+                    backgroundClip: 'text',
+                    textFillColor: 'transparent',
+                    WebkitBackgroundClip: 'text',
+                    WebkitTextFillColor: 'transparent'
+                  }}
+                >
+                  problem to progress
+                </Box>
+              </Typography>
+              <Typography
+                variant="body2"
+                sx={{
+                  color: isDarkMode ? '#9ca3af' : '#6b7280',
+                  lineHeight: 1.8,
+                  mb: 3
+                }}
+              >
+                Every screen, email and notification is designed so that you
+                always know what&apos;s happening, who&apos;s responsible and what
+                comes next.
+              </Typography>
+              <Box sx={chipSx('#0ea5e9')}>
+                <HistoryEdu fontSize="small" />
+                End‑to‑end guided experience
+              </Box>
+            </Grid>
+
+            <Grid item xs={12} md={7}>
+              <Box
+                sx={{
+                  position: 'relative',
+                  pl: { xs: 0, md: 3 },
+                  '&::before': {
+                    content: '""',
+                    position: 'absolute',
+                    left: { xs: '12px', md: '24px' },
+                    top: 6,
+                    bottom: 6,
+                    width: 2,
+                    bgcolor: alpha('#64748b', 0.4)
+                  }
+                }}
+              >
+                {journeySteps.map((step, idx) => (
+                  <Box
+                    key={step.step}
                     sx={{
-                      bgcolor: alpha(dev.color, isDarkMode ? 0.2 : 0.1),
-                      color: dev.color,
-                      '&:hover': { bgcolor: alpha(dev.color, 0.3) }
+                      position: 'relative',
+                      display: 'flex',
+                      gap: 2.5,
+                      mb: idx === journeySteps.length - 1 ? 0 : 3.2
                     }}
                   >
-                    <GitHub fontSize="small" />
-                  </IconButton>
-                  <IconButton
-                    href={dev.linkedin}
-                    target="_blank"
-                    size="small"
+                    <Box
+                      sx={{
+                        position: 'relative',
+                        zIndex: 1,
+                        mt: 0.5,
+                        flexShrink: 0
+                      }}
+                    >
+                      <Box
+                        sx={{
+                          width: 26,
+                          height: 26,
+                          borderRadius: '999px',
+                          bgcolor: isDarkMode ? '#020617' : '#0f172a',
+                          border: '2px solid #22c55e',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          color: '#22c55e',
+                          fontSize: 11,
+                          fontWeight: 700,
+                          boxShadow: '0 0 0 4px rgba(34,197,94,0.15)'
+                        }}
+                      >
+                        {step.step}
+                      </Box>
+                    </Box>
+
+                    <Box
+                      sx={{
+                        flex: 1,
+                        p: 2.4,
+                        borderRadius: 3,
+                        background: isDarkMode
+                          ? 'rgba(15,23,42,0.95)'
+                          : 'rgba(255,255,255,0.98)',
+                        border: `1px solid ${alpha('#1f2937', 0.14)}`,
+                        boxShadow: `0 12px 30px ${alpha('#020617', isDarkMode ? 0.8 : 0.18)}`
+                      }}
+                    >
+                      <Box
+                        sx={{
+                          display: 'flex',
+                          justifyContent: 'space-between',
+                          alignItems: 'center',
+                          mb: 1
+                        }}
+                      >
+                        <Typography
+                          variant="subtitle1"
+                          sx={{
+                            fontWeight: 600,
+                            color: isDarkMode ? '#e5e7eb' : '#0f172a'
+                          }}
+                        >
+                          {step.title}
+                        </Typography>
+                        <Box
+                          sx={{
+                            width: 30,
+                            height: 30,
+                            borderRadius: '999px',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            bgcolor: alpha('#22c55e', 0.12),
+                            color: '#22c55e'
+                          }}
+                        >
+                          {step.icon}
+                        </Box>
+                      </Box>
+                      <Typography
+                        variant="body2"
+                        sx={{
+                          color: isDarkMode ? '#9ca3af' : '#6b7280',
+                          mb: 1.2
+                        }}
+                      >
+                        {step.description}
+                      </Typography>
+                      <Box
+                        sx={{
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          gap: 0.8,
+                          fontSize: 11,
+                          color: isDarkMode ? '#6b7280' : '#9ca3af',
+                          textTransform: 'uppercase',
+                          letterSpacing: 0.6
+                        }}
+                      >
+                        <span>Step {idx + 1}</span>
+                        <Box
+                          component="span"
+                          sx={{
+                            width: 4,
+                            height: 4,
+                            borderRadius: '999px',
+                            bgcolor: '#22c55e'
+                          }}
+                        />
+                        <span>Guided</span>
+                      </Box>
+                    </Box>
+                  </Box>
+                ))}
+              </Box>
+            </Grid>
+          </Grid>
+        </Box>
+
+        {/* TEAM & TECH SECTION */}
+        <Box>
+          <Grid container spacing={{ xs: 4, md: 5 }} alignItems="stretch">
+            {/* Team */}
+            <Grid item xs={12} md={7}>
+              <Typography
+                variant="h4"
+                sx={{
+                  fontWeight: 700,
+                  fontSize: { xs: '1.9rem', md: '2.1rem' },
+                  mb: 1,
+                  color: isDarkMode ? '#e5e7eb' : '#0f172a'
+                }}
+              >
+                The makers behind the platform
+              </Typography>
+              <Typography
+                variant="body2"
+                sx={{
+                  color: isDarkMode ? '#9ca3af' : '#6b7280',
+                  mb: 3
+                }}
+              >
+                A small, focused team of engineers and students who have lived
+                through the very problems this platform solves.
+              </Typography>
+
+              <Grid container spacing={3}>
+                {team.map((dev) => (
+                  <Grid item xs={12} sm={6} key={dev.name}>
+                    <Card sx={getCardSx(dev.color)}>
+                      <CardContent sx={{ position: 'relative', zIndex: 1, p: 0 }}>
+                        <Box
+                          sx={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: 2,
+                            mb: 2
+                          }}
+                        >
+                          <Avatar
+                            sx={{
+                              bgcolor: dev.color,
+                              width: 52,
+                              height: 52,
+                              fontWeight: 700,
+                              fontSize: 20,
+                              boxShadow: `0 12px 28px ${alpha(dev.color, 0.6)}`
+                            }}
+                          >
+                            {dev.avatar}
+                          </Avatar>
+                          <Box>
+                            <Typography
+                              variant="subtitle1"
+                              sx={{
+                                fontWeight: 700,
+                                color: isDarkMode ? '#e5e7eb' : '#0f172a'
+                              }}
+                            >
+                              {dev.name}
+                            </Typography>
+                            <Box sx={chipSx(dev.color)}>
+                              <Code fontSize="small" />
+                              {dev.role}
+                            </Box>
+                          </Box>
+                        </Box>
+                        <Box sx={{ mb: 2 }}>
+                          {dev.skills.map((skill) => (
+                            <Chip
+                              key={skill}
+                              label={skill}
+                              size="small"
+                              sx={{
+                                mr: 1,
+                                mb: 1,
+                                bgcolor: alpha(dev.color, isDarkMode ? 0.35 : 0.15),
+                                color: isDarkMode ? '#e5e7eb' : '#0f172a',
+                                fontSize: 11,
+                                fontWeight: 600
+                              }}
+                            />
+                          ))}
+                        </Box>
+                        <Box sx={{ display: 'flex', gap: 1.5 }}>
+                          <IconButton
+                            href={dev.github}
+                            target="_blank"
+                            sx={{
+                              bgcolor: alpha(dev.color, isDarkMode ? 0.4 : 0.16),
+                              color: isDarkMode ? '#e5e7eb' : '#0f172a',
+                              '&:hover': {
+                                bgcolor: alpha(dev.color, 0.65),
+                                transform: 'translateY(-2px)'
+                              },
+                              transition: 'all 0.2s ease'
+                            }}
+                          >
+                            <GitHub />
+                          </IconButton>
+                          <IconButton
+                            href={dev.linkedin}
+                            target="_blank"
+                            sx={{
+                              bgcolor: alpha(dev.color, isDarkMode ? 0.4 : 0.16),
+                              color: isDarkMode ? '#e5e7eb' : '#0f172a',
+                              '&:hover': {
+                                bgcolor: alpha(dev.color, 0.65),
+                                transform: 'translateY(-2px)'
+                              },
+                              transition: 'all 0.2s ease'
+                            }}
+                          >
+                            <LinkedIn />
+                          </IconButton>
+                        </Box>
+                      </CardContent>
+                    </Card>
+                  </Grid>
+                ))}
+              </Grid>
+            </Grid>
+
+            {/* Tech & Support */}
+            <Grid item xs={12} md={5}>
+              <Card sx={getCardSx('#0ea5e9')}>
+                <CardContent sx={{ position: 'relative', zIndex: 1, p: 0 }}>
+                  <Typography
+                    variant="subtitle2"
                     sx={{
-                      bgcolor: alpha(dev.color, isDarkMode ? 0.2 : 0.1),
-                      color: dev.color,
-                      '&:hover': { bgcolor: alpha(dev.color, 0.3) }
+                      textTransform: 'uppercase',
+                      letterSpacing: 0.6,
+                      mb: 1,
+                      color: isDarkMode ? '#a5b4fc' : '#2563eb',
+                      fontWeight: 600
                     }}
                   >
-                    <LinkedIn fontSize="small" />
-                  </IconButton>
-                </Box>
+                    Modern Tech Stack
+                  </Typography>
+                  <Typography
+                    variant="h6"
+                    sx={{
+                      fontWeight: 700,
+                      mb: 2,
+                      color: isDarkMode ? '#e5e7eb' : '#0f172a'
+                    }}
+                  >
+                    Fast, secure and built to scale with your institution.
+                  </Typography>
+
+                  <Grid container spacing={1.2} sx={{ mb: 3 }}>
+                    {[
+                      { label: 'React + Vite', icon: <Code />, color: '#3b82f6' },
+                      { label: 'Node & Express', icon: <Code />, color: '#22c55e' },
+                      { label: 'MongoDB', icon: <Code />, color: '#f97316' },
+                      { label: 'JWT Security', icon: <Security />, color: '#0ea5e9' }
+                    ].map((item) => (
+                      <Grid item xs={6} key={item.label}>
+                        <Box
+                          sx={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: 1,
+                            p: 1.2,
+                            borderRadius: 999,
+                            bgcolor: alpha(item.color, isDarkMode ? 0.32 : 0.16)
+                          }}
+                        >
+                          <Box
+                            sx={{
+                              width: 22,
+                              height: 22,
+                              borderRadius: '999px',
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                              bgcolor: alpha('#020617', 0.85),
+                              color: item.color
+                            }}
+                          >
+                            {item.icon}
+                          </Box>
+                          <Typography
+                            variant="caption"
+                            sx={{
+                              fontWeight: 600,
+                              color: isDarkMode ? '#e5e7eb' : '#0f172a'
+                            }}
+                          >
+                            {item.label}
+                          </Typography>
+                        </Box>
+                      </Grid>
+                    ))}
+                  </Grid>
+
+                  <Box
+                    sx={{
+                      mt: 1.5,
+                      p: 2,
+                      borderRadius: 3,
+                      bgcolor: isDarkMode
+                        ? 'rgba(15,23,42,0.96)'
+                        : 'rgba(15,23,42,0.96)',
+                      color: '#e5e7eb',
+                      display: 'flex',
+                      flexDirection: 'column',
+                      gap: 1.4
+                    }}
+                  >
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                      <Support fontSize="small" />
+                      <Typography variant="subtitle2" sx={{ fontWeight: 600 }}>
+                        Always‑on support for your campus
+                      </Typography>
+                    </Box>
+                    <Typography variant="body2" sx={{ color: '#9ca3af' }}>
+                      Need help, have a feature idea or found an issue? Reach out –
+                      we&apos;re actively improving E‑Complain with your feedback.
+                    </Typography>
+                    <Grid container spacing={1.2} sx={{ mt: 0.5 }}>
+                      {[
+                        {
+                          icon: <Email fontSize="small" />,
+                          label: 'support@ecomplaint.edu'
+                        },
+                        {
+                          icon: <Phone fontSize="small" />,
+                          label: '+91 1234567890'
+                        },
+                        {
+                          icon: <LocationOn fontSize="small" />,
+                          label: 'Campus Helpdesk • 09:00 – 18:00'
+                        }
+                      ].map((item) => (
+                        <Grid item xs={12} key={item.label}>
+                          <Box
+                            sx={{
+                              display: 'flex',
+                              alignItems: 'center',
+                              gap: 1,
+                              fontSize: 13,
+                              color: '#e5e7eb'
+                            }}
+                          >
+                            <Box
+                              sx={{
+                                width: 22,
+                                height: 22,
+                                borderRadius: '999px',
+                                bgcolor: 'rgba(15,23,42,0.8)',
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center'
+                              }}
+                            >
+                              {item.icon}
+                            </Box>
+                            <span>{item.label}</span>
+                          </Box>
+                        </Grid>
+                      ))}
+                    </Grid>
+                  </Box>
+                </CardContent>
               </Card>
             </Grid>
-          ))}
-        </Grid>
-      </Box>
-
-      {/* Contact Section */}
-      <Card sx={{
-        ...getCardStyle(),
-        p: { xs: 3, md: 4 },
-        textAlign: 'center',
-        animation: `${fadeInUp} 0.8s ease-out`
-      }}>
-        <Avatar sx={{
-          width: { xs: 60, md: 70 },
-          height: { xs: 60, md: 70 },
-          mx: 'auto',
-          mb: 2,
-          background: 'linear-gradient(135deg, #1976d2, #9c27b0)',
-          animation: `${pulse} 2s ease-in-out infinite`
-        }}>
-          <Support sx={{ fontSize: { xs: 30, md: 35 }, color: '#fff' }} />
-        </Avatar>
-        <Typography variant="h5" sx={{
-          fontWeight: 700,
-          color: isDarkMode ? '#fff' : '#1976d2',
-          mb: 1,
-          fontSize: { xs: '1.2rem', md: '1.5rem' }
-        }}>
-          Need Help?
-        </Typography>
-        <Typography variant="body2" sx={{
-          color: isDarkMode ? alpha('#fff', 0.6) : '#64748b',
-          mb: 3,
-          maxWidth: 400,
-          mx: 'auto'
-        }}>
-          Contact us for any queries or support
-        </Typography>
-        <Box sx={{
-          display: 'flex',
-          justifyContent: 'center',
-          gap: { xs: 1, md: 2 },
-          flexWrap: 'wrap',
-          flexDirection: { xs: 'column', sm: 'row' },
-          alignItems: 'center'
-        }}>
-          {[
-            { icon: <Email />, label: "support@ecomplaint.edu", color: "#1976d2" },
-            { icon: <Phone />, label: "+91 1234567890", color: "#9c27b0" },
-            { icon: <LocationOn />, label: "University Campus", color: "#2e7d32" }
-          ].map((item, i) => (
-            <Chip
-              key={i}
-              icon={item.icon}
-              label={item.label}
-              sx={{
-                py: { xs: 2, md: 2.5 },
-                px: 1,
-                bgcolor: alpha(item.color, isDarkMode ? 0.2 : 0.1),
-                color: item.color,
-                fontWeight: 500,
-                fontSize: { xs: '0.75rem', md: '0.85rem' },
-                width: { xs: '100%', sm: 'auto' },
-                maxWidth: { xs: 250, sm: 'none' },
-                '& .MuiChip-icon': { color: item.color }
-              }}
-            />
-          ))}
+          </Grid>
         </Box>
-      </Card>
-
-      {/* Footer Note */}
-      <Box sx={{
-        textAlign: 'center',
-        mt: 4,
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        gap: 0.5
-      }}>
-        <Typography variant="body2" sx={{
-          color: isDarkMode ? alpha('#fff', 0.5) : '#94a3b8'
-        }}>
-          Made with
-        </Typography>
-        <Favorite sx={{ fontSize: 16, color: '#ef4444' }} />
-        <Typography variant="body2" sx={{
-          color: isDarkMode ? alpha('#fff', 0.5) : '#94a3b8'
-        }}>
-          by the E-Complaint Team
-        </Typography>
       </Box>
-
     </Box>
   )
 }
 
 export default About
+
+
