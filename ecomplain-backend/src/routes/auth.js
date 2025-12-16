@@ -54,19 +54,6 @@ router.put('/reset-password-otp', validateResetPasswordOTP, resetPasswordWithOTP
 router.post('/super-admin/forgot-password', sendSuperAdminPasswordResetOTP);
 router.post('/super-admin/reset-password', resetSuperAdminPassword);
 
-// Debug endpoint to test registration data
-router.post('/register-debug', (req, res) => {
-  console.log('Registration Debug - Request Body:', JSON.stringify(req.body, null, 2));
-  res.json({
-    success: true,
-    message: 'Debug data received',
-    receivedData: req.body
-  });
-});
-
-// Test registration endpoint without validation
-router.post('/register-test', registerStudent);
-
 // Protected routes
 router.get('/me', authenticateToken, getMe);
 router.post('/logout', authenticateToken, logout);
