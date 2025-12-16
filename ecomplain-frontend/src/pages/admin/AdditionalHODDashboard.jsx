@@ -1006,6 +1006,38 @@ export default function AdditionalHODDashboard() {
                                         </IconButton>
                                       </span>
                                     </Tooltip>
+                                    {/* Quick Resolve button */}
+                                    {!isForwarded && !isResolved && !isRejected && (
+                                      <Tooltip title="Mark as Resolved">
+                                        <IconButton
+                                          onClick={() => handleStatusUpdate(complaint._id, 'Resolved')}
+                                          sx={{
+                                            color: 'success.main',
+                                            '&:hover': {
+                                              backgroundColor: isDarkMode ? 'rgba(76, 175, 80, 0.1)' : 'rgba(76, 175, 80, 0.04)'
+                                            }
+                                          }}
+                                        >
+                                          <CheckCircle />
+                                        </IconButton>
+                                      </Tooltip>
+                                    )}
+                                    {/* Quick Reject button */}
+                                    {!isForwarded && !isResolved && !isRejected && (
+                                      <Tooltip title="Mark as Rejected">
+                                        <IconButton
+                                          onClick={() => handleStatusUpdate(complaint._id, 'Rejected')}
+                                          sx={{
+                                            color: 'error.main',
+                                            '&:hover': {
+                                              backgroundColor: isDarkMode ? 'rgba(244, 67, 54, 0.1)' : 'rgba(244, 67, 54, 0.04)'
+                                            }
+                                          }}
+                                        >
+                                          <Cancel />
+                                        </IconButton>
+                                      </Tooltip>
+                                    )}
                                     {!isForwarded && (
                                       <>
                                         <Tooltip title={
