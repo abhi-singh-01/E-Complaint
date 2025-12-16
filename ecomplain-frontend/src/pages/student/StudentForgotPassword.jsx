@@ -23,7 +23,7 @@ import {
   Lock,
   Visibility,
   VisibilityOff,
-  Pin
+  MarkEmailRead
 } from '@mui/icons-material'
 
 export default function StudentForgotPassword() {
@@ -334,29 +334,47 @@ export default function StudentForgotPassword() {
     if (step === 'otp') {
       return (
         <>
-          <Box sx={{ textAlign: 'center', mb: 4 }}>
+          <Box sx={{ textAlign: 'center', mb: { xs: 3, md: 4 } }}>
             <Box sx={{
               display: 'inline-flex',
               alignItems: 'center',
               justifyContent: 'center',
-              width: 80,
-              height: 80,
+              width: { xs: 64, md: 80 },
+              height: { xs: 64, md: 80 },
               borderRadius: '50%',
-              bgcolor: 'success.main',
-              mb: 3
+              bgcolor: isDarkMode ? '#22c55e' : 'success.main',
+              mb: { xs: 2, md: 3 },
+              boxShadow: isDarkMode
+                ? '0 8px 32px rgba(34, 197, 94, 0.4)'
+                : '0 8px 32px rgba(76, 175, 80, 0.3)'
             }}>
-              <Pin sx={{ fontSize: 40, color: 'white' }} />
+              <MarkEmailRead sx={{ fontSize: { xs: 32, md: 40 }, color: 'white' }} />
             </Box>
-            <Typography variant="h4" component="h1" gutterBottom sx={{ fontWeight: 'bold', color: '#1976d2' }}>
+            <Typography
+              variant="h4"
+              component="h1"
+              gutterBottom
+              sx={{
+                fontWeight: 'bold',
+                color: isDarkMode ? '#60a5fa' : '#1976d2',
+                fontSize: { xs: '1.5rem', sm: '1.75rem', md: '2.125rem' }
+              }}
+            >
               Enter OTP
             </Typography>
-            <Typography variant="body2" color="text.secondary">
-              We've sent a 6-digit code to <strong>{email}</strong>
+            <Typography
+              variant="body2"
+              sx={{
+                color: isDarkMode ? '#9ca3af' : 'text.secondary',
+                fontSize: { xs: '0.85rem', md: '0.875rem' }
+              }}
+            >
+              We've sent a 6-digit code to <strong style={{ color: isDarkMode ? '#e5e7eb' : 'inherit' }}>{email}</strong>
             </Typography>
           </Box>
 
           {error && (
-            <Alert severity="error" sx={{ mb: 3 }} onClose={() => setError('')}>
+            <Alert severity="error" sx={{ mb: { xs: 2, md: 3 } }} onClose={() => setError('')}>
               {error}
             </Alert>
           )}
@@ -370,11 +388,34 @@ export default function StudentForgotPassword() {
               error={!!errors.otp}
               helperText={errors.otp || "Enter the 6-digit code from your email"}
               required
-              inputProps={{ maxLength: 6, style: { letterSpacing: '0.5em', textAlign: 'center', fontSize: '1.5rem' } }}
+              inputProps={{
+                maxLength: 6,
+                style: {
+                  letterSpacing: '0.5em',
+                  textAlign: 'center',
+                  fontSize: '1.5rem',
+                  fontWeight: 'bold'
+                }
+              }}
               sx={{
-                mb: 3,
+                mb: { xs: 2, md: 3 },
                 '& .MuiOutlinedInput-root': {
-                  backgroundColor: isDarkMode ? 'rgba(66, 66, 66, 0.8)' : 'rgba(255, 255, 255, 0.9)'
+                  backgroundColor: isDarkMode ? 'rgba(66, 66, 66, 0.8)' : 'rgba(255, 255, 255, 0.9)',
+                  '& fieldset': {
+                    borderColor: isDarkMode ? 'rgba(255, 255, 255, 0.2)' : 'rgba(0, 0, 0, 0.23)'
+                  },
+                  '&:hover fieldset': {
+                    borderColor: isDarkMode ? '#60a5fa' : '#1976d2'
+                  },
+                  '&.Mui-focused fieldset': {
+                    borderColor: isDarkMode ? '#60a5fa' : '#1976d2'
+                  }
+                },
+                '& .MuiInputLabel-root': {
+                  color: isDarkMode ? '#9ca3af' : 'inherit'
+                },
+                '& .MuiFormHelperText-root': {
+                  color: isDarkMode ? '#9ca3af' : 'inherit'
                 }
               }}
             />
@@ -387,12 +428,17 @@ export default function StudentForgotPassword() {
               disabled={loading || otp.length !== 6}
               sx={{
                 mb: 2,
-                py: 1.5,
-                fontSize: '1.1rem',
+                py: { xs: 1.25, md: 1.5 },
+                fontSize: { xs: '1rem', md: '1.1rem' },
                 fontWeight: 'bold',
                 background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
                 '&:hover': {
                   background: 'linear-gradient(135deg, #5568d3 0%, #6a3d91 100%)',
+                  transform: 'translateY(-2px)',
+                  boxShadow: '0 8px 25px rgba(0,0,0,0.15)'
+                },
+                '&:disabled': {
+                  background: isDarkMode ? 'rgba(255,255,255,0.12)' : 'rgba(0,0,0,0.12)'
                 },
                 transition: 'all 0.3s ease'
               }}
@@ -401,12 +447,15 @@ export default function StudentForgotPassword() {
             </Button>
           </form>
 
-          <Box sx={{ textAlign: 'center', mb: 3 }}>
+          <Box sx={{ textAlign: 'center', mb: { xs: 2, md: 3 } }}>
             <Button
               variant="text"
               onClick={handleResendOTP}
               disabled={resendCooldown > 0 || loading}
-              sx={{ color: '#1976d2' }}
+              sx={{
+                color: isDarkMode ? '#60a5fa' : '#1976d2',
+                fontSize: { xs: '0.85rem', md: '0.875rem' }
+              }}
             >
               {resendCooldown > 0 ? `Resend OTP in ${resendCooldown}s` : 'Resend OTP'}
             </Button>
@@ -417,13 +466,14 @@ export default function StudentForgotPassword() {
               variant="text"
               onClick={() => setStep('email')}
               sx={{
-                color: '#1976d2',
+                color: isDarkMode ? '#60a5fa' : '#1976d2',
                 display: 'inline-flex',
                 alignItems: 'center',
-                gap: 1
+                gap: 1,
+                fontSize: { xs: '0.85rem', md: '0.875rem' }
               }}
             >
-              <ArrowBack sx={{ fontSize: 18 }} />
+              <ArrowBack sx={{ fontSize: { xs: 16, md: 18 } }} />
               Change Email
             </Button>
           </Box>
