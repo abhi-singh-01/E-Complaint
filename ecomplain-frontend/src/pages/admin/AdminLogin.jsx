@@ -590,10 +590,17 @@ export default function AdminLogin() {
                         ? '0 8px 25px rgba(25, 118, 210, 0.3)'
                         : '0 8px 25px rgba(44, 62, 80, 0.3)'
                     },
+                    '&.Mui-disabled': {
+                      background: isDarkMode
+                        ? 'linear-gradient(45deg, #1976d2 30%, #1565c0 90%)'
+                        : 'linear-gradient(45deg, #2c3e50 30%, #34495e 90%)',
+                      color: 'rgba(255, 255, 255, 0.8)',
+                      opacity: 0.85
+                    },
                     transition: 'all 0.3s ease',
                     mb: { xs: 2, sm: 2.5, md: 3 }
                   }}
-                  startIcon={<LoginIcon />}
+                  startIcon={loading ? null : <LoginIcon />}
                 >
                   {loading ? 'Signing In...' : 'Sign In'}
                 </Button>
