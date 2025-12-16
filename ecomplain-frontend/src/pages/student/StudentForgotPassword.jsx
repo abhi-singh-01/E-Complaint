@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useRef } from 'react'
 import { useNavigate, Link as RouterLink } from 'react-router-dom'
 import api from '../../lib/api.js'
 import { useTheme as useCustomTheme } from '../../contexts/ThemeContext.jsx'
@@ -35,7 +35,8 @@ export default function StudentForgotPassword() {
 
   // Form data
   const [email, setEmail] = useState('')
-  const [otp, setOtp] = useState('')
+  const [otpDigits, setOtpDigits] = useState(['', '', '', '', '', ''])
+  const otpRefs = useRef([...Array(6)].map(() => null))
   const [resetToken, setResetToken] = useState('')
   const [password, setPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
@@ -108,7 +109,8 @@ export default function StudentForgotPassword() {
     setError('')
     setErrors({})
 
-    if (!otp.trim() || otp.length !== 6) {
+    const otpValue = otpDigits.join('')
+    if (otpValue.length !== 6) {
       setErrors({ otp: 'Please enter the 6-digit OTP' })
       return
     }
@@ -117,7 +119,7 @@ export default function StudentForgotPassword() {
     try {
       const { data } = await api.post('/api/auth/verify-password-reset-otp', {
         email: email.trim().toLowerCase(),
-        otp: otp.trim()
+        otp: otpValue
       })
 
       setResetToken(data.resetToken)
@@ -133,6 +135,45 @@ export default function StudentForgotPassword() {
       }
     } finally {
       setLoading(false)
+    }
+  }
+
+  // Handle OTP digit input
+  const handleOtpChange = (index, value) => {
+    // Only allow single digit
+    const digit = value.replace(/\D/g, '').slice(-1)
+
+    const newOtpDigits = [...otpDigits]
+    newOtpDigits[index] = digit
+    setOtpDigits(newOtpDigits)
+
+    // Auto-focus next input if digit entered
+    if (digit && index < 5) {
+      otpRefs.current[index + 1]?.focus()
+    }
+  }
+
+  // Handle backspace navigation
+  const handleOtpKeyDown = (index, e) => {
+    if (e.key === 'Backspace' && !otpDigits[index] && index > 0) {
+      // Move to previous input on backspace if current is empty
+      otpRefs.current[index - 1]?.focus()
+    }
+  }
+
+  // Handle paste for OTP
+  const handleOtpPaste = (e) => {
+    e.preventDefault()
+    const pastedData = e.clipboardData.getData('text').replace(/\D/g, '').slice(0, 6)
+    if (pastedData) {
+      const newOtpDigits = [...otpDigits]
+      for (let i = 0; i < 6; i++) {
+        newOtpDigits[i] = pastedData[i] || ''
+      }
+      setOtpDigits(newOtpDigits)
+      // Focus last filled or next empty input
+      const focusIndex = Math.min(pastedData.length, 5)
+      otpRefs.current[focusIndex]?.focus()
     }
   }
 
@@ -380,52 +421,82 @@ export default function StudentForgotPassword() {
           )}
 
           <form onSubmit={handleVerifyOTP}>
-            <TextField
-              fullWidth
-              label="Enter OTP"
-              value={otp}
-              onChange={(e) => setOtp(e.target.value.replace(/\D/g, '').slice(0, 6))}
-              error={!!errors.otp}
-              helperText={errors.otp || "Enter the 6-digit code from your email"}
-              required
-              inputProps={{
-                maxLength: 6,
-                style: {
-                  letterSpacing: '0.5em',
-                  textAlign: 'center',
-                  fontSize: '1.5rem',
-                  fontWeight: 'bold'
-                }
-              }}
+            {/* OTP Input Boxes */}
+            <Box sx={{
+              display: 'flex',
+              justifyContent: 'center',
+              gap: { xs: 0.75, sm: 1.5, md: 2 },
+              mb: { xs: 2, md: 3 }
+            }}>
+              {otpDigits.map((digit, index) => (
+                <Box
+                  key={index}
+                  component="input"
+                  ref={(el) => otpRefs.current[index] = el}
+                  type="text"
+                  inputMode="numeric"
+                  maxLength={1}
+                  value={digit}
+                  onChange={(e) => handleOtpChange(index, e.target.value)}
+                  onKeyDown={(e) => handleOtpKeyDown(index, e)}
+                  onPaste={index === 0 ? handleOtpPaste : undefined}
+                  sx={{
+                    width: { xs: '42px', sm: '48px', md: '54px' },
+                    height: { xs: '50px', sm: '56px', md: '62px' },
+                    fontSize: { xs: '1.25rem', sm: '1.5rem', md: '1.75rem' },
+                    fontWeight: 'bold',
+                    textAlign: 'center',
+                    border: `2px solid`,
+                    borderColor: errors.otp
+                      ? 'error.main'
+                      : digit
+                        ? (isDarkMode ? '#60a5fa' : 'primary.main')
+                        : (isDarkMode ? 'rgba(255, 255, 255, 0.3)' : 'rgba(0, 0, 0, 0.23)'),
+                    borderRadius: { xs: '10px', md: '12px' },
+                    bgcolor: isDarkMode ? 'rgba(66, 66, 66, 0.9)' : 'rgba(255, 255, 255, 0.98)',
+                    color: isDarkMode ? '#ffffff' : '#111827',
+                    outline: 'none',
+                    transition: 'all 0.2s ease',
+                    caretColor: isDarkMode ? '#60a5fa' : 'primary.main',
+                    boxShadow: digit
+                      ? (isDarkMode ? '0 0 15px rgba(96, 165, 250, 0.4)' : '0 4px 12px rgba(25, 118, 210, 0.25)')
+                      : (isDarkMode ? '0 2px 8px rgba(0,0,0,0.3)' : '0 2px 6px rgba(0,0,0,0.08)'),
+                    '&:focus': {
+                      borderColor: isDarkMode ? '#60a5fa' : 'primary.main',
+                      boxShadow: isDarkMode
+                        ? '0 0 20px rgba(96, 165, 250, 0.5)'
+                        : '0 0 16px rgba(25, 118, 210, 0.4)',
+                      transform: 'scale(1.05)'
+                    },
+                    '&::placeholder': {
+                      color: isDarkMode ? 'rgba(255,255,255,0.3)' : 'rgba(0,0,0,0.3)'
+                    }
+                  }}
+                />
+              ))}
+            </Box>
+
+            {/* Helper text / Error */}
+            <Typography
+              variant="caption"
               sx={{
-                mb: { xs: 2, md: 3 },
-                '& .MuiOutlinedInput-root': {
-                  backgroundColor: isDarkMode ? 'rgba(66, 66, 66, 0.8)' : 'rgba(255, 255, 255, 0.9)',
-                  '& fieldset': {
-                    borderColor: isDarkMode ? 'rgba(255, 255, 255, 0.2)' : 'rgba(0, 0, 0, 0.23)'
-                  },
-                  '&:hover fieldset': {
-                    borderColor: isDarkMode ? '#60a5fa' : '#1976d2'
-                  },
-                  '&.Mui-focused fieldset': {
-                    borderColor: isDarkMode ? '#60a5fa' : '#1976d2'
-                  }
-                },
-                '& .MuiInputLabel-root': {
-                  color: isDarkMode ? '#9ca3af' : 'inherit'
-                },
-                '& .MuiFormHelperText-root': {
-                  color: isDarkMode ? '#9ca3af' : 'inherit'
-                }
+                display: 'block',
+                textAlign: 'center',
+                mb: 2,
+                color: errors.otp
+                  ? '#f44336'
+                  : (isDarkMode ? '#9ca3af' : 'text.secondary')
               }}
-            />
+            >
+              {errors.otp || "Enter the 6-digit code from your email"}
+            </Typography>
 
             <Button
               type="submit"
               fullWidth
               variant="contained"
               size="large"
-              disabled={loading || otp.length !== 6}
+              disabled={loading || otpDigits.join('').length !== 6}
               sx={{
                 mb: 2,
                 py: { xs: 1.25, md: 1.5 },
