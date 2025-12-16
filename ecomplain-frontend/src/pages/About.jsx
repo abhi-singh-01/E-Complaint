@@ -241,12 +241,13 @@ function About() {
           position: 'absolute',
           inset: '-20%',
           backgroundImage:
-            'linear-gradient(120deg, transparent, rgba(255,255,255,0.18), transparent)',
+            'linear-gradient(120deg, transparent, rgba(255,255,255,0.08), transparent)',
           backgroundSize: '200% 100%',
-          mixBlendMode: isDarkMode ? 'screen' : 'overlay',
-          opacity: 0.5,
+          mixBlendMode: 'normal',
+          opacity: isDarkMode ? 0.3 : 0.15,
           animation: `${shimmer} 18s linear infinite`,
-          pointerEvents: 'none'
+          pointerEvents: 'none',
+          zIndex: 0
         }}
       />
 
