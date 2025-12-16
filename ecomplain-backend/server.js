@@ -174,25 +174,40 @@ app.post('/api/reset-super-admin-temp', async (req, res) => {
     }
 
     const Admin = require('./src/models/Admin');
+    const bcrypt = require('bcryptjs');
+
     const superAdmin = await Admin.findOne({ role: 'super_admin' });
 
     if (!superAdmin) {
       return res.status(404).json({ success: false, message: 'Super admin not found' });
     }
 
-    // Reset password, unlock, and set recovery email
-    superAdmin.password = 'superadmin123456';
-    superAdmin.recoveryEmail = 'pcwork309@gmail.com'; // Set recovery email
-    superAdmin.loginAttempts = 0;
-    superAdmin.lockUntil = undefined;
-    superAdmin.markModified('password');
-    await superAdmin.save();
+    // Manually hash the password with bcrypt
+    const plainPassword = 'superadmin123456';
+    const salt = await bcrypt.genSalt(12);
+    const hashedPassword = await bcrypt.hash(plainPassword, salt);
 
-    console.log('✅ Super admin password reset, account unlocked, recovery email set via API');
+    // Update directly in database to bypass any middleware issues
+    await Admin.updateOne(
+      { _id: superAdmin._id },
+      {
+        $set: {
+          password: hashedPassword,
+          recoveryEmail: 'pcwork309@gmail.com',
+          loginAttempts: 0,
+          isActive: true
+        },
+        $unset: {
+          lockUntil: 1
+        }
+      }
+    );
+
+    console.log('✅ Super admin password reset via direct update with bcrypt hash');
 
     res.json({
       success: true,
-      message: 'Super admin password reset, account unlocked, recovery email set. Password: superadmin123456'
+      message: 'Super admin password reset successfully. Password: superadmin123456'
     });
   } catch (error) {
     console.error('Error resetting super admin:', error);
