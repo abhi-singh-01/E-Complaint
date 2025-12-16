@@ -3,6 +3,16 @@ import { Box, Typography, Button, Container, Paper } from '@mui/material'
 import { ErrorOutline, Refresh, Home } from '@mui/icons-material'
 import { useNavigate } from 'react-router-dom'
 
+// Helper to detect chunk loading errors
+const isChunkLoadError = (error) => {
+  return (
+    error?.message?.includes('Failed to fetch dynamically imported module') ||
+    error?.message?.includes('Loading chunk') ||
+    error?.message?.includes('ChunkLoadError') ||
+    error?.name === 'ChunkLoadError'
+  )
+}
+
 class ErrorBoundaryClass extends React.Component {
   constructor(props) {
     super(props)
@@ -19,6 +29,22 @@ class ErrorBoundaryClass extends React.Component {
       error,
       errorInfo,
     })
+
+    // If it's a chunk loading error, auto-reload the page
+    if (isChunkLoadError(error)) {
+      console.log('Chunk loading error detected, reloading page to fetch fresh assets...')
+      // Clear cache and reload
+      if ('caches' in window) {
+        caches.keys().then(names => {
+          names.forEach(name => caches.delete(name))
+        })
+      }
+      // Reload after a short delay
+      setTimeout(() => {
+        window.location.reload()
+      }, 1000)
+      return
+    }
 
     // Optionally log to error reporting service
     // logErrorToService(error, errorInfo)

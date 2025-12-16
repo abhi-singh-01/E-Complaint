@@ -13,18 +13,42 @@ import Footer from './components/Footer.jsx'
 import ErrorBoundary from './components/ErrorBoundary.jsx'
 import ScrollToTop from './components/ScrollToTop.jsx'
 
-// Lazy load heavy components
-const StudentRegister = lazy(() => import('./pages/student/StudentRegister.jsx'))
-const StudentOTPVerification = lazy(() => import('./pages/student/StudentOTPVerification.jsx'))
-const StudentLogin = lazy(() => import('./pages/student/StudentLogin.jsx'))
-const StudentForgotPassword = lazy(() => import('./pages/student/StudentForgotPassword.jsx'))
-const StudentResetPassword = lazy(() => import('./pages/student/StudentResetPassword.jsx'))
-const StudentDashboard = lazy(() => import('./pages/student/StudentDashboard.jsx'))
-const AdminLogin = lazy(() => import('./pages/admin/AdminLogin.jsx'))
-const AdminDashboard = lazy(() => import('./pages/admin/AdminDashboard.jsx'))
-const About = lazy(() => import('./pages/About.jsx'))
-const LandingPage = lazy(() => import('./components/LandingPage.jsx'))
-const NotFound = lazy(() => import('./pages/NotFound.jsx'))
+// Lazy load with retry for chunk loading failures after deployments
+const lazyWithRetry = (componentImport) => {
+  return lazy(async () => {
+    const pageHasAlreadyReloaded = JSON.parse(
+      sessionStorage.getItem('page-has-reloaded') || 'false'
+    )
+
+    try {
+      const component = await componentImport()
+      sessionStorage.setItem('page-has-reloaded', 'false')
+      return component
+    } catch (error) {
+      if (!pageHasAlreadyReloaded) {
+        // Chunk failed to load, reload the page
+        sessionStorage.setItem('page-has-reloaded', 'true')
+        window.location.reload()
+        return { default: () => null }
+      }
+      // If we've already reloaded and still failing, throw the error
+      throw error
+    }
+  })
+}
+
+// Lazy load heavy components with retry
+const StudentRegister = lazyWithRetry(() => import('./pages/student/StudentRegister.jsx'))
+const StudentOTPVerification = lazyWithRetry(() => import('./pages/student/StudentOTPVerification.jsx'))
+const StudentLogin = lazyWithRetry(() => import('./pages/student/StudentLogin.jsx'))
+const StudentForgotPassword = lazyWithRetry(() => import('./pages/student/StudentForgotPassword.jsx'))
+const StudentResetPassword = lazyWithRetry(() => import('./pages/student/StudentResetPassword.jsx'))
+const StudentDashboard = lazyWithRetry(() => import('./pages/student/StudentDashboard.jsx'))
+const AdminLogin = lazyWithRetry(() => import('./pages/admin/AdminLogin.jsx'))
+const AdminDashboard = lazyWithRetry(() => import('./pages/admin/AdminDashboard.jsx'))
+const About = lazyWithRetry(() => import('./pages/About.jsx'))
+const LandingPage = lazyWithRetry(() => import('./components/LandingPage.jsx'))
+const NotFound = lazyWithRetry(() => import('./pages/NotFound.jsx'))
 
 function ProtectedRoute({ children, adminRoute = false }) {
   const { token } = useAuth()
