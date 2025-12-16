@@ -498,7 +498,7 @@ function SuperAdminDashboard() {
   return (
     <>
       <AdminNavbar />
-      <Container maxWidth="xl" sx={{ py: { xs: 2, sm: 3, md: 4 }, mt: { xs: 7, sm: 8 }, px: { xs: 1, sm: 2, md: 3 } }}>
+      <Container maxWidth="xl" sx={{ pt: { xs: 1, sm: 1.5, md: 2 }, pb: { xs: 2, sm: 3, md: 4 }, mt: { xs: 6, sm: 7 }, px: { xs: 1, sm: 2, md: 3 } }}>
         {/* Header */}
         <Box sx={{ mb: { xs: 2, sm: 3, md: 4 } }}>
           <Typography variant="h3" gutterBottom sx={{ fontWeight: 'bold', color: '#1976d2', fontSize: { xs: '1.5rem', sm: '2rem', md: '2.5rem' } }}>
