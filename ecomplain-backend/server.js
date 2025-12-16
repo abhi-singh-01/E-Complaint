@@ -163,58 +163,6 @@ app.use('/api/admin', adminRoutes);
 app.use('/api/super-admin', superAdminRoutes);
 app.use('/api/profile', profileRoutes);
 
-// TEMPORARY: Reset super admin endpoint (REMOVE AFTER USE)
-app.post('/api/reset-super-admin-temp', async (req, res) => {
-  try {
-    const { secretKey } = req.body;
-
-    // Simple security check - use a secret key
-    if (secretKey !== 'RESET_SUPERADMIN_2024') {
-      return res.status(403).json({ success: false, message: 'Invalid secret key' });
-    }
-
-    const Admin = require('./src/models/Admin');
-    const bcrypt = require('bcryptjs');
-
-    const superAdmin = await Admin.findOne({ role: 'super_admin' });
-
-    if (!superAdmin) {
-      return res.status(404).json({ success: false, message: 'Super admin not found' });
-    }
-
-    // Manually hash the password with bcrypt
-    const plainPassword = 'superadmin123456';
-    const salt = await bcrypt.genSalt(12);
-    const hashedPassword = await bcrypt.hash(plainPassword, salt);
-
-    // Update directly in database to bypass any middleware issues
-    await Admin.updateOne(
-      { _id: superAdmin._id },
-      {
-        $set: {
-          password: hashedPassword,
-          recoveryEmail: 'pcwork309@gmail.com',
-          loginAttempts: 0,
-          isActive: true
-        },
-        $unset: {
-          lockUntil: 1
-        }
-      }
-    );
-
-    console.log('✅ Super admin password reset via direct update with bcrypt hash');
-
-    res.json({
-      success: true,
-      message: 'Super admin password reset successfully. Password: superadmin123456'
-    });
-  } catch (error) {
-    console.error('Error resetting super admin:', error);
-    res.status(500).json({ success: false, message: error.message });
-  }
-});
-
 // Serve static files (if any) with optimized settings
 app.use('/uploads', express.static(path.join(__dirname, 'uploads'), {
   maxAge: '1y', // Cache static files for 1 year
