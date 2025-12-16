@@ -11,8 +11,11 @@ function Home() {
     <Box sx={{ minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
       {/* Content Section Below Images */}
       <Box
-        className="bg-gradient-to-br from-blue-50 to-purple-50"
-        sx={{ py: 8, flex: 1 }}
+        sx={{
+          py: 8,
+          flex: 1,
+          background: 'linear-gradient(to bottom right, #eff6ff, #f3e8ff)'
+        }}
       >
         <Container maxWidth="lg">
           <Box
@@ -35,7 +38,6 @@ function Home() {
               variant="h2"
               component="h1"
               gutterBottom
-              className="font-bold mb-6"
               sx={{
                 fontSize: '3rem',
                 fontWeight: 700,
@@ -49,13 +51,14 @@ function Home() {
 
             <Typography
               variant="h5"
-              className="mb-8 max-w-3xl mx-auto"
               sx={{
                 fontSize: '1.2rem',
                 fontWeight: 400,
                 color: '#666',
                 lineHeight: 1.6,
-                mb: 4
+                mb: 4,
+                maxWidth: '48rem',
+                mx: 'auto'
               }}
             >
               Submit, track, and resolve issues efficiently with our modern, user-friendly platform designed for students.
@@ -63,8 +66,8 @@ function Home() {
 
             {/* Get Started Button */}
             <Box sx={{ mb: 6 }}>
-              <Button 
-                variant="contained" 
+              <Button
+                variant="contained"
                 size="large"
                 component={RouterLink}
                 to="/register"
@@ -91,9 +94,9 @@ function Home() {
             </Box>
 
             {/* Stats Section */}
-            <Box 
-              sx={{ 
-                display: 'flex', 
+            <Box
+              sx={{
+                display: 'flex',
                 justifyContent: 'center',
                 gap: { xs: 3, md: 6 },
                 flexWrap: 'wrap',
@@ -131,22 +134,22 @@ function Home() {
       </Box>
 
       {/* CTA Section */}
-      <Box className="py-16 bg-blue-600">
-        <Container maxWidth="md" className="text-center text-white">
-          <Typography variant="h4" component="h2" className="font-bold mb-4">
+      <Box sx={{ py: 8, backgroundColor: '#1976d2' }}>
+        <Container maxWidth="md" sx={{ textAlign: 'center', color: 'white' }}>
+          <Typography variant="h4" component="h2" sx={{ fontWeight: 'bold', mb: 2 }}>
             Ready to Get Started?
           </Typography>
-          <Typography variant="h6" className="mb-8 opacity-90">
+          <Typography variant="h6" sx={{ mb: 4, opacity: 0.9 }}>
             Join thousands of students and staff who trust our platform for complaint management.
           </Typography>
-          <Box sx={{ 
-            display: 'flex', 
-            gap: 2, 
+          <Box sx={{
+            display: 'flex',
+            gap: 2,
             justifyContent: 'center',
             flexDirection: { xs: 'column', sm: 'row' }
           }}>
-            <Button 
-              variant="contained" 
+            <Button
+              variant="contained"
               size="large"
               component={RouterLink}
               to="/register"

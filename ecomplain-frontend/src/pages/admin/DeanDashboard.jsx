@@ -5,6 +5,8 @@ import api from '../../lib/api.js'
 import axios from 'axios'
 import AdminNavbar from '../../components/AdminNavbar.jsx'
 import * as XLSX from 'xlsx'
+import { motion, AnimatePresence } from 'framer-motion'
+import { staggerContainer, staggerItem, tabContent } from '../../utils/AnimationConfig.jsx'
 import {
   Container,
   Typography,
@@ -78,6 +80,11 @@ import {
   OpenInNew
 } from '@mui/icons-material'
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip as RechartsTooltip, Legend, BarChart, Bar, XAxis, YAxis, CartesianGrid, LineChart, Line } from 'recharts'
+
+// Create motion components
+const MotionBox = motion.create(Box)
+const MotionCard = motion.create(Card)
+const MotionGrid = motion.create(Grid)
 
 export default function DeanDashboard() {
   const { user } = useAuth()
@@ -510,8 +517,15 @@ export default function DeanDashboard() {
         )}
 
         {/* Statistics Cards */}
-        <Grid container spacing={{ xs: 1.5, sm: 2, md: 3 }} sx={{ mb: 4 }}>
-          <Grid item xs={6} sm={6} md={2.4} sx={{ display: 'flex' }}>
+        <MotionGrid
+          container
+          spacing={{ xs: 1.5, sm: 2, md: 3 }}
+          sx={{ mb: 4 }}
+          initial="initial"
+          animate="animate"
+          variants={staggerContainer}
+        >
+          <Grid item xs={6} sm={6} md={2.4} sx={{ display: 'flex' }} component={motion.div} variants={staggerItem}>
             <Card sx={{
               borderRadius: { xs: '12px', md: '16px' },
               boxShadow: isDarkMode
@@ -715,7 +729,7 @@ export default function DeanDashboard() {
               </CardContent>
             </Card>
           </Grid>
-        </Grid>
+        </MotionGrid>
 
         {/* Tabs */}
         <Box sx={{ borderBottom: 1, borderColor: 'divider', mb: 3 }}>

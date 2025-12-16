@@ -1,9 +1,11 @@
 import { useState } from 'react'
 import { useNavigate, Link as RouterLink } from 'react-router-dom'
+import { motion } from 'framer-motion'
 import api, { clearApiCache } from '../../lib/api.js'
 import { useAuth } from '../../auth/AuthContext.jsx'
 import { useTheme as useCustomTheme } from '../../contexts/ThemeContext.jsx'
 import { useToast } from '../../contexts/ToastContext.jsx'
+import { slideUp, staggerContainer, staggerItem } from '../../utils/AnimationConfig.jsx'
 import {
   Container,
   TextField,
@@ -26,6 +28,11 @@ import {
   Login as LoginIcon,
   School
 } from '@mui/icons-material'
+
+// Create motion components
+const MotionBox = motion.create(Box)
+const MotionCard = motion.create(Card)
+
 
 export default function StudentLogin() {
   const nav = useNavigate()
@@ -94,14 +101,14 @@ export default function StudentLogin() {
         email: form.email,
         password: form.password
       })
-      
+
       // Clear all cached data before setting new auth credentials
       clearApiCache()
-      
+
       setToken(data.token)
       setUser(data.student)
       showSuccess('Login successful! Redirecting...')
-      
+
       // Navigate immediately after clearing cache and setting credentials
       // The dashboard will load fresh data without cache interference
       nav('/dashboard')
@@ -115,21 +122,26 @@ export default function StudentLogin() {
   }
 
   return (
-    <Box 
-      sx={{ 
+    <Box
+      sx={{
         minHeight: '100vh',
-        background: isDarkMode 
+        background: isDarkMode
           ? 'linear-gradient(135deg, #2c3e50 0%, #34495e 100%)'
           : 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
         py: 4
       }}
     >
       <Container maxWidth="sm">
-        <Box sx={{ display: 'flex', justifyContent: 'center', mb: 4 }}>
-          <Typography 
-            variant="h4" 
-            component="h1" 
-            sx={{ 
+        <MotionBox
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5 }}
+          sx={{ display: 'flex', justifyContent: 'center', mb: 4 }}
+        >
+          <Typography
+            variant="h4"
+            component="h1"
+            sx={{
               color: 'white',
               fontWeight: 'bold',
               textAlign: 'center'
@@ -137,14 +149,17 @@ export default function StudentLogin() {
           >
             Student Login
           </Typography>
-        </Box>
+        </MotionBox>
 
-        <Card 
+        <MotionCard
+          initial={{ opacity: 0, y: 30, scale: 0.95 }}
+          animate={{ opacity: 1, y: 0, scale: 1 }}
+          transition={{ duration: 0.6, delay: 0.2, ease: [0.4, 0, 0.2, 1] }}
           elevation={10}
-          sx={{ 
+          sx={{
             borderRadius: 3,
             overflow: 'hidden',
-            boxShadow: isDarkMode 
+            boxShadow: isDarkMode
               ? '0 20px 40px rgba(0,0,0,0.3)'
               : '0 20px 40px rgba(0,0,0,0.1)',
             backgroundColor: isDarkMode ? '#424242' : '#ffffff'
@@ -152,10 +167,10 @@ export default function StudentLogin() {
         >
           <CardContent sx={{ p: 4 }}>
             <Box sx={{ textAlign: 'center', mb: 4 }}>
-              <Box sx={{ 
-                display: 'flex', 
-                justifyContent: 'center', 
-                mb: 2 
+              <Box sx={{
+                display: 'flex',
+                justifyContent: 'center',
+                mb: 2
               }}>
                 <School sx={{ fontSize: 48, color: '#1976d2' }} />
               </Box>
@@ -168,9 +183,9 @@ export default function StudentLogin() {
             </Box>
 
             {error && (
-            <Alert color="error" sx={{ mb: 3 }}>
-              {error}
-            </Alert>
+              <Alert color="error" sx={{ mb: 3 }}>
+                {error}
+              </Alert>
             )}
 
             <Box as="form" onSubmit={submit} noValidate>
@@ -185,7 +200,7 @@ export default function StudentLogin() {
                   error={!!errors.email}
                   helperText={errors.email || "Enter your college email address"}
                   required
-                  sx={{ 
+                  sx={{
                     mb: 3,
                     '& .MuiOutlinedInput-root': {
                       backgroundColor: isDarkMode ? 'rgba(66, 66, 66, 0.8)' : 'rgba(255, 255, 255, 0.9)'
@@ -211,7 +226,7 @@ export default function StudentLogin() {
                   error={!!errors.password}
                   helperText={errors.password || "Enter your account password"}
                   required
-                  sx={{ 
+                  sx={{
                     mb: 3,
                     '& .MuiOutlinedInput-root': {
                       backgroundColor: isDarkMode ? 'rgba(66, 66, 66, 0.8)' : 'rgba(255, 255, 255, 0.9)'
@@ -240,10 +255,10 @@ export default function StudentLogin() {
 
                 {/* Forgot Password Link */}
                 <Box sx={{ textAlign: 'left', mb: 3 }}>
-                  <Link 
-                    component={RouterLink} 
-                    to="/forgot-password" 
-                    sx={{ 
+                  <Link
+                    component={RouterLink}
+                    to="/forgot-password"
+                    sx={{
                       color: '#1976d2',
                       textDecoration: 'none',
                       '&:hover': { textDecoration: 'underline' }
@@ -320,19 +335,19 @@ export default function StudentLogin() {
               </Box>
             </Box>
           </CardContent>
-        </Card>
+        </MotionCard>
 
         {/* Additional Info */}
         <Box sx={{ mt: 4, textAlign: 'center' }}>
-          <Typography variant="body2" sx={{ 
-            color: isDarkMode ? '#e0e0e0' : 'white', 
-            opacity: 0.8 
+          <Typography variant="body2" sx={{
+            color: isDarkMode ? '#e0e0e0' : 'white',
+            opacity: 0.8
           }}>
             Need help? Contact support at{' '}
-            <Link 
-              href="mailto:support@university.edu" 
-              sx={{ 
-                color: isDarkMode ? '#e0e0e0' : 'white', 
+            <Link
+              href="mailto:support@university.edu"
+              sx={{
+                color: isDarkMode ? '#e0e0e0' : 'white',
                 textDecoration: 'underline',
                 '&:hover': { opacity: 0.7 }
               }}

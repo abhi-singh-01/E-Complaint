@@ -504,6 +504,14 @@ export default function CoordinatorDashboard() {
 
   const colors = ['#1976d2', '#f57c00', '#2e7d32', '#d32f2f', '#7b1fa2', '#00acc1']
 
+const statsCardLayout = {
+  minHeight: { xs: '180px', sm: '200px', md: '220px' },
+  contentPadding: { xs: 2, sm: 2.5, md: 3 },
+  iconSize: { xs: 40, sm: 46, md: 56 },
+  valueSize: { xs: '2rem', sm: '2.35rem', md: '2.8rem' },
+  labelSize: { xs: '0.85rem', sm: '0.95rem', md: '1.05rem' }
+}
+
   return (
     <>
       <AdminNavbar />
