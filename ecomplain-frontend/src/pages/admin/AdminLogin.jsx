@@ -20,7 +20,12 @@ import {
   FormControl,
   InputLabel,
   Select,
-  MenuItem
+  MenuItem,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  CircularProgress
 } from '@mui/material'
 import {
   Visibility,
@@ -29,7 +34,8 @@ import {
   Lock,
   Login as LoginIcon,
   AdminPanelSettings,
-  SupervisorAccount
+  SupervisorAccount,
+  LockReset
 } from '@mui/icons-material'
 
 export default function AdminLogin() {
@@ -47,6 +53,17 @@ export default function AdminLogin() {
   const [showPassword, setShowPassword] = useState(false)
   const [loading, setLoading] = useState(false)
   const [errors, setErrors] = useState({})
+
+  // Forgot password state
+  const [forgotPasswordOpen, setForgotPasswordOpen] = useState(false)
+  const [forgotStep, setForgotStep] = useState(1) // 1: email, 2: OTP, 3: new password
+  const [forgotEmail, setForgotEmail] = useState('superadmin@university.edu')
+  const [forgotOtp, setForgotOtp] = useState('')
+  const [forgotNewPassword, setForgotNewPassword] = useState('')
+  const [forgotLoading, setForgotLoading] = useState(false)
+  const [forgotError, setForgotError] = useState('')
+  const [forgotSuccess, setForgotSuccess] = useState('')
+  const [maskedEmail, setMaskedEmail] = useState('')
 
   // Form validation
   const validateForm = () => {
@@ -201,6 +218,67 @@ export default function AdminLogin() {
       }
     } finally {
       setLoading(false)
+    }
+  }
+
+  // Forgot password handlers for super admin
+  const handleOpenForgotPassword = () => {
+    setForgotPasswordOpen(true)
+    setForgotStep(1)
+    setForgotEmail('superadmin@university.edu')
+    setForgotOtp('')
+    setForgotNewPassword('')
+    setForgotError('')
+    setForgotSuccess('')
+    setMaskedEmail('')
+  }
+
+  const handleCloseForgotPassword = () => {
+    setForgotPasswordOpen(false)
+    setForgotStep(1)
+    setForgotError('')
+    setForgotSuccess('')
+  }
+
+  const handleSendOtp = async () => {
+    setForgotLoading(true)
+    setForgotError('')
+    try {
+      const { data } = await api.post('/api/auth/super-admin/forgot-password', {
+        email: forgotEmail
+      })
+      setMaskedEmail(data.maskedEmail || 'your recovery email')
+      setForgotStep(2)
+      setForgotSuccess(`OTP sent to ${data.maskedEmail || 'recovery email'}`)
+    } catch (err) {
+      setForgotError(err.response?.data?.message || 'Failed to send OTP')
+    } finally {
+      setForgotLoading(false)
+    }
+  }
+
+  const handleResetPassword = async () => {
+    if (forgotNewPassword.length < 8) {
+      setForgotError('Password must be at least 8 characters')
+      return
+    }
+    setForgotLoading(true)
+    setForgotError('')
+    try {
+      await api.post('/api/auth/super-admin/reset-password', {
+        email: forgotEmail,
+        otp: forgotOtp,
+        newPassword: forgotNewPassword
+      })
+      setForgotSuccess('Password reset successful! You can now login.')
+      setForgotStep(3)
+      setTimeout(() => {
+        handleCloseForgotPassword()
+      }, 2000)
+    } catch (err) {
+      setForgotError(err.response?.data?.message || 'Failed to reset password')
+    } finally {
+      setForgotLoading(false)
     }
   }
 
@@ -598,9 +676,133 @@ export default function AdminLogin() {
               </Link>
               {' '}for access requests.
             </Typography>
+
+            {/* Forgot Password link for Super Admin only */}
+            {form.role === 'super_admin' && (
+              <Button
+                variant="text"
+                onClick={handleOpenForgotPassword}
+                sx={{
+                  mt: 2,
+                  color: isDarkMode ? '#60a5fa' : '#90caf9',
+                  fontSize: { xs: '0.8rem', sm: '0.875rem' },
+                  '&:hover': {
+                    backgroundColor: 'rgba(255,255,255,0.1)'
+                  }
+                }}
+                startIcon={<LockReset />}
+              >
+                Forgot Super Admin Password?
+              </Button>
+            )}
           </Box>
         </Container>
       </Box>
+
+      {/* Forgot Password Dialog for Super Admin */}
+      <Dialog
+        open={forgotPasswordOpen}
+        onClose={handleCloseForgotPassword}
+        maxWidth="sm"
+        fullWidth
+        PaperProps={{
+          sx: {
+            backgroundColor: isDarkMode ? '#1e293b' : '#fff',
+            color: isDarkMode ? '#fff' : 'inherit'
+          }
+        }}
+      >
+        <DialogTitle sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+          <LockReset color="primary" />
+          Super Admin Password Reset
+        </DialogTitle>
+        <DialogContent>
+          {forgotError && (
+            <Alert severity="error" sx={{ mb: 2 }}>{forgotError}</Alert>
+          )}
+          {forgotSuccess && (
+            <Alert severity="success" sx={{ mb: 2 }}>{forgotSuccess}</Alert>
+          )}
+
+          {forgotStep === 1 && (
+            <Box sx={{ mt: 1 }}>
+              <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+                Enter your super admin email to receive a password reset OTP on your recovery email.
+              </Typography>
+              <TextField
+                fullWidth
+                label="Super Admin Email"
+                value={forgotEmail}
+                onChange={(e) => setForgotEmail(e.target.value)}
+                disabled
+                sx={{ mb: 2 }}
+              />
+            </Box>
+          )}
+
+          {forgotStep === 2 && (
+            <Box sx={{ mt: 1 }}>
+              <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+                Enter the OTP sent to {maskedEmail} and your new password.
+              </Typography>
+              <TextField
+                fullWidth
+                label="OTP"
+                value={forgotOtp}
+                onChange={(e) => setForgotOtp(e.target.value)}
+                placeholder="Enter 6-digit OTP"
+                sx={{ mb: 2 }}
+              />
+              <TextField
+                fullWidth
+                type="password"
+                label="New Password"
+                value={forgotNewPassword}
+                onChange={(e) => setForgotNewPassword(e.target.value)}
+                placeholder="Minimum 8 characters"
+                sx={{ mb: 2 }}
+                helperText="Password must be at least 8 characters"
+              />
+            </Box>
+          )}
+
+          {forgotStep === 3 && (
+            <Box sx={{ textAlign: 'center', py: 2 }}>
+              <Typography variant="h6" color="success.main">
+                ✅ Password Reset Successful!
+              </Typography>
+              <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
+                You can now login with your new password.
+              </Typography>
+            </Box>
+          )}
+        </DialogContent>
+        <DialogActions sx={{ px: 3, pb: 2 }}>
+          <Button onClick={handleCloseForgotPassword} disabled={forgotLoading}>
+            Cancel
+          </Button>
+          {forgotStep === 1 && (
+            <Button
+              onClick={handleSendOtp}
+              variant="contained"
+              disabled={forgotLoading}
+              startIcon={forgotLoading ? <CircularProgress size={20} /> : null}
+            >
+              {forgotLoading ? 'Sending...' : 'Send OTP'}
+            </Button>
+          )}
+          {forgotStep === 2 && (
+            <Button
+              onClick={handleResetPassword}
+              variant="contained"
+              disabled={forgotLoading || !forgotOtp || !forgotNewPassword}
+              startIcon={forgotLoading ? <CircularProgress size={20} /> : null}
+            >
+              {forgotLoading ? 'Resetting...' : 'Reset Password'}
+            </Button>
+          )}
+        </DialogActions>
+      </Dialog>
     </>
   )
 }
