@@ -1129,6 +1129,174 @@ const resetPasswordWithOTP = asyncHandler(async (req, res) => {
   }
 });
 
+// @desc    Send password reset OTP to super admin's recovery email
+// @route   POST /api/auth/super-admin/forgot-password
+// @access  Public
+const sendSuperAdminPasswordResetOTP = asyncHandler(async (req, res) => {
+  try {
+    const { email } = req.body;
+
+    if (!email) {
+      return res.status(400).json({
+        success: false,
+        message: 'Email is required'
+      });
+    }
+
+    // Find super admin by email
+    const superAdmin = await Admin.findOne({
+      email: email.toLowerCase(),
+      role: 'super_admin'
+    });
+
+    if (!superAdmin) {
+      return res.status(404).json({
+        success: false,
+        message: 'Super admin account not found'
+      });
+    }
+
+    // Check if recovery email is set
+    if (!superAdmin.recoveryEmail) {
+      return res.status(400).json({
+        success: false,
+        message: 'No recovery email configured for this account. Please contact system support.'
+      });
+    }
+
+    // Generate OTP
+    const otp = generateOTP();
+    const otpExpiry = Date.now() + 10 * 60 * 1000; // 10 minutes
+
+    // Store OTP in cache
+    const cacheKey = `super_admin_reset:${email.toLowerCase()}`;
+    await setCache(cacheKey, {
+      otp,
+      otpExpiry,
+      adminId: superAdmin._id.toString(),
+      attempts: 0
+    }, 10 * 60 * 1000);
+
+    // Send OTP to recovery email
+    try {
+      await sendPasswordResetOTPEmail({
+        email: superAdmin.recoveryEmail,
+        name: `${superAdmin.firstName} ${superAdmin.lastName}`,
+        otp
+      });
+
+      // Mask recovery email for response
+      const maskedEmail = superAdmin.recoveryEmail.replace(/(.{2})(.*)(@.*)/, '$1***$3');
+
+      res.json({
+        success: true,
+        message: `Password reset OTP sent to recovery email: ${maskedEmail}`,
+        maskedEmail
+      });
+    } catch (emailError) {
+      console.error('Error sending super admin reset OTP:', emailError);
+      return res.status(500).json({
+        success: false,
+        message: 'Failed to send OTP email. Please try again.'
+      });
+    }
+  } catch (error) {
+    console.error('Error in sendSuperAdminPasswordResetOTP:', error);
+    throw error;
+  }
+});
+
+// @desc    Verify OTP and reset super admin password
+// @route   POST /api/auth/super-admin/reset-password
+// @access  Public
+const resetSuperAdminPassword = asyncHandler(async (req, res) => {
+  try {
+    const { email, otp, newPassword } = req.body;
+
+    if (!email || !otp || !newPassword) {
+      return res.status(400).json({
+        success: false,
+        message: 'Email, OTP, and new password are required'
+      });
+    }
+
+    if (newPassword.length < 8) {
+      return res.status(400).json({
+        success: false,
+        message: 'Password must be at least 8 characters long'
+      });
+    }
+
+    // Get cached OTP data
+    const cacheKey = `super_admin_reset:${email.toLowerCase()}`;
+    const cachedData = await getCache(cacheKey);
+
+    if (!cachedData) {
+      return res.status(400).json({
+        success: false,
+        message: 'OTP has expired or is invalid. Please request a new one.'
+      });
+    }
+
+    // Check attempts
+    if (cachedData.attempts >= 5) {
+      await deleteCache(cacheKey);
+      return res.status(400).json({
+        success: false,
+        message: 'Too many failed attempts. Please request a new OTP.'
+      });
+    }
+
+    // Verify OTP
+    if (cachedData.otp !== otp) {
+      cachedData.attempts += 1;
+      await setCache(cacheKey, cachedData, 10 * 60 * 1000);
+      return res.status(400).json({
+        success: false,
+        message: `Invalid OTP. ${5 - cachedData.attempts} attempts remaining.`
+      });
+    }
+
+    // Check OTP expiry
+    if (Date.now() > cachedData.otpExpiry) {
+      await deleteCache(cacheKey);
+      return res.status(400).json({
+        success: false,
+        message: 'OTP has expired. Please request a new one.'
+      });
+    }
+
+    // Find and update super admin
+    const superAdmin = await Admin.findById(cachedData.adminId);
+
+    if (!superAdmin) {
+      return res.status(404).json({
+        success: false,
+        message: 'Account not found'
+      });
+    }
+
+    // Update password and unlock account
+    superAdmin.password = newPassword;
+    superAdmin.loginAttempts = 0;
+    superAdmin.lockUntil = undefined;
+    await superAdmin.save();
+
+    // Clear cache
+    await deleteCache(cacheKey);
+
+    console.log('✅ Super admin password reset via recovery email:', superAdmin.email);
+
+    res.json({
+      success: true,
+      message: 'Password reset successful! You can now login with your new password.'
+    });
+  } catch (error) {
+    console.error('Error in resetSuperAdminPassword:', error);
+    throw error;
+  }
+});
+
 module.exports = {
   registerStudent,
   sendRegistrationOTP,
@@ -1143,5 +1311,7 @@ module.exports = {
   resetPassword,
   sendPasswordResetOTP,
   verifyPasswordResetOTP,
-  resetPasswordWithOTP
+  resetPasswordWithOTP,
+  sendSuperAdminPasswordResetOTP,
+  resetSuperAdminPassword
 };

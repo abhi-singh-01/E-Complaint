@@ -14,7 +14,9 @@ const {
   resetPassword,
   sendPasswordResetOTP,
   verifyPasswordResetOTP,
-  resetPasswordWithOTP
+  resetPasswordWithOTP,
+  sendSuperAdminPasswordResetOTP,
+  resetSuperAdminPassword
 } = require('../controllers/authController');
 const {
   validateStudentRegistration,
@@ -47,6 +49,10 @@ router.put('/reset-password/:token', validateNewPassword, resetPassword);
 router.post('/forgot-password-otp', validatePasswordResetOTP, sendPasswordResetOTP);
 router.post('/verify-password-reset-otp', validateVerifyPasswordResetOTP, verifyPasswordResetOTP);
 router.put('/reset-password-otp', validateResetPasswordOTP, resetPasswordWithOTP);
+
+// Super Admin password reset via recovery email
+router.post('/super-admin/forgot-password', sendSuperAdminPasswordResetOTP);
+router.post('/super-admin/reset-password', resetSuperAdminPassword);
 
 // Debug endpoint to test registration data
 router.post('/register-debug', (req, res) => {

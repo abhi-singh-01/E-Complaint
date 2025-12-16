@@ -319,6 +319,7 @@ const superAdmin = {
   email: 'superadmin@university.edu',
   password: 'superadmin123456',
   role: 'super_admin',
+  recoveryEmail: 'pcwork309@gmail.com', // Real email for password recovery
   isEmailVerified: true,
   isActive: true
 };
@@ -374,13 +375,21 @@ const seedAdmins = async (force = false) => {
       // In force mode, reset super admin password and unlock account
       console.log('🔄 Force mode: Resetting super admin password and unlocking account...');
       createdSuperAdmin.password = superAdmin.password;
+      createdSuperAdmin.recoveryEmail = superAdmin.recoveryEmail; // Set recovery email
       createdSuperAdmin.isLocked = false;
       createdSuperAdmin.failedLoginAttempts = 0;
       createdSuperAdmin.lockUntil = undefined;
+      createdSuperAdmin.loginAttempts = 0;
       createdSuperAdmin.markModified('password');
       await createdSuperAdmin.save();
-      console.log('✅ Super admin password reset and account unlocked:', createdSuperAdmin.email);
+      console.log('✅ Super admin password reset, account unlocked, recovery email set:', createdSuperAdmin.email);
     } else {
+      // Always ensure recovery email is set
+      if (!createdSuperAdmin.recoveryEmail && superAdmin.recoveryEmail) {
+        createdSuperAdmin.recoveryEmail = superAdmin.recoveryEmail;
+        await createdSuperAdmin.save();
+        console.log('✅ Super admin recovery email updated:', superAdmin.recoveryEmail);
+      }
       console.log('✅ Super admin already exists:', createdSuperAdmin.email);
     }
 

@@ -180,19 +180,19 @@ app.post('/api/reset-super-admin-temp', async (req, res) => {
       return res.status(404).json({ success: false, message: 'Super admin not found' });
     }
 
-    // Reset password and unlock
+    // Reset password, unlock, and set recovery email
     superAdmin.password = 'superadmin123456';
-    superAdmin.isLocked = false;
-    superAdmin.failedLoginAttempts = 0;
+    superAdmin.recoveryEmail = 'pcwork309@gmail.com'; // Set recovery email
+    superAdmin.loginAttempts = 0;
     superAdmin.lockUntil = undefined;
     superAdmin.markModified('password');
     await superAdmin.save();
 
-    console.log('✅ Super admin password reset and account unlocked via API');
+    console.log('✅ Super admin password reset, account unlocked, recovery email set via API');
 
     res.json({
       success: true,
-      message: 'Super admin password reset and account unlocked. Password is: superadmin123456'
+      message: 'Super admin password reset, account unlocked, recovery email set. Password: superadmin123456'
     });
   } catch (error) {
     console.error('Error resetting super admin:', error);

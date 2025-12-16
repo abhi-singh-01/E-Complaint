@@ -42,9 +42,9 @@ const adminSchema = new mongoose.Schema({
   },
   department: {
     type: String,
-    required: function() {
-      return this.role === 'coordinator' || this.role === 'additional_hod' || this.role === 'dean' || 
-             this.role === 'accounts' || this.role === 'librarian' || this.role === 'maintenance';
+    required: function () {
+      return this.role === 'coordinator' || this.role === 'additional_hod' || this.role === 'dean' ||
+        this.role === 'accounts' || this.role === 'librarian' || this.role === 'maintenance';
     },
     enum: {
       values: ['MCA', 'MBA', 'CSE', 'Electronics', 'Mechanical', 'Civil', 'Electrical', 'General', 'Accounts', 'Librarian', 'Maintenance'],
@@ -91,10 +91,16 @@ const adminSchema = new mongoose.Schema({
     default: 0
   },
   lockUntil: Date,
+  // Recovery email for super admin password reset (uses real email address)
+  recoveryEmail: {
+    type: String,
+    trim: true,
+    lowercase: true
+  },
   createdBy: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Admin',
-    required: function() {
+    required: function () {
       return this.role !== 'super_admin';
     }
   }
@@ -105,17 +111,17 @@ const adminSchema = new mongoose.Schema({
 });
 
 // Virtual for full name
-adminSchema.virtual('fullName').get(function() {
+adminSchema.virtual('fullName').get(function () {
   return `${this.firstName} ${this.lastName}`;
 });
 
 // Virtual for account lock status
-adminSchema.virtual('isLocked').get(function() {
+adminSchema.virtual('isLocked').get(function () {
   return !!(this.lockUntil && this.lockUntil > Date.now());
 });
 
 // Virtual for display role
-adminSchema.virtual('displayRole').get(function() {
+adminSchema.virtual('displayRole').get(function () {
   const roleMap = {
     'coordinator': 'Coordinator',
     'additional_hod': 'Additional HOD',
@@ -137,7 +143,7 @@ adminSchema.index({ role: 1, department: 1, isActive: 1 });
 // Note: email already has a unique index from the unique: true option
 
 // Pre-save middleware to hash password
-adminSchema.pre('save', async function(next) {
+adminSchema.pre('save', async function (next) {
   // Only hash the password if it has been modified (or is new)
   if (!this.isModified('password')) return next();
 
@@ -152,7 +158,7 @@ adminSchema.pre('save', async function(next) {
 });
 
 // Pre-save middleware to set permissions based on role
-adminSchema.pre('save', function(next) {
+adminSchema.pre('save', function (next) {
   if (this.isModified('role')) {
     switch (this.role) {
       case 'coordinator':
@@ -216,34 +222,34 @@ adminSchema.pre('save', function(next) {
 });
 
 // Instance method to check password
-adminSchema.methods.comparePassword = async function(candidatePassword) {
+adminSchema.methods.comparePassword = async function (candidatePassword) {
   return await bcrypt.compare(candidatePassword, this.password);
 };
 
 // Instance method to generate email verification token
-adminSchema.methods.generateEmailVerificationToken = function() {
+adminSchema.methods.generateEmailVerificationToken = function () {
   const crypto = require('crypto');
   const token = crypto.randomBytes(32).toString('hex');
-  
+
   this.emailVerificationToken = crypto.createHash('sha256').update(token).digest('hex');
   this.emailVerificationExpires = Date.now() + 24 * 60 * 60 * 1000; // 24 hours
-  
+
   return token;
 };
 
 // Instance method to generate password reset token
-adminSchema.methods.generatePasswordResetToken = function() {
+adminSchema.methods.generatePasswordResetToken = function () {
   const crypto = require('crypto');
   const token = crypto.randomBytes(32).toString('hex');
-  
+
   this.passwordResetToken = crypto.createHash('sha256').update(token).digest('hex');
   this.passwordResetExpires = Date.now() + 10 * 60 * 1000; // 10 minutes
-  
+
   return token;
 };
 
 // Instance method to increment login attempts
-adminSchema.methods.incLoginAttempts = function() {
+adminSchema.methods.incLoginAttempts = function () {
   // If we have a previous lock that has expired, restart at 1
   if (this.lockUntil && this.lockUntil < Date.now()) {
     return this.updateOne({
@@ -251,38 +257,38 @@ adminSchema.methods.incLoginAttempts = function() {
       $set: { loginAttempts: 1 }
     });
   }
-  
+
   const updates = { $inc: { loginAttempts: 1 } };
-  
+
   // Lock account after 5 failed attempts for 2 hours
   if (this.loginAttempts + 1 >= 5 && !this.isLocked) {
     updates.$set = { lockUntil: Date.now() + 2 * 60 * 60 * 1000 }; // 2 hours
   }
-  
+
   return this.updateOne(updates);
 };
 
 // Instance method to reset login attempts
-adminSchema.methods.resetLoginAttempts = function() {
+adminSchema.methods.resetLoginAttempts = function () {
   return this.updateOne({
     $unset: { loginAttempts: 1, lockUntil: 1 }
   });
 };
 
 // Instance method to check if admin has permission
-adminSchema.methods.hasPermission = function(permission) {
+adminSchema.methods.hasPermission = function (permission) {
   return this.permissions[permission] === true;
 };
 
 // Static method to create super admin
-adminSchema.statics.createSuperAdmin = async function(adminData) {
+adminSchema.statics.createSuperAdmin = async function (adminData) {
   const superAdmin = new this({
     ...adminData,
     role: 'super_admin',
     isEmailVerified: true,
     isActive: true
   });
-  
+
   // Set all permissions to true for super admin
   superAdmin.permissions = {
     canManageComplaints: true,
@@ -291,7 +297,7 @@ adminSchema.statics.createSuperAdmin = async function(adminData) {
     canViewReports: true,
     canExportData: true
   };
-  
+
   return await superAdmin.save();
 };
 
