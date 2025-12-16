@@ -136,29 +136,51 @@ export default function AdditionalHODDashboard() {
     };
   }, []);
 
-  // Fetch complaints assigned to this additional HOD
+  // Fetch complaints assigned to this additional HOD (includes escalated ones)
   const fetchComplaints = async (statusFilter = 'all') => {
     try {
       setLoading(true)
       setError('') // Clear any previous errors
 
       const userId = user._id || user.id
+      const statusParam = statusFilter === 'all' ? undefined :
+        statusFilter === 'pending' ? 'Pending' :
+          statusFilter === 'in progress' ? 'In Progress' :
+            statusFilter === 'resolved' ? 'Resolved' :
+              statusFilter === 'rejected' ? 'Rejected' :
+                statusFilter === 'closed' ? 'Closed' : statusFilter
 
-      const { data } = await api.get('/api/complaints', {
+      // Fetch complaints currently assigned to additional HOD
+      const { data: assignedData } = await api.get('/api/complaints', {
         params: {
           department: user.department,
           assignedTo: userId,
-          status: statusFilter === 'all' ? undefined :
-            statusFilter === 'pending' ? 'Pending' :
-              statusFilter === 'in progress' ? 'In Progress' :
-                statusFilter === 'resolved' ? 'Resolved' :
-                  statusFilter === 'rejected' ? 'Rejected' :
-                    statusFilter === 'closed' ? 'Closed' : statusFilter,
-          limit: 100 // Increase limit to get more complaints
+          status: statusParam,
+          limit: 100
         }
       })
 
-      setComplaints(data.complaints || [])
+      // Fetch complaints originally assigned to this additional HOD (escalated ones)
+      const { data: additionalHodAssignedData } = await api.get('/api/complaints', {
+        params: {
+          department: user.department,
+          additionalHodAssigned: userId,
+          status: statusParam,
+          limit: 100
+        }
+      })
+
+      // Merge and remove duplicates
+      const assignedComplaints = assignedData.complaints || []
+      const additionalHodComplaints = additionalHodAssignedData.complaints || []
+      const complaintMap = new Map()
+
+      assignedComplaints.forEach(c => complaintMap.set(c._id, c))
+      additionalHodComplaints.forEach(c => {
+        if (!complaintMap.has(c._id)) complaintMap.set(c._id, c)
+      })
+
+      setComplaints(Array.from(complaintMap.values()))
     } catch (err) {
       if (err.__CACHED__) {
         setComplaints(err.data?.complaints || [])

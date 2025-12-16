@@ -217,10 +217,12 @@ export default function DeanDashboard() {
       const departmentComplaints = data.complaints || []
       setAllComplaints(departmentComplaints)
 
-      // Dean Level Complaints: complaints that are at Dean level OR escalated to Dean
+      // Dean Level Complaints: complaints that are at Dean level OR escalated to Dean OR forwarded to external by Dean
       const deanLevelComplaints = departmentComplaints.filter(c =>
         c.workflow?.currentLevel === 'dean' ||
-        (c.workflow?.escalatedAt && c.workflow?.currentLevel === 'dean')
+        (c.workflow?.escalatedAt && c.workflow?.currentLevel === 'dean') ||
+        c.workflow?.deanAssigned ||
+        c.externalForward?.isForwarded // Include complaints forwarded to external departments
       )
       setComplaints(deanLevelComplaints)
 
@@ -239,7 +241,9 @@ export default function DeanDashboard() {
         setAllComplaints(departmentComplaints)
         const deanLevelComplaints = departmentComplaints.filter(c =>
           c.workflow?.currentLevel === 'dean' ||
-          (c.workflow?.escalatedAt && c.workflow?.currentLevel === 'dean')
+          (c.workflow?.escalatedAt && c.workflow?.currentLevel === 'dean') ||
+          c.workflow?.deanAssigned ||
+          c.externalForward?.isForwarded
         )
         setComplaints(deanLevelComplaints)
         const escalatedComplaints = departmentComplaints.filter(c =>
