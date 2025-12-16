@@ -89,7 +89,7 @@ export default function StudentRegister() {
   // Get available years based on department
   const getAvailableYears = (department) => {
     const twoYearCourses = ['MCA', 'MBA']
-    const fourYearCourses = ['CSE']
+    const fourYearCourses = ['CSE', 'Electronics', 'Mechanical', 'Civil', 'Electrical']
 
     if (twoYearCourses.includes(department)) {
       return [
@@ -769,6 +769,10 @@ export default function StudentRegister() {
                               <MenuItem value="MCA">MCA</MenuItem>
                               <MenuItem value="MBA">MBA</MenuItem>
                               <MenuItem value="CSE">CSE</MenuItem>
+                              <MenuItem value="Electronics">Electronics</MenuItem>
+                              <MenuItem value="Mechanical">Mechanical</MenuItem>
+                              <MenuItem value="Civil">Civil</MenuItem>
+                              <MenuItem value="Electrical">Electrical</MenuItem>
                             </Select>
                             {errors.department && (
                               <Typography variant="caption" color="error" sx={{ mt: 0.5, ml: 1.75 }}>
