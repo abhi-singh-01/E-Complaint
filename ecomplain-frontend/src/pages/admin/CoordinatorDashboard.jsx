@@ -142,29 +142,51 @@ export default function CoordinatorDashboard() {
     };
   }, []);
 
-  // Fetch complaints assigned to this coordinator
+  // Fetch complaints assigned to this coordinator (includes forwarded ones)
   const fetchComplaints = async (statusFilter = 'all') => {
     try {
       setLoading(true)
       setError('')
 
       const userId = user._id || user.id
+      const statusParam = statusFilter === 'all' ? undefined :
+        statusFilter === 'pending' ? 'Pending' :
+          statusFilter === 'in progress' ? 'In Progress' :
+            statusFilter === 'resolved' ? 'Resolved' :
+              statusFilter === 'rejected' ? 'Rejected' :
+                statusFilter === 'closed' ? 'Closed' : statusFilter
 
-      const { data } = await api.get('/api/complaints', {
+      // Fetch complaints currently assigned to coordinator
+      const { data: assignedData } = await api.get('/api/complaints', {
         params: {
           department: user.department,
           assignedTo: userId,
-          status: statusFilter === 'all' ? undefined :
-            statusFilter === 'pending' ? 'Pending' :
-              statusFilter === 'in progress' ? 'In Progress' :
-                statusFilter === 'resolved' ? 'Resolved' :
-                  statusFilter === 'rejected' ? 'Rejected' :
-                    statusFilter === 'closed' ? 'Closed' : statusFilter,
+          status: statusParam,
           limit: 100
         }
       })
 
-      setComplaints(data.complaints || [])
+      // Fetch complaints originally assigned to this coordinator (forwarded ones)
+      const { data: coordinatorAssignedData } = await api.get('/api/complaints', {
+        params: {
+          department: user.department,
+          coordinatorAssigned: userId,
+          status: statusParam,
+          limit: 100
+        }
+      })
+
+      // Merge and remove duplicates
+      const assignedComplaints = assignedData.complaints || []
+      const coordinatorComplaints = coordinatorAssignedData.complaints || []
+      const complaintMap = new Map()
+
+      assignedComplaints.forEach(c => complaintMap.set(c._id, c))
+      coordinatorComplaints.forEach(c => {
+        if (!complaintMap.has(c._id)) complaintMap.set(c._id, c)
+      })
+
+      setComplaints(Array.from(complaintMap.values()))
     } catch (err) {
       if (err.__CACHED__) {
         setComplaints(err.data?.complaints || [])
@@ -205,20 +227,19 @@ export default function CoordinatorDashboard() {
         }
       })
 
-      // Fetch resolved complaints that were originally assigned to this coordinator
-      // (even if they were resolved at dean, additional_hod, or panel levels)
+      // Fetch ALL complaints that were originally assigned to this coordinator
+      // This includes forwarded complaints (In Progress) and resolved ones
       const { data: coordinatorAssignedData } = await api.get('/api/complaints', {
         params: {
           department: user.department,
           coordinatorAssigned: userId,
-          status: 'Resolved',
           limit: 100
         }
       })
 
       // Merge the two lists and remove duplicates
       const assignedComplaints = assignedData.complaints || []
-      const coordinatorResolvedComplaints = coordinatorAssignedData.complaints || []
+      const coordinatorForwardedComplaints = coordinatorAssignedData.complaints || []
 
       // Create a map to avoid duplicates
       const complaintMap = new Map()
@@ -228,8 +249,8 @@ export default function CoordinatorDashboard() {
         complaintMap.set(complaint._id, complaint)
       })
 
-      // Add resolved complaints originally assigned to coordinator
-      coordinatorResolvedComplaints.forEach(complaint => {
+      // Add forwarded/resolved complaints originally assigned to coordinator
+      coordinatorForwardedComplaints.forEach(complaint => {
         if (!complaintMap.has(complaint._id)) {
           complaintMap.set(complaint._id, complaint)
         }
