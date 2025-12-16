@@ -35,7 +35,7 @@ A comprehensive, full-stack complaint management system designed for educational
 ### Frontend
 | Technology | Purpose |
 |------------|---------|
-| **React 18** | UI Framework |
+| **React 19** | UI Framework |
 | **Vite** | Build Tool |
 | **Material-UI (MUI)** | Component Library |
 | **Framer Motion** | Animations |
