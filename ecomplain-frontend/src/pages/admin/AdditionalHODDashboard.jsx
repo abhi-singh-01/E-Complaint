@@ -555,7 +555,7 @@ export default function AdditionalHODDashboard() {
               border: isDarkMode ? '1px solid rgba(255,255,255,0.1)' : 'none',
               transition: 'all 0.3s ease',
               width: '100%',
-              minHeight: { xs: '120px', sm: '140px', md: '160px' },
+              minHeight: { xs: '140px', sm: '160px', md: '180px' },
               display: 'flex',
               flexDirection: 'column',
               '&:hover': {
@@ -596,7 +596,7 @@ export default function AdditionalHODDashboard() {
               border: isDarkMode ? '1px solid rgba(255,255,255,0.1)' : 'none',
               transition: 'all 0.3s ease',
               width: '100%',
-              minHeight: { xs: '120px', sm: '140px', md: '160px' },
+              minHeight: { xs: '140px', sm: '160px', md: '180px' },
               display: 'flex',
               flexDirection: 'column',
               '&:hover': {
@@ -637,7 +637,7 @@ export default function AdditionalHODDashboard() {
               border: isDarkMode ? '1px solid rgba(255,255,255,0.1)' : 'none',
               transition: 'all 0.3s ease',
               width: '100%',
-              minHeight: { xs: '120px', sm: '140px', md: '160px' },
+              minHeight: { xs: '140px', sm: '160px', md: '180px' },
               display: 'flex',
               flexDirection: 'column',
               '&:hover': {
@@ -678,7 +678,7 @@ export default function AdditionalHODDashboard() {
               border: isDarkMode ? '1px solid rgba(255,255,255,0.1)' : 'none',
               transition: 'all 0.3s ease',
               width: '100%',
-              minHeight: { xs: '120px', sm: '140px', md: '160px' },
+              minHeight: { xs: '140px', sm: '160px', md: '180px' },
               display: 'flex',
               flexDirection: 'column',
               '&:hover': {
@@ -719,7 +719,7 @@ export default function AdditionalHODDashboard() {
               border: isDarkMode ? '1px solid rgba(255,255,255,0.1)' : 'none',
               transition: 'all 0.3s ease',
               width: '100%',
-              minHeight: { xs: '120px', sm: '140px', md: '160px' },
+              minHeight: { xs: '140px', sm: '160px', md: '180px' },
               display: 'flex',
               flexDirection: 'column',
               '&:hover': {

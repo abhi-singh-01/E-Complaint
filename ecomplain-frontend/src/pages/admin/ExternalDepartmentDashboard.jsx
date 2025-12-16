@@ -315,7 +315,7 @@ export default function ExternalDepartmentDashboard() {
               bgcolor: isDarkMode ? 'rgba(30, 41, 59, 0.8)' : '#ffffff',
               border: isDarkMode ? '1px solid rgba(255,255,255,0.1)' : 'none',
               transition: 'all 0.3s ease',
-              minHeight: { xs: '120px', sm: '140px', md: '150px' },
+              minHeight: { xs: '140px', sm: '160px', md: '180px' },
               '&:hover': {
                 transform: 'translateY(-4px)',
                 boxShadow: isDarkMode
@@ -342,7 +342,7 @@ export default function ExternalDepartmentDashboard() {
               bgcolor: isDarkMode ? 'rgba(30, 41, 59, 0.8)' : '#ffffff',
               border: isDarkMode ? '1px solid rgba(255,255,255,0.1)' : 'none',
               transition: 'all 0.3s ease',
-              minHeight: { xs: '120px', sm: '140px', md: '150px' },
+              minHeight: { xs: '140px', sm: '160px', md: '180px' },
               '&:hover': {
                 transform: 'translateY(-4px)',
                 boxShadow: isDarkMode
@@ -369,7 +369,7 @@ export default function ExternalDepartmentDashboard() {
               bgcolor: isDarkMode ? 'rgba(30, 41, 59, 0.8)' : '#ffffff',
               border: isDarkMode ? '1px solid rgba(255,255,255,0.1)' : 'none',
               transition: 'all 0.3s ease',
-              minHeight: { xs: '120px', sm: '140px', md: '150px' },
+              minHeight: { xs: '140px', sm: '160px', md: '180px' },
               '&:hover': {
                 transform: 'translateY(-4px)',
                 boxShadow: isDarkMode
