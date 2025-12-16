@@ -14,6 +14,7 @@ const {
   updateStudent,
   deleteStudent,
   resetAdminPassword,
+  unlockAdmin,
   resetStudentPassword,
   updateComplaint,
   deleteComplaint
@@ -39,6 +40,7 @@ router.post('/admins', createAdmin);
 router.put('/admins/:id', updateAdmin);
 router.delete('/admins/:id', deleteAdmin);
 router.put('/admins/:id/reset-password', resetAdminPassword);
+router.put('/admins/:id/unlock', unlockAdmin);
 
 // Complaints Management
 router.get('/complaints', getAllComplaints);

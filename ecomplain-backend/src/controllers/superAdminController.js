@@ -12,7 +12,7 @@ const getSystemOverview = asyncHandler(async (req, res) => {
     const totalStudents = await Student.countDocuments();
     const totalAdmins = await Admin.countDocuments();
     const totalComplaints = await Complaint.countDocuments();
-    
+
     // Get complaints by status
     const complaintsByStatus = await Complaint.aggregate([
       {
@@ -22,7 +22,7 @@ const getSystemOverview = asyncHandler(async (req, res) => {
         }
       }
     ]);
-    
+
     // Get complaints by department
     const complaintsByDepartment = await Complaint.aggregate([
       {
@@ -46,15 +46,15 @@ const getSystemOverview = asyncHandler(async (req, res) => {
         $sort: { count: -1 }
       }
     ]);
-    
+
     // Get recent complaints (last 7 days)
     const sevenDaysAgo = new Date();
     sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
-    
+
     const recentComplaints = await Complaint.countDocuments({
       createdAt: { $gte: sevenDaysAgo }
     });
-    
+
     // Get complaints by category
     const complaintsByCategory = await Complaint.aggregate([
       {
@@ -67,7 +67,7 @@ const getSystemOverview = asyncHandler(async (req, res) => {
         $sort: { count: -1 }
       }
     ]);
-    
+
     // Get admin distribution by role
     const adminDistribution = await Admin.aggregate([
       {
@@ -77,7 +77,7 @@ const getSystemOverview = asyncHandler(async (req, res) => {
         }
       }
     ]);
-    
+
     // Get department-wise admin count
     const departmentAdminCount = await Admin.aggregate([
       {
@@ -128,12 +128,12 @@ const getAllStudents = asyncHandler(async (req, res) => {
     const limit = parseInt(req.query.limit) || 10;
     const search = req.query.search || '';
     const department = req.query.department || '';
-    
+
     const skip = (page - 1) * limit;
-    
+
     // Build query
     let query = {};
-    
+
     if (search) {
       query.$or = [
         { firstName: { $regex: search, $options: 'i' } },
@@ -142,20 +142,20 @@ const getAllStudents = asyncHandler(async (req, res) => {
         { rollNo: { $regex: search, $options: 'i' } }
       ];
     }
-    
+
     if (department) {
       query.department = department;
     }
-    
+
     const students = await Student.find(query)
       .select('-password -passwordResetToken -passwordResetExpires')
       .sort({ createdAt: -1 })
       .skip(skip)
       .limit(limit)
       .lean(); // Use lean() for read-only queries
-    
+
     const total = await Student.countDocuments(query);
-    
+
     res.json({
       success: true,
       data: {
@@ -188,7 +188,7 @@ const getAllAdmins = asyncHandler(async (req, res) => {
       .populate('createdBy', 'firstName lastName email')
       .sort({ createdAt: -1 })
       .lean({ virtuals: true }); // Use lean() for read-only queries
-    
+
     res.json({
       success: true,
       data: { admins }
@@ -212,20 +212,20 @@ const getAllComplaints = asyncHandler(async (req, res) => {
     const status = req.query.status || '';
     const department = req.query.department || '';
     const category = req.query.category || '';
-    
+
     const skip = (page - 1) * limit;
-    
+
     // Build query
     let query = {};
-    
+
     if (status) {
       query.status = status;
     }
-    
+
     if (category) {
       query.category = category;
     }
-    
+
     const complaints = await Complaint.find(query)
       .populate('student', 'firstName lastName email rollNo department')
       .populate('assignedTo', 'firstName lastName email role department')
@@ -233,17 +233,17 @@ const getAllComplaints = asyncHandler(async (req, res) => {
       .skip(skip)
       .limit(limit)
       .lean({ virtuals: true }); // Use lean() for read-only queries
-    
+
     // Filter by department if specified
     let filteredComplaints = complaints;
     if (department) {
-      filteredComplaints = complaints.filter(complaint => 
+      filteredComplaints = complaints.filter(complaint =>
         complaint.student && complaint.student.department === department
       );
     }
-    
+
     const total = await Complaint.countDocuments(query);
-    
+
     res.json({
       success: true,
       data: {
@@ -272,7 +272,7 @@ const getAllComplaints = asyncHandler(async (req, res) => {
 const createAdmin = asyncHandler(async (req, res) => {
   try {
     const { firstName, lastName, email, password, role, department } = req.body;
-    
+
     // Check if admin already exists
     const existingAdmin = await Admin.findOne({ email });
     if (existingAdmin) {
@@ -281,7 +281,7 @@ const createAdmin = asyncHandler(async (req, res) => {
         message: 'Admin with this email already exists'
       });
     }
-    
+
     // Create new admin
     const newAdmin = new Admin({
       firstName,
@@ -294,13 +294,13 @@ const createAdmin = asyncHandler(async (req, res) => {
       isEmailVerified: true,
       isActive: true
     });
-    
+
     await newAdmin.save();
-    
+
     // Remove password from response
     const adminResponse = newAdmin.toObject();
     delete adminResponse.password;
-    
+
     res.status(201).json({
       success: true,
       message: 'Admin created successfully',
@@ -322,7 +322,7 @@ const updateAdmin = asyncHandler(async (req, res) => {
   try {
     const { id } = req.params;
     const updates = req.body;
-    
+
     // Don't allow updating super admin
     const admin = await Admin.findById(id);
     if (!admin) {
@@ -331,21 +331,21 @@ const updateAdmin = asyncHandler(async (req, res) => {
         message: 'Admin not found'
       });
     }
-    
+
     if (admin.role === 'super_admin') {
       return res.status(403).json({
         success: false,
         message: 'Cannot modify super admin account'
       });
     }
-    
+
     // Update admin
     const updatedAdmin = await Admin.findByIdAndUpdate(
       id,
       updates,
       { new: true, runValidators: true }
     ).select('-password');
-    
+
     res.json({
       success: true,
       message: 'Admin updated successfully',
@@ -366,7 +366,7 @@ const updateAdmin = asyncHandler(async (req, res) => {
 const deleteAdmin = asyncHandler(async (req, res) => {
   try {
     const { id } = req.params;
-    
+
     // Don't allow deleting super admin
     const admin = await Admin.findById(id);
     if (!admin) {
@@ -375,16 +375,16 @@ const deleteAdmin = asyncHandler(async (req, res) => {
         message: 'Admin not found'
       });
     }
-    
+
     if (admin.role === 'super_admin') {
       return res.status(403).json({
         success: false,
         message: 'Cannot delete super admin account'
       });
     }
-    
+
     await Admin.findByIdAndDelete(id);
-    
+
     res.json({
       success: true,
       message: 'Admin deleted successfully'
@@ -425,7 +425,7 @@ const getSystemAnalytics = asyncHandler(async (req, res) => {
         $sort: { '_id.year': 1, '_id.month': 1 }
       }
     ]);
-    
+
     // Get resolution time analytics
     const resolutionTime = await Complaint.aggregate([
       {
@@ -450,7 +450,7 @@ const getSystemAnalytics = asyncHandler(async (req, res) => {
         }
       }
     ]);
-    
+
     // Get top performing departments
     const departmentPerformance = await Complaint.aggregate([
       {
@@ -490,7 +490,7 @@ const getSystemAnalytics = asyncHandler(async (req, res) => {
         $sort: { resolutionRate: -1 }
       }
     ]);
-    
+
     res.json({
       success: true,
       data: {
@@ -514,19 +514,19 @@ const getSystemAnalytics = asyncHandler(async (req, res) => {
 const createStudent = asyncHandler(async (req, res) => {
   try {
     const { firstName, lastName, email, libraryId, rollNo, department, year, password } = req.body;
-    
+
     // Check if student already exists
     const existingStudent = await Student.findOne({
       $or: [{ email }, { libraryId }, { rollNo }]
     });
-    
+
     if (existingStudent) {
       return res.status(400).json({
         success: false,
         message: 'Student with this email, library ID, or roll number already exists'
       });
     }
-    
+
     // Create new student
     const newStudent = await Student.create({
       firstName,
@@ -540,11 +540,11 @@ const createStudent = asyncHandler(async (req, res) => {
       isEmailVerified: true,
       isActive: true
     });
-    
+
     // Remove password from response
     const studentResponse = newStudent.toObject();
     delete studentResponse.password;
-    
+
     res.status(201).json({
       success: true,
       message: 'Student created successfully',
@@ -566,12 +566,12 @@ const updateStudent = asyncHandler(async (req, res) => {
   try {
     const { id } = req.params;
     const updates = req.body;
-    
+
     // Don't allow password update through this endpoint (use reset password endpoint)
     if (updates.password) {
       delete updates.password;
     }
-    
+
     const student = await Student.findById(id);
     if (!student) {
       return res.status(404).json({
@@ -579,14 +579,14 @@ const updateStudent = asyncHandler(async (req, res) => {
         message: 'Student not found'
       });
     }
-    
+
     // Check for duplicate email, libraryId, or rollNo if being updated
     if (updates.email || updates.libraryId || updates.rollNo) {
       const duplicateQuery = { _id: { $ne: id } };
       if (updates.email) duplicateQuery.email = updates.email;
       if (updates.libraryId) duplicateQuery.libraryId = updates.libraryId;
       if (updates.rollNo) duplicateQuery.rollNo = updates.rollNo;
-      
+
       const duplicate = await Student.findOne(duplicateQuery);
       if (duplicate) {
         return res.status(400).json({
@@ -595,14 +595,14 @@ const updateStudent = asyncHandler(async (req, res) => {
         });
       }
     }
-    
+
     // Update student
     const updatedStudent = await Student.findByIdAndUpdate(
       id,
       updates,
       { new: true, runValidators: true }
     ).select('-password');
-    
+
     res.json({
       success: true,
       message: 'Student updated successfully',
@@ -623,7 +623,7 @@ const updateStudent = asyncHandler(async (req, res) => {
 const deleteStudent = asyncHandler(async (req, res) => {
   try {
     const { id } = req.params;
-    
+
     const student = await Student.findById(id);
     if (!student) {
       return res.status(404).json({
@@ -631,9 +631,9 @@ const deleteStudent = asyncHandler(async (req, res) => {
         message: 'Student not found'
       });
     }
-    
+
     await Student.findByIdAndDelete(id);
-    
+
     res.json({
       success: true,
       message: 'Student deleted successfully'
@@ -654,14 +654,14 @@ const resetAdminPassword = asyncHandler(async (req, res) => {
   try {
     const { id } = req.params;
     const { newPassword } = req.body;
-    
+
     if (!newPassword || newPassword.length < 8) {
       return res.status(400).json({
         success: false,
         message: 'Password must be at least 8 characters long'
       });
     }
-    
+
     const admin = await Admin.findById(id);
     if (!admin) {
       return res.status(404).json({
@@ -669,27 +669,63 @@ const resetAdminPassword = asyncHandler(async (req, res) => {
         message: 'Admin not found'
       });
     }
-    
+
     if (admin.role === 'super_admin' && admin._id.toString() !== req.user._id.toString()) {
       return res.status(403).json({
         success: false,
         message: 'Cannot reset password for another super admin'
       });
     }
-    
+
     // Update password (will be hashed by pre-save middleware)
     admin.password = newPassword;
+    // Also unlock the account and reset failed attempts
+    admin.loginAttempts = 0;
+    admin.lockUntil = undefined;
     await admin.save();
-    
+
     res.json({
       success: true,
-      message: 'Admin password reset successfully'
+      message: 'Admin password reset and account unlocked successfully'
     });
   } catch (error) {
     console.error('Error resetting admin password:', error);
     res.status(500).json({
       success: false,
       message: 'Failed to reset admin password'
+    });
+  }
+});
+
+// @desc    Unlock admin account
+// @route   PUT /api/super-admin/admins/:id/unlock
+// @access  Private (Super Admin only)
+const unlockAdmin = asyncHandler(async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const admin = await Admin.findById(id);
+    if (!admin) {
+      return res.status(404).json({
+        success: false,
+        message: 'Admin not found'
+      });
+    }
+
+    // Unlock the account
+    admin.loginAttempts = 0;
+    admin.lockUntil = undefined;
+    await admin.save();
+
+    res.json({
+      success: true,
+      message: `Admin account (${admin.email}) unlocked successfully`
+    });
+  } catch (error) {
+    console.error('Error unlocking admin:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to unlock admin account'
     });
   }
 });
@@ -701,14 +737,14 @@ const resetStudentPassword = asyncHandler(async (req, res) => {
   try {
     const { id } = req.params;
     const { newPassword } = req.body;
-    
+
     if (!newPassword || newPassword.length < 8) {
       return res.status(400).json({
         success: false,
         message: 'Password must be at least 8 characters long'
       });
     }
-    
+
     const student = await Student.findById(id);
     if (!student) {
       return res.status(404).json({
@@ -716,11 +752,11 @@ const resetStudentPassword = asyncHandler(async (req, res) => {
         message: 'Student not found'
       });
     }
-    
+
     // Update password (will be hashed by pre-save middleware)
     student.password = newPassword;
     await student.save();
-    
+
     res.json({
       success: true,
       message: 'Student password reset successfully'
@@ -741,7 +777,7 @@ const updateComplaint = asyncHandler(async (req, res) => {
   try {
     const { id } = req.params;
     const updates = req.body;
-    
+
     const complaint = await Complaint.findById(id);
     if (!complaint) {
       return res.status(404).json({
@@ -749,7 +785,7 @@ const updateComplaint = asyncHandler(async (req, res) => {
         message: 'Complaint not found'
       });
     }
-    
+
     // Update complaint
     const updatedComplaint = await Complaint.findByIdAndUpdate(
       id,
@@ -758,7 +794,7 @@ const updateComplaint = asyncHandler(async (req, res) => {
     )
       .populate('student', 'firstName lastName email rollNo department')
       .populate('assignedTo', 'firstName lastName email role department');
-    
+
     res.json({
       success: true,
       message: 'Complaint updated successfully',
@@ -779,7 +815,7 @@ const updateComplaint = asyncHandler(async (req, res) => {
 const deleteComplaint = asyncHandler(async (req, res) => {
   try {
     const { id } = req.params;
-    
+
     const complaint = await Complaint.findById(id);
     if (!complaint) {
       return res.status(404).json({
@@ -787,9 +823,9 @@ const deleteComplaint = asyncHandler(async (req, res) => {
         message: 'Complaint not found'
       });
     }
-    
+
     await Complaint.findByIdAndDelete(id);
-    
+
     res.json({
       success: true,
       message: 'Complaint deleted successfully'
@@ -816,6 +852,7 @@ module.exports = {
   updateStudent,
   deleteStudent,
   resetAdminPassword,
+  unlockAdmin,
   resetStudentPassword,
   updateComplaint,
   deleteComplaint
