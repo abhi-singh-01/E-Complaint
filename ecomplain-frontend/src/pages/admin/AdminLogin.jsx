@@ -76,7 +76,7 @@ export default function AdminLogin() {
     if (form.role && form.role !== 'super_admin' && !externalRoles.includes(form.role) && !form.department) {
       newErrors.department = 'Please select your department'
     }
-    
+
     // Auto-set department for external roles (capitalized)
     if (form.role === 'accounts') {
       form.department = 'Accounts';
@@ -92,12 +92,12 @@ export default function AdminLogin() {
 
   const handleInputChange = (field) => (e) => {
     const value = e.target.value
-    
+
     // Clear error when user starts typing
     if (errors[field]) {
       setErrors({ ...errors, [field]: '' })
     }
-    
+
     // If role changes to super_admin or external department, handle department
     if (field === 'role') {
       let departmentValue = form.department
@@ -126,13 +126,13 @@ export default function AdminLogin() {
 
     // Debug: Log form data before validation
     console.log('Form data before validation:', form)
-    
+
     if (!validateForm()) {
       console.log('Validation failed. Errors:', errors)
       setError('Please fix the errors below')
       return
     }
-    
+
     console.log('Validation passed. Proceeding with login...')
 
     // Ensure role is set
@@ -146,7 +146,7 @@ export default function AdminLogin() {
     try {
       // For external departments, send the actual role and capitalized department
       const isExternalRole = ['accounts', 'librarian', 'maintenance'].includes(form.role)
-      const departmentValue = isExternalRole 
+      const departmentValue = isExternalRole
         ? form.role.charAt(0).toUpperCase() + form.role.slice(1) // Capitalize: 'Accounts', 'Librarian', 'Maintenance'
         : (form.department || '')
 
@@ -172,21 +172,21 @@ export default function AdminLogin() {
       console.log('Form state:', form)
 
       const { data } = await api.post('/api/auth/admin/login', loginData)
-      
+
       // Clear all cached data before setting new auth credentials
       clearApiCache()
-      
+
       setToken(data.token)
       setUser(data.admin)
       setSuccess('Login successful! Redirecting...')
-      
+
       // Navigate immediately after clearing cache and setting credentials
       // The dashboard will load fresh data without cache interference
       nav('/admin/dashboard')
     } catch (err) {
       console.error('Login error:', err)
       console.error('Error response:', err.response?.data)
-      
+
       if (err.response?.data?.errors) {
         // Handle validation errors
         const validationErrors = err.response.data.errors
@@ -207,10 +207,10 @@ export default function AdminLogin() {
   return (
     <>
       <AdminLoginNavbar />
-      <Box 
-        sx={{ 
+      <Box
+        sx={{
           minHeight: '100vh',
-          background: isDarkMode 
+          background: isDarkMode
             ? 'linear-gradient(135deg, #0d1117 0%, #161b22 100%)'
             : 'linear-gradient(135deg, #2c3e50 0%, #34495e 100%)',
           py: 4,
@@ -218,371 +218,387 @@ export default function AdminLogin() {
         }}
       >
         <Container maxWidth="sm">
-        <Box sx={{ display: 'flex', justifyContent: 'center', mb: 4 }}>
-          <Typography 
-            variant="h4" 
-            component="h1" 
-            sx={{ 
-              color: isDarkMode ? '#ffffff' : 'white',
-              fontWeight: 'bold',
-              textAlign: 'center'
+          <Box sx={{ display: 'flex', justifyContent: 'center', mb: { xs: 2, sm: 3, md: 4 } }}>
+            <Typography
+              variant="h4"
+              component="h1"
+              sx={{
+                color: isDarkMode ? '#ffffff' : 'white',
+                fontWeight: 'bold',
+                textAlign: 'center',
+                fontSize: { xs: '1.5rem', sm: '1.75rem', md: '2.125rem' }
+              }}
+            >
+              Admin Portal
+            </Typography>
+          </Box>
+
+          <Card
+            elevation={10}
+            sx={{
+              borderRadius: 3,
+              overflow: 'hidden',
+              boxShadow: isDarkMode
+                ? '0 20px 40px rgba(0,0,0,0.3)'
+                : '0 20px 40px rgba(0,0,0,0.1)',
+              backgroundColor: isDarkMode ? '#1e1e1e' : '#ffffff',
+              border: isDarkMode ? '1px solid #333' : 'none'
             }}
           >
-            Admin
-          </Typography>
-        </Box>
-
-        <Card 
-          elevation={10}
-          sx={{ 
-            borderRadius: 3,
-            overflow: 'hidden',
-            boxShadow: isDarkMode 
-              ? '0 20px 40px rgba(0,0,0,0.3)'
-              : '0 20px 40px rgba(0,0,0,0.1)',
-            backgroundColor: isDarkMode ? '#1e1e1e' : '#ffffff',
-            border: isDarkMode ? '1px solid #333' : 'none'
-          }}
-        >
-          <CardContent sx={{ p: 4 }}>
-            <Box sx={{ textAlign: 'center', mb: 4 }}>
-              <Box sx={{ 
-                display: 'flex', 
-                justifyContent: 'center', 
-                mb: 2 
-              }}>
-                <AdminPanelSettings sx={{ 
-                  fontSize: 48, 
-                  color: isDarkMode ? '#1976d2' : '#2c3e50' 
-                }} />
+            <CardContent sx={{ p: { xs: 2, sm: 3, md: 4 } }}>
+              <Box sx={{ textAlign: 'center', mb: { xs: 2, sm: 3, md: 4 } }}>
+                <Box sx={{
+                  display: 'flex',
+                  justifyContent: 'center',
+                  mb: { xs: 1, sm: 2 }
+                }}>
+                  <AdminPanelSettings sx={{
+                    fontSize: { xs: 40, sm: 44, md: 48 },
+                    color: isDarkMode ? '#1976d2' : '#2c3e50'
+                  }} />
+                </Box>
+                <Typography variant="h5" component="h2" gutterBottom sx={{
+                  fontWeight: 'bold',
+                  color: isDarkMode ? '#ffffff' : '#2c3e50',
+                  fontSize: { xs: '1.15rem', sm: '1.35rem', md: '1.5rem' }
+                }}>
+                  Administrative Access
+                </Typography>
+                <Typography variant="body2" sx={{
+                  color: isDarkMode ? '#94a3b8' : 'text.secondary',
+                  fontSize: { xs: '0.8rem', sm: '0.875rem' }
+                }}>
+                  Sign in to manage complaints and oversee operations
+                </Typography>
               </Box>
-              <Typography variant="h5" component="h2" gutterBottom sx={{ 
-                fontWeight: 'bold', 
-                color: isDarkMode ? '#ffffff' : '#2c3e50' 
-              }}>
-                Administrative Access
-              </Typography>
-              <Typography variant="body2" color="text.secondary">
-                Sign in to manage complaints and oversee department operations
-              </Typography>
-            </Box>
 
-            {error && (
-              <Alert severity="error" sx={{ mb: 3 }}>
-                {error}
-              </Alert>
-            )}
+              {error && (
+                <Alert severity="error" sx={{ mb: 3 }}>
+                  {error}
+                </Alert>
+              )}
 
-            {success && (
-              <Alert severity="success" sx={{ mb: 3 }}>
-                {success}
-              </Alert>
-            )}
+              {success && (
+                <Alert severity="success" sx={{ mb: 3 }}>
+                  {success}
+                </Alert>
+              )}
 
-            <Box component="form" onSubmit={submit} noValidate>
-              <FormControl fullWidth sx={{ mb: 3 }}>
-                <InputLabel>Select Your Role</InputLabel>
-                <Select
-                  value={form.role}
-                  label="Select Your Role"
-                  onChange={handleInputChange('role')}
-                  error={!!errors.role}
-                >
-                  <MenuItem value="coordinator">
-                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                      <SupervisorAccount color="primary" />
-                      <Box>
-                        <Typography variant="body1">Coordinator</Typography>
-                        <Typography variant="caption" color="text.secondary">
-                          Intake level - Verify, resolve or forward complaints
-                        </Typography>
-                      </Box>
-                    </Box>
-                  </MenuItem>
-                  <MenuItem value="additional_hod">
-                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                      <SupervisorAccount color="primary" />
-                      <Box>
-                        <Typography variant="body1">Additional HOD</Typography>
-                        <Typography variant="caption" color="text.secondary">
-                          First level - Review and resolve complaints
-                        </Typography>
-                      </Box>
-                    </Box>
-                  </MenuItem>
-                  <MenuItem value="dean">
-                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                      <AdminPanelSettings color="primary" />
-                      <Box>
-                        <Typography variant="body1">Dean</Typography>
-                        <Typography variant="caption" color="text.secondary">
-                          Final authority - Escalated complaints and reports
-                        </Typography>
-                      </Box>
-                    </Box>
-                  </MenuItem>
-                  <MenuItem value="super_admin">
-                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                      <AdminPanelSettings color="error" />
-                      <Box>
-                        <Typography variant="body1">Super Administrator</Typography>
-                        <Typography variant="caption" color="text.secondary">
-                          System-wide access and management
-                        </Typography>
-                      </Box>
-                    </Box>
-                  </MenuItem>
-                  <MenuItem value="accounts">
-                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                      <AdminPanelSettings color="info" />
-                      <Box>
-                        <Typography variant="body1">Accounts Department</Typography>
-                        <Typography variant="caption" color="text.secondary">
-                          Handle fee-related complaints
-                        </Typography>
-                      </Box>
-                    </Box>
-                  </MenuItem>
-                  <MenuItem value="librarian">
-                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                      <AdminPanelSettings color="info" />
-                      <Box>
-                        <Typography variant="body1">Librarian</Typography>
-                        <Typography variant="caption" color="text.secondary">
-                          Handle library-related complaints
-                        </Typography>
-                      </Box>
-                    </Box>
-                  </MenuItem>
-                  <MenuItem value="maintenance">
-                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                      <AdminPanelSettings color="info" />
-                      <Box>
-                        <Typography variant="body1">Maintenance Department</Typography>
-                        <Typography variant="caption" color="text.secondary">
-                          Handle infrastructure complaints
-                        </Typography>
-                      </Box>
-                    </Box>
-                  </MenuItem>
-                </Select>
-                {errors.role && (
-                  <Typography variant="caption" color="error" sx={{ mt: 1, ml: 2 }}>
-                    {errors.role}
-                  </Typography>
-                )}
-              </FormControl>
-
-              {/* Department Selection - Only show for non-super admin and non-external department roles */}
-              {form.role !== 'super_admin' && form.role !== 'accounts' && form.role !== 'librarian' && form.role !== 'maintenance' && (
-                <FormControl fullWidth sx={{ mb: 3 }}>
-                  <InputLabel>Select Department</InputLabel>
+              <Box component="form" onSubmit={submit} noValidate>
+                <FormControl fullWidth sx={{ mb: { xs: 2, sm: 2.5, md: 3 } }}>
+                  <InputLabel sx={{ fontSize: { xs: '0.875rem', sm: '1rem' } }}>Select Your Role</InputLabel>
                   <Select
-                    value={form.department}
-                    label="Select Department"
-                    onChange={handleInputChange('department')}
-                    error={!!errors.department}
+                    value={form.role}
+                    label="Select Your Role"
+                    onChange={handleInputChange('role')}
+                    error={!!errors.role}
                   >
-                    <MenuItem value="MCA">MCA</MenuItem>
-                    <MenuItem value="MBA">MBA</MenuItem>
-                    <MenuItem value="CSE">CSE</MenuItem>
-                    <MenuItem value="Electronics">Electronics</MenuItem>
-                    <MenuItem value="Mechanical">Mechanical</MenuItem>
-                    <MenuItem value="Civil">Civil</MenuItem>
-                    <MenuItem value="Electrical">Electrical</MenuItem>
-                    <MenuItem value="General">General</MenuItem>
+                    <MenuItem value="coordinator">
+                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                        <SupervisorAccount color="primary" />
+                        <Box>
+                          <Typography variant="body1">Coordinator</Typography>
+                          <Typography variant="caption" color="text.secondary">
+                            Intake level - Verify, resolve or forward complaints
+                          </Typography>
+                        </Box>
+                      </Box>
+                    </MenuItem>
+                    <MenuItem value="additional_hod">
+                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                        <SupervisorAccount color="primary" />
+                        <Box>
+                          <Typography variant="body1">Additional HOD</Typography>
+                          <Typography variant="caption" color="text.secondary">
+                            First level - Review and resolve complaints
+                          </Typography>
+                        </Box>
+                      </Box>
+                    </MenuItem>
+                    <MenuItem value="dean">
+                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                        <AdminPanelSettings color="primary" />
+                        <Box>
+                          <Typography variant="body1">Dean</Typography>
+                          <Typography variant="caption" color="text.secondary">
+                            Final authority - Escalated complaints and reports
+                          </Typography>
+                        </Box>
+                      </Box>
+                    </MenuItem>
+                    <MenuItem value="super_admin">
+                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                        <AdminPanelSettings color="error" />
+                        <Box>
+                          <Typography variant="body1">Super Administrator</Typography>
+                          <Typography variant="caption" color="text.secondary">
+                            System-wide access and management
+                          </Typography>
+                        </Box>
+                      </Box>
+                    </MenuItem>
+                    <MenuItem value="accounts">
+                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                        <AdminPanelSettings color="info" />
+                        <Box>
+                          <Typography variant="body1">Accounts Department</Typography>
+                          <Typography variant="caption" color="text.secondary">
+                            Handle fee-related complaints
+                          </Typography>
+                        </Box>
+                      </Box>
+                    </MenuItem>
+                    <MenuItem value="librarian">
+                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                        <AdminPanelSettings color="info" />
+                        <Box>
+                          <Typography variant="body1">Librarian</Typography>
+                          <Typography variant="caption" color="text.secondary">
+                            Handle library-related complaints
+                          </Typography>
+                        </Box>
+                      </Box>
+                    </MenuItem>
+                    <MenuItem value="maintenance">
+                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                        <AdminPanelSettings color="info" />
+                        <Box>
+                          <Typography variant="body1">Maintenance Department</Typography>
+                          <Typography variant="caption" color="text.secondary">
+                            Handle infrastructure complaints
+                          </Typography>
+                        </Box>
+                      </Box>
+                    </MenuItem>
                   </Select>
-                  {errors.department && (
+                  {errors.role && (
                     <Typography variant="caption" color="error" sx={{ mt: 1, ml: 2 }}>
-                      {errors.department}
+                      {errors.role}
                     </Typography>
                   )}
                 </FormControl>
-              )}
-              {/* Auto-set department for external departments */}
-              {form.role === 'accounts' && (
-                <FormControl fullWidth sx={{ mb: 3 }}>
-                  <InputLabel>Department</InputLabel>
-                  <Select
-                    value="Accounts"
-                    label="Department"
-                    disabled
-                  >
-                    <MenuItem value="Accounts">Accounts</MenuItem>
-                  </Select>
-                </FormControl>
-              )}
-              {form.role === 'librarian' && (
-                <FormControl fullWidth sx={{ mb: 3 }}>
-                  <InputLabel>Department</InputLabel>
-                  <Select
-                    value="Librarian"
-                    label="Department"
-                    disabled
-                  >
-                    <MenuItem value="Librarian">Librarian</MenuItem>
-                  </Select>
-                </FormControl>
-              )}
-              {form.role === 'maintenance' && (
-                <FormControl fullWidth sx={{ mb: 3 }}>
-                  <InputLabel>Department</InputLabel>
-                  <Select
-                    value="Maintenance"
-                    label="Department"
-                    disabled
-                  >
-                    <MenuItem value="Maintenance">Maintenance</MenuItem>
-                  </Select>
-                </FormControl>
-              )}
 
-              <TextField
-                fullWidth
-                label="Admin Email"
-                type="email"
-                value={form.email}
-                onChange={handleInputChange('email')}
-                error={!!errors.email}
-                helperText={errors.email || "Enter your administrative email address"}
-                required
-                sx={{ mb: 3 }}
-                InputProps={{
-                  startAdornment: (
-                    <InputAdornment position="start">
-                      <Email color="primary" />
-                    </InputAdornment>
-                  ),
-                }}
-              />
+                {/* Department Selection - Only show for non-super admin and non-external department roles */}
+                {form.role !== 'super_admin' && form.role !== 'accounts' && form.role !== 'librarian' && form.role !== 'maintenance' && (
+                  <FormControl fullWidth sx={{ mb: { xs: 2, sm: 2.5, md: 3 } }}>
+                    <InputLabel sx={{ fontSize: { xs: '0.875rem', sm: '1rem' } }}>Select Department</InputLabel>
+                    <Select
+                      value={form.department}
+                      label="Select Department"
+                      onChange={handleInputChange('department')}
+                      error={!!errors.department}
+                    >
+                      <MenuItem value="MCA">MCA</MenuItem>
+                      <MenuItem value="MBA">MBA</MenuItem>
+                      <MenuItem value="CSE">CSE</MenuItem>
+                      <MenuItem value="Electronics">Electronics</MenuItem>
+                      <MenuItem value="Mechanical">Mechanical</MenuItem>
+                      <MenuItem value="Civil">Civil</MenuItem>
+                      <MenuItem value="Electrical">Electrical</MenuItem>
+                      <MenuItem value="General">General</MenuItem>
+                    </Select>
+                    {errors.department && (
+                      <Typography variant="caption" color="error" sx={{ mt: 1, ml: 2 }}>
+                        {errors.department}
+                      </Typography>
+                    )}
+                  </FormControl>
+                )}
+                {/* Auto-set department for external departments */}
+                {form.role === 'accounts' && (
+                  <FormControl fullWidth sx={{ mb: 3 }}>
+                    <InputLabel>Department</InputLabel>
+                    <Select
+                      value="Accounts"
+                      label="Department"
+                      disabled
+                    >
+                      <MenuItem value="Accounts">Accounts</MenuItem>
+                    </Select>
+                  </FormControl>
+                )}
+                {form.role === 'librarian' && (
+                  <FormControl fullWidth sx={{ mb: 3 }}>
+                    <InputLabel>Department</InputLabel>
+                    <Select
+                      value="Librarian"
+                      label="Department"
+                      disabled
+                    >
+                      <MenuItem value="Librarian">Librarian</MenuItem>
+                    </Select>
+                  </FormControl>
+                )}
+                {form.role === 'maintenance' && (
+                  <FormControl fullWidth sx={{ mb: 3 }}>
+                    <InputLabel>Department</InputLabel>
+                    <Select
+                      value="Maintenance"
+                      label="Department"
+                      disabled
+                    >
+                      <MenuItem value="Maintenance">Maintenance</MenuItem>
+                    </Select>
+                  </FormControl>
+                )}
 
-              <TextField
-                fullWidth
-                label="Password"
-                type={showPassword ? 'text' : 'password'}
-                value={form.password}
-                onChange={handleInputChange('password')}
-                error={!!errors.password}
-                helperText={errors.password}
-                required
-                sx={{ mb: 3 }}
-                InputProps={{
-                  startAdornment: (
-                    <InputAdornment position="start">
-                      <Lock color="primary" />
-                    </InputAdornment>
-                  ),
-                  endAdornment: (
-                    <InputAdornment position="end">
-                      <IconButton
-                        onClick={() => setShowPassword(!showPassword)}
-                        edge="end"
-                      >
-                        {showPassword ? <VisibilityOff /> : <Visibility />}
-                      </IconButton>
-                    </InputAdornment>
-                  ),
-                }}
-              />
+                <TextField
+                  fullWidth
+                  label="Admin Email"
+                  type="email"
+                  value={form.email}
+                  onChange={handleInputChange('email')}
+                  error={!!errors.email}
+                  helperText={errors.email || "Enter your administrative email address"}
+                  required
+                  sx={{ mb: { xs: 2, sm: 2.5, md: 3 } }}
+                  InputProps={{
+                    startAdornment: (
+                      <InputAdornment position="start">
+                        <Email color="primary" />
+                      </InputAdornment>
+                    ),
+                  }}
+                />
 
-              <Button
-                type="submit"
-                variant="contained"
-                size="large"
-                fullWidth
-                disabled={loading}
+                <TextField
+                  fullWidth
+                  label="Password"
+                  type={showPassword ? 'text' : 'password'}
+                  value={form.password}
+                  onChange={handleInputChange('password')}
+                  error={!!errors.password}
+                  helperText={errors.password}
+                  required
+                  sx={{ mb: { xs: 2, sm: 2.5, md: 3 } }}
+                  InputProps={{
+                    startAdornment: (
+                      <InputAdornment position="start">
+                        <Lock color="primary" />
+                      </InputAdornment>
+                    ),
+                    endAdornment: (
+                      <InputAdornment position="end">
+                        <IconButton
+                          onClick={() => setShowPassword(!showPassword)}
+                          edge="end"
+                        >
+                          {showPassword ? <VisibilityOff /> : <Visibility />}
+                        </IconButton>
+                      </InputAdornment>
+                    ),
+                  }}
+                />
+
+                <Button
+                  type="submit"
+                  variant="contained"
+                  size="large"
+                  fullWidth
+                  disabled={loading}
+                  sx={{
+                    py: { xs: 1.25, sm: 1.5 },
+                    fontSize: { xs: '0.95rem', sm: '1rem', md: '1.1rem' },
+                    fontWeight: 'bold',
+                    background: isDarkMode
+                      ? 'linear-gradient(45deg, #1976d2 30%, #1565c0 90%)'
+                      : 'linear-gradient(45deg, #2c3e50 30%, #34495e 90%)',
+                    '&:hover': {
+                      background: isDarkMode
+                        ? 'linear-gradient(45deg, #1565c0 30%, #0d47a1 90%)'
+                        : 'linear-gradient(45deg, #1a252f 30%, #2c3e50 90%)',
+                      transform: 'translateY(-2px)',
+                      boxShadow: isDarkMode
+                        ? '0 8px 25px rgba(25, 118, 210, 0.3)'
+                        : '0 8px 25px rgba(44, 62, 80, 0.3)'
+                    },
+                    transition: 'all 0.3s ease',
+                    mb: { xs: 2, sm: 2.5, md: 3 }
+                  }}
+                  startIcon={<LoginIcon />}
+                >
+                  {loading ? 'Signing In...' : 'Sign In'}
+                </Button>
+
+
+                <Box sx={{ textAlign: 'center' }}>
+                  <Typography variant="body2" sx={{
+                    color: isDarkMode ? '#94a3b8' : 'text.secondary',
+                    mb: { xs: 1.5, sm: 2 },
+                    fontSize: { xs: '0.8rem', sm: '0.875rem' }
+                  }}>
+                    Need access? Contact system administrator
+                  </Typography>
+
+                  {/* Default Credentials Info */}
+                  <Box sx={{
+                    p: { xs: 1.5, sm: 2 },
+                    backgroundColor: isDarkMode ? 'rgba(25, 118, 210, 0.1)' : 'rgba(25, 118, 210, 0.05)',
+                    borderRadius: 2,
+                    border: isDarkMode ? '1px solid rgba(25, 118, 210, 0.2)' : '1px solid rgba(25, 118, 210, 0.1)'
+                  }}>
+                    <Typography variant="caption" sx={{
+                      color: isDarkMode ? '#94a3b8' : 'text.secondary',
+                      fontWeight: 'bold',
+                      display: 'block',
+                      mb: 1,
+                      fontSize: { xs: '0.7rem', sm: '0.75rem' }
+                    }}>
+                      Default Credentials (Change after first login):
+                    </Typography>
+                    {/* Only show credentials for department roles, not external departments */}
+                    {form.role !== 'accounts' && form.role !== 'librarian' && form.role !== 'maintenance' && form.role !== 'super_admin' && form.department && (
+                      <>
+                        <Typography variant="caption" color="text.secondary" sx={{ display: 'block' }}>
+                          Coordinator: {form.department ? `${form.department.toLowerCase()}.coordinator@university.edu` : 'dept.coordinator@university.edu'} / {form.department ? `${form.department.toLowerCase()}123456` : 'dept123456'}
+                        </Typography>
+                        <Typography variant="caption" color="text.secondary" sx={{ display: 'block' }}>
+                          Additional HOD: {form.department ? `${form.department.toLowerCase()}.additional@university.edu` : 'dept.additional@university.edu'} / {form.department ? `${form.department.toLowerCase()}123456` : 'dept123456'}
+                        </Typography>
+                        <Typography variant="caption" color="text.secondary" sx={{ display: 'block' }}>
+                          Dean: {form.department ? `${form.department.toLowerCase()}.dean@university.edu` : 'dept.dean@university.edu'} / {form.department ? `${form.department.toLowerCase()}123456` : 'dept123456'}
+                        </Typography>
+                      </>
+                    )}
+                    {/* Show message for external departments */}
+                    {(form.role === 'accounts' || form.role === 'librarian' || form.role === 'maintenance') && (
+                      <Typography variant="caption" color="text.secondary" sx={{ display: 'block', fontStyle: 'italic' }}>
+                        External departments have a single login account. Contact Super Admin to create your account.
+                      </Typography>
+                    )}
+                    {/* Show message for super admin */}
+                    {form.role === 'super_admin' && (
+                      <Typography variant="caption" color="text.secondary" sx={{ display: 'block' }}>
+                        Super Admin: superadmin@university.edu / superadmin123456
+                      </Typography>
+                    )}
+                  </Box>
+                </Box>
+              </Box>
+            </CardContent>
+          </Card>
+
+          {/* Additional Info */}
+          <Box sx={{ mt: { xs: 2, sm: 3, md: 4 }, textAlign: 'center', px: { xs: 1, sm: 0 } }}>
+            <Typography variant="body2" sx={{
+              color: isDarkMode ? '#ffffff' : 'white',
+              opacity: 0.8,
+              fontSize: { xs: '0.75rem', sm: '0.85rem', md: '0.875rem' }
+            }}>
+              Administrative access is by invitation only. Contact{' '}
+              <Link
+                href="mailto:admin@ecomplaint.edu"
                 sx={{
-                  py: 1.5,
-                  fontSize: '1.1rem',
-                  fontWeight: 'bold',
-                  background: isDarkMode 
-                    ? 'linear-gradient(45deg, #1976d2 30%, #1565c0 90%)'
-                    : 'linear-gradient(45deg, #2c3e50 30%, #34495e 90%)',
-                  '&:hover': {
-                    background: isDarkMode 
-                      ? 'linear-gradient(45deg, #1565c0 30%, #0d47a1 90%)'
-                      : 'linear-gradient(45deg, #1a252f 30%, #2c3e50 90%)',
-                    transform: 'translateY(-2px)',
-                    boxShadow: isDarkMode 
-                      ? '0 8px 25px rgba(25, 118, 210, 0.3)'
-                      : '0 8px 25px rgba(44, 62, 80, 0.3)'
-                  },
-                  transition: 'all 0.3s ease',
-                  mb: 3
+                  color: isDarkMode ? '#ffffff' : 'white',
+                  textDecoration: 'underline',
+                  '&:hover': { opacity: 0.7 }
                 }}
-                startIcon={<LoginIcon />}
               >
-                {loading ? 'Signing In...' : 'Sign In'}
-              </Button>
-
-
-              <Box sx={{ textAlign: 'center' }}>
-                <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-                  Need access? Contact system administrator
-                </Typography>
-                
-              {/* Default Credentials Info */}
-              <Box sx={{ 
-                p: 2, 
-                backgroundColor: 'rgba(25, 118, 210, 0.05)', 
-                borderRadius: 2,
-                border: '1px solid rgba(25, 118, 210, 0.1)'
-              }}>
-                <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 'bold', display: 'block', mb: 1 }}>
-                  Default Credentials (Change after first login):
-                </Typography>
-                {/* Only show credentials for department roles, not external departments */}
-                {form.role !== 'accounts' && form.role !== 'librarian' && form.role !== 'maintenance' && form.role !== 'super_admin' && form.department && (
-                  <>
-                    <Typography variant="caption" color="text.secondary" sx={{ display: 'block' }}>
-                      Coordinator: {form.department ? `${form.department.toLowerCase()}.coordinator@university.edu` : 'dept.coordinator@university.edu'} / {form.department ? `${form.department.toLowerCase()}123456` : 'dept123456'}
-                    </Typography>
-                    <Typography variant="caption" color="text.secondary" sx={{ display: 'block' }}>
-                      Additional HOD: {form.department ? `${form.department.toLowerCase()}.additional@university.edu` : 'dept.additional@university.edu'} / {form.department ? `${form.department.toLowerCase()}123456` : 'dept123456'}
-                    </Typography>
-                    <Typography variant="caption" color="text.secondary" sx={{ display: 'block' }}>
-                      Dean: {form.department ? `${form.department.toLowerCase()}.dean@university.edu` : 'dept.dean@university.edu'} / {form.department ? `${form.department.toLowerCase()}123456` : 'dept123456'}
-                    </Typography>
-                  </>
-                )}
-                {/* Show message for external departments */}
-                {(form.role === 'accounts' || form.role === 'librarian' || form.role === 'maintenance') && (
-                  <Typography variant="caption" color="text.secondary" sx={{ display: 'block', fontStyle: 'italic' }}>
-                    External departments have a single login account. Contact Super Admin to create your account.
-                  </Typography>
-                )}
-                {/* Show message for super admin */}
-                {form.role === 'super_admin' && (
-                  <Typography variant="caption" color="text.secondary" sx={{ display: 'block' }}>
-                    Super Admin: superadmin@university.edu / superadmin123456
-                  </Typography>
-                )}
-              </Box>
-              </Box>
-            </Box>
-          </CardContent>
-        </Card>
-
-        {/* Additional Info */}
-        <Box sx={{ mt: 4, textAlign: 'center' }}>
-          <Typography variant="body2" sx={{ 
-            color: isDarkMode ? '#ffffff' : 'white', 
-            opacity: 0.8 
-          }}>
-            Administrative access is by invitation only. Contact{' '}
-            <Link 
-              href="mailto:admin@ecomplaint.edu" 
-              sx={{ 
-                color: isDarkMode ? '#ffffff' : 'white', 
-                textDecoration: 'underline',
-                '&:hover': { opacity: 0.7 }
-              }}
-            >
-              admin@ecomplaint.edu
-            </Link>
-            {' '}for access requests.
-          </Typography>
-        </Box>
+                admin@ecomplaint.edu
+              </Link>
+              {' '}for access requests.
+            </Typography>
+          </Box>
         </Container>
       </Box>
     </>

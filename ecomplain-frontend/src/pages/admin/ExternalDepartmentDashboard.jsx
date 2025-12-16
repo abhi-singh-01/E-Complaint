@@ -305,38 +305,83 @@ export default function ExternalDepartmentDashboard() {
         )}
 
         {/* Statistics Cards */}
-        <Grid container spacing={3} sx={{ mb: 4 }}>
-          <Grid item xs={12} sm={6} md={3}>
-            <Card>
-              <CardContent>
-                <Typography variant="h4" sx={{ fontWeight: 'bold', color: 'primary.main' }}>
+        <Grid container spacing={{ xs: 2, sm: 3 }} sx={{ mb: 4 }}>
+          <Grid item xs={6} sm={6} md={4}>
+            <Card sx={{
+              borderRadius: { xs: '12px', md: '16px' },
+              boxShadow: isDarkMode
+                ? '0 4px 20px rgba(0, 0, 0, 0.4)'
+                : '0 4px 12px rgba(0, 0, 0, 0.1)',
+              bgcolor: isDarkMode ? 'rgba(30, 41, 59, 0.8)' : '#ffffff',
+              border: isDarkMode ? '1px solid rgba(255,255,255,0.1)' : 'none',
+              transition: 'all 0.3s ease',
+              minHeight: { xs: '120px', sm: '140px', md: '150px' },
+              '&:hover': {
+                transform: 'translateY(-4px)',
+                boxShadow: isDarkMode
+                  ? '0 8px 30px rgba(25, 118, 210, 0.3)'
+                  : '0 8px 25px rgba(0, 0, 0, 0.15)'
+              }
+            }}>
+              <CardContent sx={{ textAlign: 'center', p: { xs: 2, sm: 2.5 } }}>
+                <Typography variant="h4" sx={{ fontWeight: 'bold', color: isDarkMode ? '#60a5fa' : 'primary.main', fontSize: { xs: '1.75rem', sm: '2rem', md: '2.25rem' } }}>
                   {stats.total}
                 </Typography>
-                <Typography variant="body2" color="text.secondary">
+                <Typography variant="body2" sx={{ color: isDarkMode ? '#94a3b8' : 'text.secondary', fontSize: { xs: '0.75rem', sm: '0.875rem' }, fontWeight: 600 }}>
                   Total Complaints
                 </Typography>
               </CardContent>
             </Card>
           </Grid>
-          <Grid item xs={12} sm={6} md={3}>
-            <Card>
-              <CardContent>
-                <Typography variant="h4" sx={{ fontWeight: 'bold', color: 'info.main' }}>
+          <Grid item xs={6} sm={6} md={4}>
+            <Card sx={{
+              borderRadius: { xs: '12px', md: '16px' },
+              boxShadow: isDarkMode
+                ? '0 4px 20px rgba(0, 0, 0, 0.4)'
+                : '0 4px 12px rgba(0, 0, 0, 0.1)',
+              bgcolor: isDarkMode ? 'rgba(30, 41, 59, 0.8)' : '#ffffff',
+              border: isDarkMode ? '1px solid rgba(255,255,255,0.1)' : 'none',
+              transition: 'all 0.3s ease',
+              minHeight: { xs: '120px', sm: '140px', md: '150px' },
+              '&:hover': {
+                transform: 'translateY(-4px)',
+                boxShadow: isDarkMode
+                  ? '0 8px 30px rgba(0, 172, 193, 0.3)'
+                  : '0 8px 25px rgba(0, 0, 0, 0.15)'
+              }
+            }}>
+              <CardContent sx={{ textAlign: 'center', p: { xs: 2, sm: 2.5 } }}>
+                <Typography variant="h4" sx={{ fontWeight: 'bold', color: isDarkMode ? '#22d3d1' : 'info.main', fontSize: { xs: '1.75rem', sm: '2rem', md: '2.25rem' } }}>
                   {stats.inProgress}
                 </Typography>
-                <Typography variant="body2" color="text.secondary">
+                <Typography variant="body2" sx={{ color: isDarkMode ? '#94a3b8' : 'text.secondary', fontSize: { xs: '0.75rem', sm: '0.875rem' }, fontWeight: 600 }}>
                   In Progress
                 </Typography>
               </CardContent>
             </Card>
           </Grid>
-          <Grid item xs={12} sm={6} md={3}>
-            <Card>
-              <CardContent>
-                <Typography variant="h4" sx={{ fontWeight: 'bold', color: 'success.main' }}>
+          <Grid item xs={6} sm={6} md={4}>
+            <Card sx={{
+              borderRadius: { xs: '12px', md: '16px' },
+              boxShadow: isDarkMode
+                ? '0 4px 20px rgba(0, 0, 0, 0.4)'
+                : '0 4px 12px rgba(0, 0, 0, 0.1)',
+              bgcolor: isDarkMode ? 'rgba(30, 41, 59, 0.8)' : '#ffffff',
+              border: isDarkMode ? '1px solid rgba(255,255,255,0.1)' : 'none',
+              transition: 'all 0.3s ease',
+              minHeight: { xs: '120px', sm: '140px', md: '150px' },
+              '&:hover': {
+                transform: 'translateY(-4px)',
+                boxShadow: isDarkMode
+                  ? '0 8px 30px rgba(34, 197, 94, 0.3)'
+                  : '0 8px 25px rgba(0, 0, 0, 0.15)'
+              }
+            }}>
+              <CardContent sx={{ textAlign: 'center', p: { xs: 2, sm: 2.5 } }}>
+                <Typography variant="h4" sx={{ fontWeight: 'bold', color: isDarkMode ? '#22c55e' : 'success.main', fontSize: { xs: '1.75rem', sm: '2rem', md: '2.25rem' } }}>
                   {stats.resolved}
                 </Typography>
-                <Typography variant="body2" color="text.secondary">
+                <Typography variant="body2" sx={{ color: isDarkMode ? '#94a3b8' : 'text.secondary', fontSize: { xs: '0.75rem', sm: '0.875rem' }, fontWeight: 600 }}>
                   Resolved
                 </Typography>
               </CardContent>

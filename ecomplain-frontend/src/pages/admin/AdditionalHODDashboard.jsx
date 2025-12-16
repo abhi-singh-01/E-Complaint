@@ -544,21 +544,30 @@ export default function AdditionalHODDashboard() {
         )}
 
         {/* Statistics Cards */}
-        <Grid container spacing={2} sx={{ mb: 4 }}>
-          <Grid item xs={12} sm={6} md={2.4} sx={{ display: 'flex', minHeight: 0 }}>
+        <Grid container spacing={{ xs: 1.5, sm: 2, md: 3 }} sx={{ mb: 4 }}>
+          <Grid item xs={6} sm={6} md={2.4} sx={{ display: 'flex' }}>
             <Card sx={{
-              borderRadius: '16px',
-              boxShadow: '0 4px 12px rgba(0, 0, 0, 0.1)',
-              transition: 'transform 0.2s ease',
+              borderRadius: { xs: '12px', md: '16px' },
+              boxShadow: isDarkMode
+                ? '0 4px 20px rgba(0, 0, 0, 0.4)'
+                : '0 4px 12px rgba(0, 0, 0, 0.1)',
+              bgcolor: isDarkMode ? 'rgba(30, 41, 59, 0.8)' : '#ffffff',
+              border: isDarkMode ? '1px solid rgba(255,255,255,0.1)' : 'none',
+              transition: 'all 0.3s ease',
               width: '100%',
-              minHeight: { xs: '100px', sm: '130px', md: '160px' },
+              minHeight: { xs: '120px', sm: '140px', md: '160px' },
               display: 'flex',
               flexDirection: 'column',
-              '&:hover': { transform: 'translateY(-4px)' }
+              '&:hover': {
+                transform: 'translateY(-4px)',
+                boxShadow: isDarkMode
+                  ? '0 8px 30px rgba(25, 118, 210, 0.3)'
+                  : '0 8px 25px rgba(0, 0, 0, 0.15)'
+              }
             }}>
               <CardContent sx={{
                 textAlign: 'center',
-                p: 2,
+                p: { xs: 1.5, sm: 2, md: 2.5 },
                 display: 'flex',
                 flexDirection: 'column',
                 justifyContent: 'center',
@@ -566,31 +575,40 @@ export default function AdditionalHODDashboard() {
                 flexGrow: 1,
                 height: '100%'
               }}>
-                <Assignment sx={{ fontSize: { xs: 28, sm: 34, md: 40 }, color: '#1976d2', mb: 1 }} />
-                <Typography variant="h2" sx={{ fontWeight: 'bold', color: '#1976d2', fontSize: { xs: '1.5rem', sm: '1.75rem', md: '2rem' } }}>
+                <Assignment sx={{ fontSize: { xs: 32, sm: 38, md: 48 }, color: isDarkMode ? '#60a5fa' : '#1976d2', mb: 1 }} />
+                <Typography variant="h2" sx={{ fontWeight: 'bold', color: isDarkMode ? '#60a5fa' : '#1976d2', fontSize: { xs: '1.75rem', sm: '2rem', md: '2.5rem' } }}>
                   {stats.total}
                 </Typography>
-                <Typography variant="h6" color="text.secondary" sx={{ fontSize: { xs: '0.75rem', sm: '0.875rem', md: '1rem' }, fontWeight: '600' }}>
+                <Typography variant="h6" sx={{ color: isDarkMode ? '#94a3b8' : 'text.secondary', fontSize: { xs: '0.7rem', sm: '0.85rem', md: '1rem' }, fontWeight: '600' }}>
                   Total Assigned
                 </Typography>
               </CardContent>
             </Card>
           </Grid>
 
-          <Grid item xs={12} sm={6} md={2.4} sx={{ display: 'flex', minHeight: 0 }}>
+          <Grid item xs={6} sm={6} md={2.4} sx={{ display: 'flex' }}>
             <Card sx={{
-              borderRadius: '16px',
-              boxShadow: '0 4px 12px rgba(0, 0, 0, 0.1)',
-              transition: 'transform 0.2s ease',
+              borderRadius: { xs: '12px', md: '16px' },
+              boxShadow: isDarkMode
+                ? '0 4px 20px rgba(0, 0, 0, 0.4)'
+                : '0 4px 12px rgba(0, 0, 0, 0.1)',
+              bgcolor: isDarkMode ? 'rgba(30, 41, 59, 0.8)' : '#ffffff',
+              border: isDarkMode ? '1px solid rgba(255,255,255,0.1)' : 'none',
+              transition: 'all 0.3s ease',
               width: '100%',
-              minHeight: { xs: '100px', sm: '130px', md: '160px' },
+              minHeight: { xs: '120px', sm: '140px', md: '160px' },
               display: 'flex',
               flexDirection: 'column',
-              '&:hover': { transform: 'translateY(-4px)' }
+              '&:hover': {
+                transform: 'translateY(-4px)',
+                boxShadow: isDarkMode
+                  ? '0 8px 30px rgba(245, 124, 0, 0.3)'
+                  : '0 8px 25px rgba(0, 0, 0, 0.15)'
+              }
             }}>
               <CardContent sx={{
                 textAlign: 'center',
-                p: 2,
+                p: { xs: 1.5, sm: 2, md: 2.5 },
                 display: 'flex',
                 flexDirection: 'column',
                 justifyContent: 'center',
@@ -598,31 +616,40 @@ export default function AdditionalHODDashboard() {
                 flexGrow: 1,
                 height: '100%'
               }}>
-                <Pending sx={{ fontSize: { xs: 28, sm: 34, md: 40 }, color: '#f57c00', mb: 1 }} />
-                <Typography variant="h2" sx={{ fontWeight: 'bold', color: '#f57c00', fontSize: { xs: '1.5rem', sm: '1.75rem', md: '2rem' } }}>
+                <Pending sx={{ fontSize: { xs: 32, sm: 38, md: 48 }, color: isDarkMode ? '#fb923c' : '#f57c00', mb: 1 }} />
+                <Typography variant="h2" sx={{ fontWeight: 'bold', color: isDarkMode ? '#fb923c' : '#f57c00', fontSize: { xs: '1.75rem', sm: '2rem', md: '2.5rem' } }}>
                   {stats.pending}
                 </Typography>
-                <Typography variant="h6" color="text.secondary" sx={{ fontSize: { xs: '0.75rem', sm: '0.875rem', md: '1rem' }, fontWeight: '600' }}>
+                <Typography variant="h6" sx={{ color: isDarkMode ? '#94a3b8' : 'text.secondary', fontSize: { xs: '0.7rem', sm: '0.85rem', md: '1rem' }, fontWeight: '600' }}>
                   Pending
                 </Typography>
               </CardContent>
             </Card>
           </Grid>
 
-          <Grid item xs={12} sm={6} md={2.4} sx={{ display: 'flex', minHeight: 0 }}>
+          <Grid item xs={6} sm={6} md={2.4} sx={{ display: 'flex' }}>
             <Card sx={{
-              borderRadius: '16px',
-              boxShadow: '0 4px 12px rgba(0, 0, 0, 0.1)',
-              transition: 'transform 0.2s ease',
+              borderRadius: { xs: '12px', md: '16px' },
+              boxShadow: isDarkMode
+                ? '0 4px 20px rgba(0, 0, 0, 0.4)'
+                : '0 4px 12px rgba(0, 0, 0, 0.1)',
+              bgcolor: isDarkMode ? 'rgba(30, 41, 59, 0.8)' : '#ffffff',
+              border: isDarkMode ? '1px solid rgba(255,255,255,0.1)' : 'none',
+              transition: 'all 0.3s ease',
               width: '100%',
-              minHeight: { xs: '100px', sm: '130px', md: '160px' },
+              minHeight: { xs: '120px', sm: '140px', md: '160px' },
               display: 'flex',
               flexDirection: 'column',
-              '&:hover': { transform: 'translateY(-4px)' }
+              '&:hover': {
+                transform: 'translateY(-4px)',
+                boxShadow: isDarkMode
+                  ? '0 8px 30px rgba(0, 172, 193, 0.3)'
+                  : '0 8px 25px rgba(0, 0, 0, 0.15)'
+              }
             }}>
               <CardContent sx={{
                 textAlign: 'center',
-                p: 2,
+                p: { xs: 1.5, sm: 2, md: 2.5 },
                 display: 'flex',
                 flexDirection: 'column',
                 justifyContent: 'center',
@@ -630,31 +657,40 @@ export default function AdditionalHODDashboard() {
                 flexGrow: 1,
                 height: '100%'
               }}>
-                <TrendingUp sx={{ fontSize: { xs: 28, sm: 34, md: 40 }, color: '#00acc1', mb: 1 }} />
-                <Typography variant="h2" sx={{ fontWeight: 'bold', color: '#00acc1', fontSize: { xs: '1.5rem', sm: '1.75rem', md: '2rem' } }}>
+                <TrendingUp sx={{ fontSize: { xs: 32, sm: 38, md: 48 }, color: isDarkMode ? '#22d3d1' : '#00acc1', mb: 1 }} />
+                <Typography variant="h2" sx={{ fontWeight: 'bold', color: isDarkMode ? '#22d3d1' : '#00acc1', fontSize: { xs: '1.75rem', sm: '2rem', md: '2.5rem' } }}>
                   {stats.inProgress}
                 </Typography>
-                <Typography variant="h6" color="text.secondary" sx={{ fontSize: { xs: '0.75rem', sm: '0.875rem', md: '1rem' }, fontWeight: '600' }}>
+                <Typography variant="h6" sx={{ color: isDarkMode ? '#94a3b8' : 'text.secondary', fontSize: { xs: '0.7rem', sm: '0.85rem', md: '1rem' }, fontWeight: '600' }}>
                   In Progress
                 </Typography>
               </CardContent>
             </Card>
           </Grid>
 
-          <Grid item xs={12} sm={6} md={2.4} sx={{ display: 'flex', minHeight: 0 }}>
+          <Grid item xs={6} sm={6} md={2.4} sx={{ display: 'flex' }}>
             <Card sx={{
-              borderRadius: '16px',
-              boxShadow: '0 4px 12px rgba(0, 0, 0, 0.1)',
-              transition: 'transform 0.2s ease',
+              borderRadius: { xs: '12px', md: '16px' },
+              boxShadow: isDarkMode
+                ? '0 4px 20px rgba(0, 0, 0, 0.4)'
+                : '0 4px 12px rgba(0, 0, 0, 0.1)',
+              bgcolor: isDarkMode ? 'rgba(30, 41, 59, 0.8)' : '#ffffff',
+              border: isDarkMode ? '1px solid rgba(255,255,255,0.1)' : 'none',
+              transition: 'all 0.3s ease',
               width: '100%',
-              minHeight: { xs: '100px', sm: '130px', md: '160px' },
+              minHeight: { xs: '120px', sm: '140px', md: '160px' },
               display: 'flex',
               flexDirection: 'column',
-              '&:hover': { transform: 'translateY(-4px)' }
+              '&:hover': {
+                transform: 'translateY(-4px)',
+                boxShadow: isDarkMode
+                  ? '0 8px 30px rgba(34, 197, 94, 0.3)'
+                  : '0 8px 25px rgba(0, 0, 0, 0.15)'
+              }
             }}>
               <CardContent sx={{
                 textAlign: 'center',
-                p: 2,
+                p: { xs: 1.5, sm: 2, md: 2.5 },
                 display: 'flex',
                 flexDirection: 'column',
                 justifyContent: 'center',
@@ -662,31 +698,40 @@ export default function AdditionalHODDashboard() {
                 flexGrow: 1,
                 height: '100%'
               }}>
-                <CheckCircle sx={{ fontSize: { xs: 28, sm: 34, md: 40 }, color: '#2e7d32', mb: 1 }} />
-                <Typography variant="h2" sx={{ fontWeight: 'bold', color: '#2e7d32', fontSize: { xs: '1.5rem', sm: '1.75rem', md: '2rem' } }}>
+                <CheckCircle sx={{ fontSize: { xs: 32, sm: 38, md: 48 }, color: isDarkMode ? '#22c55e' : '#2e7d32', mb: 1 }} />
+                <Typography variant="h2" sx={{ fontWeight: 'bold', color: isDarkMode ? '#22c55e' : '#2e7d32', fontSize: { xs: '1.75rem', sm: '2rem', md: '2.5rem' } }}>
                   {stats.resolved}
                 </Typography>
-                <Typography variant="h6" color="text.secondary" sx={{ fontSize: { xs: '0.75rem', sm: '0.875rem', md: '1rem' }, fontWeight: '600' }}>
+                <Typography variant="h6" sx={{ color: isDarkMode ? '#94a3b8' : 'text.secondary', fontSize: { xs: '0.7rem', sm: '0.85rem', md: '1rem' }, fontWeight: '600' }}>
                   Resolved
                 </Typography>
               </CardContent>
             </Card>
           </Grid>
 
-          <Grid item xs={12} sm={6} md={2.4} sx={{ display: 'flex', minHeight: 0 }}>
+          <Grid item xs={6} sm={6} md={2.4} sx={{ display: 'flex' }}>
             <Card sx={{
-              borderRadius: '16px',
-              boxShadow: '0 4px 12px rgba(0, 0, 0, 0.1)',
-              transition: 'transform 0.2s ease',
+              borderRadius: { xs: '12px', md: '16px' },
+              boxShadow: isDarkMode
+                ? '0 4px 20px rgba(0, 0, 0, 0.4)'
+                : '0 4px 12px rgba(0, 0, 0, 0.1)',
+              bgcolor: isDarkMode ? 'rgba(30, 41, 59, 0.8)' : '#ffffff',
+              border: isDarkMode ? '1px solid rgba(255,255,255,0.1)' : 'none',
+              transition: 'all 0.3s ease',
               width: '100%',
-              minHeight: { xs: '100px', sm: '130px', md: '160px' },
+              minHeight: { xs: '120px', sm: '140px', md: '160px' },
               display: 'flex',
               flexDirection: 'column',
-              '&:hover': { transform: 'translateY(-4px)' }
+              '&:hover': {
+                transform: 'translateY(-4px)',
+                boxShadow: isDarkMode
+                  ? '0 8px 30px rgba(239, 68, 68, 0.3)'
+                  : '0 8px 25px rgba(0, 0, 0, 0.15)'
+              }
             }}>
               <CardContent sx={{
                 textAlign: 'center',
-                p: 2,
+                p: { xs: 1.5, sm: 2, md: 2.5 },
                 display: 'flex',
                 flexDirection: 'column',
                 justifyContent: 'center',
@@ -694,11 +739,11 @@ export default function AdditionalHODDashboard() {
                 flexGrow: 1,
                 height: '100%'
               }}>
-                <Cancel sx={{ fontSize: { xs: 28, sm: 34, md: 40 }, color: '#d32f2f', mb: 1 }} />
-                <Typography variant="h2" sx={{ fontWeight: 'bold', color: '#d32f2f', fontSize: { xs: '1.5rem', sm: '1.75rem', md: '2rem' } }}>
+                <Cancel sx={{ fontSize: { xs: 32, sm: 38, md: 48 }, color: isDarkMode ? '#ef4444' : '#d32f2f', mb: 1 }} />
+                <Typography variant="h2" sx={{ fontWeight: 'bold', color: isDarkMode ? '#ef4444' : '#d32f2f', fontSize: { xs: '1.75rem', sm: '2rem', md: '2.5rem' } }}>
                   {stats.rejected}
                 </Typography>
-                <Typography variant="h6" color="text.secondary" sx={{ fontSize: { xs: '0.75rem', sm: '0.875rem', md: '1rem' }, fontWeight: '600' }}>
+                <Typography variant="h6" sx={{ color: isDarkMode ? '#94a3b8' : 'text.secondary', fontSize: { xs: '0.7rem', sm: '0.85rem', md: '1rem' }, fontWeight: '600' }}>
                   Rejected
                 </Typography>
               </CardContent>

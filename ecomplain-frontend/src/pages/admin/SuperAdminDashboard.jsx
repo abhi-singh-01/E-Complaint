@@ -522,77 +522,117 @@ function SuperAdminDashboard() {
         )}
 
         {/* Statistics Cards */}
-        <Grid container spacing={4} sx={{ mb: 4 }}>
-          <Grid item xs={12} sm={6} md={3}>
+        <Grid container spacing={{ xs: 2, sm: 3, md: 4 }} sx={{ mb: 4 }}>
+          <Grid item xs={6} sm={6} md={3}>
             <Card sx={{
-              borderRadius: '16px',
-              boxShadow: '0 4px 12px rgba(0, 0, 0, 0.1)',
-              transition: 'transform 0.2s ease',
-              '&:hover': { transform: 'translateY(-4px)' }
+              borderRadius: { xs: '12px', md: '16px' },
+              boxShadow: isDarkMode
+                ? '0 4px 20px rgba(0, 0, 0, 0.4)'
+                : '0 4px 12px rgba(0, 0, 0, 0.1)',
+              bgcolor: isDarkMode ? 'rgba(30, 41, 59, 0.8)' : '#ffffff',
+              border: isDarkMode ? '1px solid rgba(255,255,255,0.1)' : 'none',
+              transition: 'all 0.3s ease',
+              minHeight: { xs: '140px', sm: '160px', md: '180px' },
+              '&:hover': {
+                transform: 'translateY(-4px)',
+                boxShadow: isDarkMode
+                  ? '0 8px 30px rgba(34, 197, 94, 0.3)'
+                  : '0 8px 25px rgba(0, 0, 0, 0.15)'
+              }
             }}>
-              <CardContent sx={{ textAlign: 'center', p: { xs: 1.5, sm: 2, md: 3 } }}>
-                <School sx={{ fontSize: { xs: 36, sm: 48, md: 60 }, color: '#2e7d32', mb: 2 }} />
-                <Typography variant="h2" sx={{ fontWeight: 'bold', color: '#2e7d32', fontSize: { xs: '1.5rem', sm: '2rem', md: '3rem' } }}>
+              <CardContent sx={{ textAlign: 'center', p: { xs: 2, sm: 2.5, md: 3 } }}>
+                <School sx={{ fontSize: { xs: 40, sm: 52, md: 64 }, color: isDarkMode ? '#22c55e' : '#2e7d32', mb: 2 }} />
+                <Typography variant="h2" sx={{ fontWeight: 'bold', color: isDarkMode ? '#22c55e' : '#2e7d32', fontSize: { xs: '1.75rem', sm: '2.25rem', md: '3rem' } }}>
                   {overview.totalStudents}
                 </Typography>
-                <Typography variant="h6" color="text.secondary" sx={{ fontSize: { xs: '0.75rem', sm: '1rem', md: '1.2rem' }, fontWeight: '600' }}>
+                <Typography variant="h6" sx={{ color: isDarkMode ? '#94a3b8' : 'text.secondary', fontSize: { xs: '0.75rem', sm: '1rem', md: '1.2rem' }, fontWeight: '600' }}>
                   Total Students
                 </Typography>
               </CardContent>
             </Card>
           </Grid>
 
-          <Grid item xs={12} sm={6} md={3}>
+          <Grid item xs={6} sm={6} md={3}>
             <Card sx={{
-              borderRadius: '16px',
-              boxShadow: '0 4px 12px rgba(0, 0, 0, 0.1)',
-              transition: 'transform 0.2s ease',
-              '&:hover': { transform: 'translateY(-4px)' }
+              borderRadius: { xs: '12px', md: '16px' },
+              boxShadow: isDarkMode
+                ? '0 4px 20px rgba(0, 0, 0, 0.4)'
+                : '0 4px 12px rgba(0, 0, 0, 0.1)',
+              bgcolor: isDarkMode ? 'rgba(30, 41, 59, 0.8)' : '#ffffff',
+              border: isDarkMode ? '1px solid rgba(255,255,255,0.1)' : 'none',
+              transition: 'all 0.3s ease',
+              minHeight: { xs: '140px', sm: '160px', md: '180px' },
+              '&:hover': {
+                transform: 'translateY(-4px)',
+                boxShadow: isDarkMode
+                  ? '0 8px 30px rgba(239, 68, 68, 0.3)'
+                  : '0 8px 25px rgba(0, 0, 0, 0.15)'
+              }
             }}>
-              <CardContent sx={{ textAlign: 'center', p: { xs: 1.5, sm: 2, md: 3 } }}>
-                <AdminPanelSettings sx={{ fontSize: { xs: 36, sm: 48, md: 60 }, color: '#d32f2f', mb: 2 }} />
-                <Typography variant="h2" sx={{ fontWeight: 'bold', color: '#d32f2f', fontSize: { xs: '1.5rem', sm: '2rem', md: '3rem' } }}>
+              <CardContent sx={{ textAlign: 'center', p: { xs: 2, sm: 2.5, md: 3 } }}>
+                <AdminPanelSettings sx={{ fontSize: { xs: 40, sm: 52, md: 64 }, color: isDarkMode ? '#ef4444' : '#d32f2f', mb: 2 }} />
+                <Typography variant="h2" sx={{ fontWeight: 'bold', color: isDarkMode ? '#ef4444' : '#d32f2f', fontSize: { xs: '1.75rem', sm: '2.25rem', md: '3rem' } }}>
                   {overview.totalAdmins}
                 </Typography>
-                <Typography variant="h6" color="text.secondary" sx={{ fontSize: { xs: '0.75rem', sm: '1rem', md: '1.2rem' }, fontWeight: '600' }}>
+                <Typography variant="h6" sx={{ color: isDarkMode ? '#94a3b8' : 'text.secondary', fontSize: { xs: '0.75rem', sm: '1rem', md: '1.2rem' }, fontWeight: '600' }}>
                   Total Admins
                 </Typography>
               </CardContent>
             </Card>
           </Grid>
 
-          <Grid item xs={12} sm={6} md={3}>
+          <Grid item xs={6} sm={6} md={3}>
             <Card sx={{
-              borderRadius: '16px',
-              boxShadow: '0 4px 12px rgba(0, 0, 0, 0.1)',
-              transition: 'transform 0.2s ease',
-              '&:hover': { transform: 'translateY(-4px)' }
+              borderRadius: { xs: '12px', md: '16px' },
+              boxShadow: isDarkMode
+                ? '0 4px 20px rgba(0, 0, 0, 0.4)'
+                : '0 4px 12px rgba(0, 0, 0, 0.1)',
+              bgcolor: isDarkMode ? 'rgba(30, 41, 59, 0.8)' : '#ffffff',
+              border: isDarkMode ? '1px solid rgba(255,255,255,0.1)' : 'none',
+              transition: 'all 0.3s ease',
+              minHeight: { xs: '140px', sm: '160px', md: '180px' },
+              '&:hover': {
+                transform: 'translateY(-4px)',
+                boxShadow: isDarkMode
+                  ? '0 8px 30px rgba(25, 118, 210, 0.3)'
+                  : '0 8px 25px rgba(0, 0, 0, 0.15)'
+              }
             }}>
-              <CardContent sx={{ textAlign: 'center', p: { xs: 1.5, sm: 2, md: 3 } }}>
-                <Assignment sx={{ fontSize: { xs: 36, sm: 48, md: 60 }, color: '#1976d2', mb: 2 }} />
-                <Typography variant="h2" sx={{ fontWeight: 'bold', color: '#1976d2', fontSize: { xs: '1.5rem', sm: '2rem', md: '3rem' } }}>
+              <CardContent sx={{ textAlign: 'center', p: { xs: 2, sm: 2.5, md: 3 } }}>
+                <Assignment sx={{ fontSize: { xs: 40, sm: 52, md: 64 }, color: isDarkMode ? '#60a5fa' : '#1976d2', mb: 2 }} />
+                <Typography variant="h2" sx={{ fontWeight: 'bold', color: isDarkMode ? '#60a5fa' : '#1976d2', fontSize: { xs: '1.75rem', sm: '2.25rem', md: '3rem' } }}>
                   {overview.totalComplaints}
                 </Typography>
-                <Typography variant="h6" color="text.secondary" sx={{ fontSize: { xs: '0.75rem', sm: '1rem', md: '1.2rem' }, fontWeight: '600' }}>
+                <Typography variant="h6" sx={{ color: isDarkMode ? '#94a3b8' : 'text.secondary', fontSize: { xs: '0.75rem', sm: '1rem', md: '1.2rem' }, fontWeight: '600' }}>
                   Total Complaints
                 </Typography>
               </CardContent>
             </Card>
           </Grid>
 
-          <Grid item xs={12} sm={6} md={3}>
+          <Grid item xs={6} sm={6} md={3}>
             <Card sx={{
-              borderRadius: '16px',
-              boxShadow: '0 4px 12px rgba(0, 0, 0, 0.1)',
-              transition: 'transform 0.2s ease',
-              '&:hover': { transform: 'translateY(-4px)' }
+              borderRadius: { xs: '12px', md: '16px' },
+              boxShadow: isDarkMode
+                ? '0 4px 20px rgba(0, 0, 0, 0.4)'
+                : '0 4px 12px rgba(0, 0, 0, 0.1)',
+              bgcolor: isDarkMode ? 'rgba(30, 41, 59, 0.8)' : '#ffffff',
+              border: isDarkMode ? '1px solid rgba(255,255,255,0.1)' : 'none',
+              transition: 'all 0.3s ease',
+              minHeight: { xs: '140px', sm: '160px', md: '180px' },
+              '&:hover': {
+                transform: 'translateY(-4px)',
+                boxShadow: isDarkMode
+                  ? '0 8px 30px rgba(245, 124, 0, 0.3)'
+                  : '0 8px 25px rgba(0, 0, 0, 0.15)'
+              }
             }}>
-              <CardContent sx={{ textAlign: 'center', p: { xs: 1.5, sm: 2, md: 3 } }}>
-                <TrendingUp sx={{ fontSize: { xs: 36, sm: 48, md: 60 }, color: '#f57c00', mb: 2 }} />
-                <Typography variant="h2" sx={{ fontWeight: 'bold', color: '#f57c00', fontSize: { xs: '1.5rem', sm: '2rem', md: '3rem' } }}>
+              <CardContent sx={{ textAlign: 'center', p: { xs: 2, sm: 2.5, md: 3 } }}>
+                <TrendingUp sx={{ fontSize: { xs: 40, sm: 52, md: 64 }, color: isDarkMode ? '#fb923c' : '#f57c00', mb: 2 }} />
+                <Typography variant="h2" sx={{ fontWeight: 'bold', color: isDarkMode ? '#fb923c' : '#f57c00', fontSize: { xs: '1.75rem', sm: '2.25rem', md: '3rem' } }}>
                   {overview.recentComplaints}
                 </Typography>
-                <Typography variant="h6" color="text.secondary" sx={{ fontSize: { xs: '0.75rem', sm: '1rem', md: '1.2rem' }, fontWeight: '600' }}>
+                <Typography variant="h6" sx={{ color: isDarkMode ? '#94a3b8' : 'text.secondary', fontSize: { xs: '0.75rem', sm: '1rem', md: '1.2rem' }, fontWeight: '600' }}>
                   Recent (7 days)
                 </Typography>
               </CardContent>

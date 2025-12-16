@@ -33,7 +33,7 @@ const defaultAdmins = [
     isEmailVerified: true,
     isActive: true
   },
-  
+
   // MBA Department
   {
     firstName: 'MBA',
@@ -65,7 +65,7 @@ const defaultAdmins = [
     isEmailVerified: true,
     isActive: true
   },
-  
+
   // CSE Department
   {
     firstName: 'CSE',
@@ -97,7 +97,7 @@ const defaultAdmins = [
     isEmailVerified: true,
     isActive: true
   },
-  
+
   // Electronics Department
   {
     firstName: 'Electronics',
@@ -129,7 +129,7 @@ const defaultAdmins = [
     isEmailVerified: true,
     isActive: true
   },
-  
+
   // Mechanical Department
   {
     firstName: 'Mechanical',
@@ -161,7 +161,7 @@ const defaultAdmins = [
     isEmailVerified: true,
     isActive: true
   },
-  
+
   // Civil Department
   {
     firstName: 'Civil',
@@ -193,7 +193,7 @@ const defaultAdmins = [
     isEmailVerified: true,
     isActive: true
   },
-  
+
   // Electrical Department
   {
     firstName: 'Electrical',
@@ -225,7 +225,7 @@ const defaultAdmins = [
     isEmailVerified: true,
     isActive: true
   },
-  
+
   // General Department (for complaints not specific to any department)
   {
     firstName: 'General',
@@ -326,69 +326,79 @@ const superAdmin = {
 const seedAdmins = async (force = false) => {
   try {
     console.log('🌱 Seeding admin accounts...');
-    
+
     // Check if admins already exist
     const existingAdmins = await Admin.countDocuments();
     if (existingAdmins > 0 && !force) {
       console.log('✅ Admin accounts already exist, skipping seed...');
       console.log('💡 To force re-seed, use: seedAdmins(true)');
-      
+
       // Verify coordinators exist for all departments
       const departments = ['MCA', 'MBA', 'CSE', 'Electronics', 'Mechanical', 'Civil', 'Electrical', 'General'];
       const missingCoordinators = [];
-      
+
       for (const dept of departments) {
         const coordinator = await Admin.findOne({
           role: 'coordinator',
           department: dept,
           isActive: true
         });
-        
+
         if (!coordinator) {
           missingCoordinators.push(dept);
         }
       }
-      
+
       if (missingCoordinators.length > 0) {
         console.log(`⚠️  Missing coordinators for departments: ${missingCoordinators.join(', ')}`);
         console.log('💡 Run seed with force=true to create missing coordinators');
       } else {
         console.log('✅ All coordinators are present for all departments');
       }
-      
+
       return;
     }
-    
+
     // If force is true, delete existing admins (except super admin)
     if (force && existingAdmins > 0) {
       console.log('🔄 Force mode: Removing existing admin accounts (except super admin)...');
       await Admin.deleteMany({ role: { $ne: 'super_admin' } });
     }
-    
+
     // First create or get super admin
     let createdSuperAdmin = await Admin.findOne({ role: 'super_admin' });
     if (!createdSuperAdmin) {
       createdSuperAdmin = await Admin.createSuperAdmin(superAdmin);
       console.log('✅ Super admin created:', createdSuperAdmin.email);
+    } else if (force) {
+      // In force mode, reset super admin password and unlock account
+      console.log('🔄 Force mode: Resetting super admin password and unlocking account...');
+      createdSuperAdmin.password = superAdmin.password;
+      createdSuperAdmin.isLocked = false;
+      createdSuperAdmin.failedLoginAttempts = 0;
+      createdSuperAdmin.lockUntil = undefined;
+      createdSuperAdmin.markModified('password');
+      await createdSuperAdmin.save();
+      console.log('✅ Super admin password reset and account unlocked:', createdSuperAdmin.email);
     } else {
       console.log('✅ Super admin already exists:', createdSuperAdmin.email);
     }
-    
+
     // Create all default admins with super admin as creator
     const createdAdmins = [];
     const skippedAdmins = [];
-    
+
     for (const adminData of defaultAdmins) {
       // Check if admin already exists
       const existingAdmin = await Admin.findOne({
         email: adminData.email
       });
-      
+
       if (existingAdmin && !force) {
         skippedAdmins.push(adminData.email);
         continue;
       }
-      
+
       if (existingAdmin && force) {
         // Update existing admin
         // Mark password as modified to ensure it gets re-hashed
@@ -408,11 +418,11 @@ const seedAdmins = async (force = false) => {
         createdAdmins.push(savedAdmin);
       }
     }
-    
+
     if (skippedAdmins.length > 0) {
       console.log(`⚠️  Skipped ${skippedAdmins.length} existing admin accounts (use force=true to update)`);
     }
-    
+
     console.log(`✅ Successfully created/updated ${createdAdmins.length} admin accounts:`);
     console.log('\n📋 Default Admin Credentials:');
     console.log('=====================================');
@@ -422,7 +432,7 @@ const seedAdmins = async (force = false) => {
     console.log('   3. Additional HOD → Can escalate to Dean');
     console.log('   4. Dean → Can forward to external departments (Library, Maintenance, Accounts)');
     console.log('=====================================');
-    
+
     // Group by department for better display
     const departmentGroups = {};
     [createdSuperAdmin, ...createdAdmins].forEach(admin => {
@@ -437,7 +447,7 @@ const seedAdmins = async (force = false) => {
         departmentGroups[admin.department].push(admin);
       }
     });
-    
+
     // Display department-wise credentials
     Object.keys(departmentGroups).sort().forEach(dept => {
       console.log(`\n🏢 ${dept} Department:`);
@@ -454,22 +464,22 @@ const seedAdmins = async (force = false) => {
         .sort((a, b) => (roleOrder[a.role] || 99) - (roleOrder[b.role] || 99))
         .forEach(admin => {
           const roleName = admin.role === 'additional_hod' ? 'Additional HOD' :
-                          admin.role === 'dean' ? 'Dean' :
-                          admin.role === 'coordinator' ? 'Coordinator' :
-                          admin.role === 'accounts' ? 'Accounts Department' :
-                          admin.role === 'librarian' ? 'Librarian' :
-                          admin.role === 'maintenance' ? 'Maintenance Department' : 'Unknown';
+            admin.role === 'dean' ? 'Dean' :
+              admin.role === 'coordinator' ? 'Coordinator' :
+                admin.role === 'accounts' ? 'Accounts Department' :
+                  admin.role === 'librarian' ? 'Librarian' :
+                    admin.role === 'maintenance' ? 'Maintenance Department' : 'Unknown';
           const password = admin.role === 'accounts' ? 'accounts123456' :
-                          admin.role === 'librarian' ? 'librarian123456' :
-                          admin.role === 'maintenance' ? 'maintenance123456' :
-                          admin.department.toLowerCase() + '123456';
+            admin.role === 'librarian' ? 'librarian123456' :
+              admin.role === 'maintenance' ? 'maintenance123456' :
+                admin.department.toLowerCase() + '123456';
           console.log(`   ${roleName}: ${admin.email} / Password: ${password}`);
         });
     });
-    
+
     console.log('\n⚠️  IMPORTANT: Change these default passwords after first login!');
     console.log('=====================================\n');
-    
+
   } catch (error) {
     console.error('❌ Error seeding admin accounts:', error);
     throw error;

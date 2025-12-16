@@ -32,7 +32,7 @@ const seedSuperAdmin = async () => {
 
     // Check if super admin already exists
     const existingSuperAdmin = await Admin.findOne({ role: 'super_admin' });
-    
+
     if (existingSuperAdmin) {
       console.log('Super admin already exists:', existingSuperAdmin.email);
       return;
@@ -64,7 +64,12 @@ const seedSuperAdmin = async () => {
 
 // Run seeding if this file is executed directly
 if (require.main === module) {
-  seedAllData();
+  // Check for --force argument
+  const forceMode = process.argv.includes('--force');
+  if (forceMode) {
+    console.log('🔄 Running in FORCE mode - will reset all admin passwords...');
+  }
+  seedAllData(forceMode);
 }
 
 module.exports = { seedSuperAdmin, seedAllData };
