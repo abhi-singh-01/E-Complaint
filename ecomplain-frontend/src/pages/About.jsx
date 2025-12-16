@@ -160,17 +160,17 @@ function About() {
       : `2px solid ${alpha(color, 0.4)}`,
     background: isDarkMode
       ? `linear-gradient(135deg, ${alpha('#0f172a', 0.85)}, ${alpha(color, 0.25)})`
-      : `linear-gradient(135deg, ${alpha(color, 0.15)}, rgba(255,255,255,0.85), ${alpha(color, 0.05)})`,
+      : `linear-gradient(135deg, rgba(255,255,255,0.98), rgba(255,255,255,0.95), ${alpha(color, 0.03)})`,
     boxShadow: isDarkMode
       ? `0 20px 50px ${alpha('#020617', 0.9)}`
-      : `0 20px 50px ${alpha(color, 0.2)}, 0 10px 30px ${alpha(color, 0.15)}, inset 0 1px 0 rgba(255,255,255,0.9)`,
+      : `0 20px 50px ${alpha(color, 0.12)}, 0 10px 30px ${alpha(color, 0.08)}, inset 0 1px 0 rgba(255,255,255,1)`,
     backdropFilter: 'blur(20px) saturate(180%)',
     '&::before': {
       content: '""',
       position: 'absolute',
       inset: '-40%',
-      background: `radial-gradient(circle at 0% 0%, ${alpha(color, isDarkMode ? 0.6 : 0.9)}, transparent 60%)`,
-      opacity: isDarkMode ? 0.4 : 0.4,
+      background: `radial-gradient(circle at 0% 0%, ${alpha(color, isDarkMode ? 0.6 : 0.4)}, transparent 60%)`,
+      opacity: isDarkMode ? 0.4 : 0.15,
       pointerEvents: 'none',
       animation: `${float} 12s ease-in-out infinite`
     },
@@ -198,8 +198,8 @@ function About() {
   })
 
   const chipSx = (color) => ({
-    bgcolor: alpha(color, isDarkMode ? 0.25 : 0.2),
-    color: isDarkMode ? '#e5e7eb' : color,
+    bgcolor: alpha(color, isDarkMode ? 0.3 : 0.2),
+    color: isDarkMode ? alpha(color, 1) : color,
     borderRadius: 999,
     px: 1.8,
     py: 0.4,
@@ -210,14 +210,14 @@ function About() {
     display: 'inline-flex',
     alignItems: 'center',
     gap: 0.8,
-    border: `2px solid ${alpha(color, isDarkMode ? 0.5 : 0.6)}`,
+    border: `2px solid ${alpha(color, isDarkMode ? 0.6 : 0.6)}`,
     boxShadow: isDarkMode
-      ? `0 4px 12px ${alpha(color, 0.3)}`
+      ? `0 4px 12px ${alpha(color, 0.4)}, 0 0 20px ${alpha(color, 0.2)}`
       : `0 4px 15px ${alpha(color, 0.3)}, inset 0 1px 0 rgba(255,255,255,0.6)`,
     backdropFilter: 'blur(10px)',
     '& svg': {
-      color: isDarkMode ? '#e5e7eb' : color,
-      filter: isDarkMode ? 'none' : `drop-shadow(0 1px 2px ${alpha(color, 0.3)})`
+      color: isDarkMode ? alpha(color, 1) : color,
+      filter: isDarkMode ? `drop-shadow(0 0 6px ${alpha(color, 0.5)})` : `drop-shadow(0 1px 2px ${alpha(color, 0.3)})`
     }
   })
 
@@ -862,12 +862,13 @@ function About() {
                           variant="subtitle1"
                           sx={{
                             fontWeight: 700,
-                            color: isDarkMode ? '#f9fafb' : '#111827'
+                            color: isDarkMode ? '#e2e8f0' : '#111827',
+                            textShadow: isDarkMode ? `0 0 20px ${alpha(dev.color, 0.4)}` : 'none'
                           }}
                         >
                           {dev.name}
                         </Typography>
-                        <Box sx={{ ...chipSx(dev.color), '& svg': { color: isDarkMode ? '#e5e7eb' : dev.color } }}>
+                        <Box sx={{ ...chipSx(dev.color), '& svg': { color: isDarkMode ? alpha(dev.color, 1) : dev.color } }}>
                           <Code fontSize="small" />
                           {dev.role}
                         </Box>
@@ -882,12 +883,14 @@ function About() {
                           sx={{
                             mr: 1,
                             mb: 1,
-                            bgcolor: alpha(dev.color, isDarkMode ? 0.35 : 0.2),
-                            color: isDarkMode ? '#e5e7eb' : dev.color,
+                            bgcolor: alpha(dev.color, isDarkMode ? 0.25 : 0.2),
+                            color: isDarkMode ? alpha(dev.color, 1) : dev.color,
                             fontSize: 11,
                             fontWeight: 700,
-                            border: `1px solid ${alpha(dev.color, isDarkMode ? 0.5 : 0.4)}`,
-                            boxShadow: `0 2px 8px ${alpha(dev.color, 0.2)}`
+                            border: `1px solid ${alpha(dev.color, isDarkMode ? 0.6 : 0.4)}`,
+                            boxShadow: isDarkMode
+                              ? `0 2px 12px ${alpha(dev.color, 0.4)}, 0 0 15px ${alpha(dev.color, 0.2)}`
+                              : `0 2px 8px ${alpha(dev.color, 0.2)}`
                           }}
                         />
                       ))}
