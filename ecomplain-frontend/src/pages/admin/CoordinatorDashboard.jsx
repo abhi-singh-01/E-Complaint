@@ -544,7 +544,7 @@ const statsCardLayout = {
               border: isDarkMode ? '1px solid rgba(255,255,255,0.1)' : 'none',
               transition: 'all 0.3s ease',
               width: '100%',
-              minHeight: { xs: '140px', sm: '160px', md: '180px' },
+              aspectRatio: '1',
               display: 'flex',
               flexDirection: 'column',
               '&:hover': {
@@ -556,7 +556,7 @@ const statsCardLayout = {
             }}>
               <CardContent sx={{
                 textAlign: 'center',
-                p: { xs: 1.5, sm: 2, md: 2.5 },
+                p: statsCardLayout.contentPadding,
                 display: 'flex',
                 flexDirection: 'column',
                 justifyContent: 'center',
@@ -564,11 +564,11 @@ const statsCardLayout = {
                 flexGrow: 1,
                 height: '100%'
               }}>
-                <Assignment sx={{ fontSize: { xs: 32, sm: 38, md: 48 }, color: isDarkMode ? '#60a5fa' : '#1976d2', mb: 1 }} />
-                <Typography variant="h2" sx={{ fontWeight: 'bold', color: isDarkMode ? '#60a5fa' : '#1976d2', fontSize: { xs: '1.75rem', sm: '2rem', md: '2.5rem' } }}>
+                <Assignment sx={{ fontSize: statsCardLayout.iconSize, color: isDarkMode ? '#60a5fa' : '#1976d2', mb: 1 }} />
+                <Typography variant="h2" sx={{ fontWeight: 'bold', color: isDarkMode ? '#60a5fa' : '#1976d2', fontSize: statsCardLayout.valueSize }}>
                   {stats.total}
                 </Typography>
-                <Typography variant="h6" sx={{ color: isDarkMode ? '#94a3b8' : 'text.secondary', fontSize: { xs: '0.7rem', sm: '0.85rem', md: '1rem' }, fontWeight: '600' }}>
+                <Typography variant="h6" sx={{ color: isDarkMode ? '#94a3b8' : 'text.secondary', fontSize: statsCardLayout.labelSize, fontWeight: '600' }}>
                   Total Assigned
                 </Typography>
               </CardContent>
@@ -585,7 +585,7 @@ const statsCardLayout = {
               border: isDarkMode ? '1px solid rgba(255,255,255,0.1)' : 'none',
               transition: 'all 0.3s ease',
               width: '100%',
-              minHeight: { xs: '140px', sm: '160px', md: '180px' },
+              aspectRatio: '1',
               display: 'flex',
               flexDirection: 'column',
               '&:hover': {
@@ -597,7 +597,7 @@ const statsCardLayout = {
             }}>
               <CardContent sx={{
                 textAlign: 'center',
-                p: { xs: 1.5, sm: 2, md: 2.5 },
+                p: statsCardLayout.contentPadding,
                 display: 'flex',
                 flexDirection: 'column',
                 justifyContent: 'center',
@@ -605,11 +605,11 @@ const statsCardLayout = {
                 flexGrow: 1,
                 height: '100%'
               }}>
-                <Pending sx={{ fontSize: { xs: 32, sm: 38, md: 48 }, color: isDarkMode ? '#fb923c' : '#f57c00', mb: 1 }} />
-                <Typography variant="h2" sx={{ fontWeight: 'bold', color: isDarkMode ? '#fb923c' : '#f57c00', fontSize: { xs: '1.75rem', sm: '2rem', md: '2.5rem' } }}>
+                <Pending sx={{ fontSize: statsCardLayout.iconSize, color: isDarkMode ? '#fb923c' : '#f57c00', mb: 1 }} />
+                <Typography variant="h2" sx={{ fontWeight: 'bold', color: isDarkMode ? '#fb923c' : '#f57c00', fontSize: statsCardLayout.valueSize }}>
                   {stats.pending}
                 </Typography>
-                <Typography variant="h6" sx={{ color: isDarkMode ? '#94a3b8' : 'text.secondary', fontSize: { xs: '0.7rem', sm: '0.85rem', md: '1rem' }, fontWeight: '600' }}>
+                <Typography variant="h6" sx={{ color: isDarkMode ? '#94a3b8' : 'text.secondary', fontSize: statsCardLayout.labelSize, fontWeight: '600' }}>
                   Pending
                 </Typography>
               </CardContent>
@@ -626,7 +626,7 @@ const statsCardLayout = {
               border: isDarkMode ? '1px solid rgba(255,255,255,0.1)' : 'none',
               transition: 'all 0.3s ease',
               width: '100%',
-              minHeight: { xs: '140px', sm: '160px', md: '180px' },
+              aspectRatio: '1',
               display: 'flex',
               flexDirection: 'column',
               '&:hover': {
@@ -638,7 +638,7 @@ const statsCardLayout = {
             }}>
               <CardContent sx={{
                 textAlign: 'center',
-                p: { xs: 1.5, sm: 2, md: 2.5 },
+                p: statsCardLayout.contentPadding,
                 display: 'flex',
                 flexDirection: 'column',
                 justifyContent: 'center',
@@ -646,11 +646,11 @@ const statsCardLayout = {
                 flexGrow: 1,
                 height: '100%'
               }}>
-                <TrendingUp sx={{ fontSize: { xs: 32, sm: 38, md: 48 }, color: isDarkMode ? '#22d3d1' : '#00acc1', mb: 1 }} />
-                <Typography variant="h2" sx={{ fontWeight: 'bold', color: isDarkMode ? '#22d3d1' : '#00acc1', fontSize: { xs: '1.75rem', sm: '2rem', md: '2.5rem' } }}>
+                <TrendingUp sx={{ fontSize: statsCardLayout.iconSize, color: isDarkMode ? '#22d3d1' : '#00acc1', mb: 1 }} />
+                <Typography variant="h2" sx={{ fontWeight: 'bold', color: isDarkMode ? '#22d3d1' : '#00acc1', fontSize: statsCardLayout.valueSize }}>
                   {stats.inProgress}
                 </Typography>
-                <Typography variant="h6" sx={{ color: isDarkMode ? '#94a3b8' : 'text.secondary', fontSize: { xs: '0.7rem', sm: '0.85rem', md: '1rem' }, fontWeight: '600' }}>
+                <Typography variant="h6" sx={{ color: isDarkMode ? '#94a3b8' : 'text.secondary', fontSize: statsCardLayout.labelSize, fontWeight: '600' }}>
                   In Progress
                 </Typography>
               </CardContent>
@@ -667,7 +667,7 @@ const statsCardLayout = {
               border: isDarkMode ? '1px solid rgba(255,255,255,0.1)' : 'none',
               transition: 'all 0.3s ease',
               width: '100%',
-              minHeight: { xs: '140px', sm: '160px', md: '180px' },
+              aspectRatio: '1',
               display: 'flex',
               flexDirection: 'column',
               '&:hover': {
@@ -679,7 +679,7 @@ const statsCardLayout = {
             }}>
               <CardContent sx={{
                 textAlign: 'center',
-                p: { xs: 1.5, sm: 2, md: 2.5 },
+                p: statsCardLayout.contentPadding,
                 display: 'flex',
                 flexDirection: 'column',
                 justifyContent: 'center',
@@ -687,11 +687,11 @@ const statsCardLayout = {
                 flexGrow: 1,
                 height: '100%'
               }}>
-                <CheckCircle sx={{ fontSize: { xs: 32, sm: 38, md: 48 }, color: isDarkMode ? '#22c55e' : '#2e7d32', mb: 1 }} />
-                <Typography variant="h2" sx={{ fontWeight: 'bold', color: isDarkMode ? '#22c55e' : '#2e7d32', fontSize: { xs: '1.75rem', sm: '2rem', md: '2.5rem' } }}>
+                <CheckCircle sx={{ fontSize: statsCardLayout.iconSize, color: isDarkMode ? '#22c55e' : '#2e7d32', mb: 1 }} />
+                <Typography variant="h2" sx={{ fontWeight: 'bold', color: isDarkMode ? '#22c55e' : '#2e7d32', fontSize: statsCardLayout.valueSize }}>
                   {stats.resolved}
                 </Typography>
-                <Typography variant="h6" sx={{ color: isDarkMode ? '#94a3b8' : 'text.secondary', fontSize: { xs: '0.7rem', sm: '0.85rem', md: '1rem' }, fontWeight: '600' }}>
+                <Typography variant="h6" sx={{ color: isDarkMode ? '#94a3b8' : 'text.secondary', fontSize: statsCardLayout.labelSize, fontWeight: '600' }}>
                   Resolved
                 </Typography>
               </CardContent>
@@ -708,7 +708,7 @@ const statsCardLayout = {
               border: isDarkMode ? '1px solid rgba(255,255,255,0.1)' : 'none',
               transition: 'all 0.3s ease',
               width: '100%',
-              minHeight: { xs: '140px', sm: '160px', md: '180px' },
+              aspectRatio: '1',
               display: 'flex',
               flexDirection: 'column',
               '&:hover': {
@@ -720,7 +720,7 @@ const statsCardLayout = {
             }}>
               <CardContent sx={{
                 textAlign: 'center',
-                p: { xs: 1.5, sm: 2, md: 2.5 },
+                p: statsCardLayout.contentPadding,
                 display: 'flex',
                 flexDirection: 'column',
                 justifyContent: 'center',
@@ -728,11 +728,11 @@ const statsCardLayout = {
                 flexGrow: 1,
                 height: '100%'
               }}>
-                <Cancel sx={{ fontSize: { xs: 32, sm: 38, md: 48 }, color: isDarkMode ? '#ef4444' : '#d32f2f', mb: 1 }} />
-                <Typography variant="h2" sx={{ fontWeight: 'bold', color: isDarkMode ? '#ef4444' : '#d32f2f', fontSize: { xs: '1.75rem', sm: '2rem', md: '2.5rem' } }}>
+                <Cancel sx={{ fontSize: statsCardLayout.iconSize, color: isDarkMode ? '#ef4444' : '#d32f2f', mb: 1 }} />
+                <Typography variant="h2" sx={{ fontWeight: 'bold', color: isDarkMode ? '#ef4444' : '#d32f2f', fontSize: statsCardLayout.valueSize }}>
                   {stats.rejected}
                 </Typography>
-                <Typography variant="h6" sx={{ color: isDarkMode ? '#94a3b8' : 'text.secondary', fontSize: { xs: '0.7rem', sm: '0.85rem', md: '1rem' }, fontWeight: '600' }}>
+                <Typography variant="h6" sx={{ color: isDarkMode ? '#94a3b8' : 'text.secondary', fontSize: statsCardLayout.labelSize, fontWeight: '600' }}>
                   Rejected
                 </Typography>
               </CardContent>
