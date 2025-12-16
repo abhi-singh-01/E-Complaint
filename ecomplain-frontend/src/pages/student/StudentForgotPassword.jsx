@@ -281,7 +281,7 @@ export default function StudentForgotPassword() {
               size="large"
               disabled={loading}
               sx={{
-                mb: 3,
+                mb: 2,
                 py: 1.5,
                 fontSize: '1.1rem',
                 fontWeight: 'bold',
@@ -294,8 +294,19 @@ export default function StudentForgotPassword() {
                 transition: 'all 0.3s ease'
               }}
             >
-              {loading ? <CircularProgress size={24} color="inherit" /> : 'Send OTP'}
+              {loading ? (
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
+                  <CircularProgress size={20} color="inherit" />
+                  <span>Sending OTP...</span>
+                </Box>
+              ) : 'Send OTP'}
             </Button>
+
+            {loading && (
+              <Alert severity="info" sx={{ mb: 2 }}>
+                📧 Sending verification email. This may take a few seconds...
+              </Alert>
+            )}
           </form>
 
           <Box sx={{ textAlign: 'center' }}>
