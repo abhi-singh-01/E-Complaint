@@ -1171,7 +1171,7 @@ export default function DeanDashboard() {
                             }
                           />
                           <ListItemSecondaryAction>
-                            <Box sx={{ display: 'flex', gap: 1 }}>
+                            <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
                               <Tooltip title="View Details">
                                 <IconButton
                                   onClick={() => {
@@ -1191,56 +1191,142 @@ export default function DeanDashboard() {
                                   <Visibility />
                                 </IconButton>
                               </Tooltip>
-                              {/* Show Forward to External button for all complaints */}
-                              {!complaint.externalForward?.isForwarded && (
-                                <Tooltip title="Forward to External Department">
-                                  <IconButton
-                                    onClick={() => {
-                                      setSelectedComplaint(complaint)
-                                      setSelectedExternalDepartment('')
-                                      setForwardReason('')
-                                      setExternalForwardDialogOpen(true)
-                                    }}
-                                    disabled={complaint.status.toLowerCase() === 'resolved' || complaint.status.toLowerCase() === 'rejected'}
-                                    sx={{
-                                      '&:focus': {
-                                        outline: 'none',
-                                        boxShadow: 'none'
-                                      },
-                                      '&:hover': {
-                                        backgroundColor: isDarkMode ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.04)'
-                                      }
-                                    }}
-                                  >
-                                    <Forward />
-                                  </IconButton>
-                                </Tooltip>
-                              )}
-                              {/* Show Close button when external department has acknowledged */}
-                              {complaint.externalForward?.isForwarded &&
-                                complaint.externalForward?.acknowledged &&
-                                complaint.status.toLowerCase() !== 'closed' && (
-                                  <Tooltip title="Close Complaint">
-                                    <IconButton
-                                      onClick={() => {
-                                        setSelectedComplaint(complaint)
-                                        setCloseDialogOpen(true)
-                                      }}
-                                      sx={{
-                                        color: 'success.main',
-                                        '&:focus': {
-                                          outline: 'none',
-                                          boxShadow: 'none'
-                                        },
-                                        '&:hover': {
-                                          backgroundColor: isDarkMode ? 'rgba(76, 175, 80, 0.1)' : 'rgba(76, 175, 80, 0.04)'
-                                        }
-                                      }}
-                                    >
-                                      <Done />
-                                    </IconButton>
-                                  </Tooltip>
-                                )}
+                              {(() => {
+                                const isForwardedExternal = complaint.externalForward?.isForwarded;
+                                const isRejected = complaint.status.toLowerCase() === 'rejected';
+                                const isResolved = complaint.status.toLowerCase() === 'resolved' || complaint.status.toLowerCase() === 'closed';
+                                const isDisabled = isForwardedExternal || isRejected || isResolved;
+
+                                return (
+                                  <>
+                                    {/* Add Comment button */}
+                                    <Tooltip title={
+                                      isForwardedExternal
+                                        ? 'Cannot operate on forwarded complaints'
+                                        : isResolved || isRejected
+                                          ? 'Cannot comment on resolved/rejected complaints'
+                                          : 'Add Comment'
+                                    }>
+                                      <span>
+                                        <IconButton
+                                          onClick={() => {
+                                            setSelectedComplaint(complaint)
+                                            setCommentDialogOpen(true)
+                                          }}
+                                          disabled={isDisabled}
+                                          sx={{
+                                            '&:focus': {
+                                              outline: 'none',
+                                              boxShadow: 'none'
+                                            },
+                                            '&:hover': {
+                                              backgroundColor: isDarkMode ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.04)'
+                                            }
+                                          }}
+                                        >
+                                          <Comment />
+                                        </IconButton>
+                                      </span>
+                                    </Tooltip>
+                                    {/* Quick Resolve button */}
+                                    {!isForwardedExternal && !isResolved && !isRejected && (
+                                      <Tooltip title="Mark as Resolved">
+                                        <IconButton
+                                          onClick={() => handleStatusUpdate(complaint._id, 'Resolved')}
+                                          sx={{
+                                            color: 'success.main',
+                                            '&:focus': {
+                                              outline: 'none',
+                                              boxShadow: 'none'
+                                            },
+                                            '&:hover': {
+                                              backgroundColor: isDarkMode ? 'rgba(76, 175, 80, 0.1)' : 'rgba(76, 175, 80, 0.04)'
+                                            }
+                                          }}
+                                        >
+                                          <CheckCircle />
+                                        </IconButton>
+                                      </Tooltip>
+                                    )}
+                                    {/* Quick Reject button */}
+                                    {!isForwardedExternal && !isResolved && !isRejected && (
+                                      <Tooltip title="Mark as Rejected">
+                                        <IconButton
+                                          onClick={() => handleStatusUpdate(complaint._id, 'Rejected')}
+                                          sx={{
+                                            color: 'error.main',
+                                            '&:focus': {
+                                              outline: 'none',
+                                              boxShadow: 'none'
+                                            },
+                                            '&:hover': {
+                                              backgroundColor: isDarkMode ? 'rgba(244, 67, 54, 0.1)' : 'rgba(244, 67, 54, 0.04)'
+                                            }
+                                          }}
+                                        >
+                                          <Cancel />
+                                        </IconButton>
+                                      </Tooltip>
+                                    )}
+                                    {/* Show Forward to External button for all complaints */}
+                                    {!isForwardedExternal && (
+                                      <Tooltip title={
+                                        isResolved || isRejected
+                                          ? 'Cannot forward resolved/rejected complaints'
+                                          : 'Forward to External Department'
+                                      }>
+                                        <span>
+                                          <IconButton
+                                            onClick={() => {
+                                              setSelectedComplaint(complaint)
+                                              setSelectedExternalDepartment('')
+                                              setForwardReason('')
+                                              setExternalForwardDialogOpen(true)
+                                            }}
+                                            disabled={isResolved || isRejected}
+                                            sx={{
+                                              '&:focus': {
+                                                outline: 'none',
+                                                boxShadow: 'none'
+                                              },
+                                              '&:hover': {
+                                                backgroundColor: isDarkMode ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.04)'
+                                              }
+                                            }}
+                                          >
+                                            <Forward />
+                                          </IconButton>
+                                        </span>
+                                      </Tooltip>
+                                    )}
+                                    {/* Show Close button when external department has acknowledged */}
+                                    {complaint.externalForward?.isForwarded &&
+                                      complaint.externalForward?.acknowledged &&
+                                      complaint.status.toLowerCase() !== 'closed' && (
+                                        <Tooltip title="Close Complaint">
+                                          <IconButton
+                                            onClick={() => {
+                                              setSelectedComplaint(complaint)
+                                              setCloseDialogOpen(true)
+                                            }}
+                                            sx={{
+                                              color: 'success.main',
+                                              '&:focus': {
+                                                outline: 'none',
+                                                boxShadow: 'none'
+                                              },
+                                              '&:hover': {
+                                                backgroundColor: isDarkMode ? 'rgba(76, 175, 80, 0.1)' : 'rgba(76, 175, 80, 0.04)'
+                                              }
+                                            }}
+                                          >
+                                            <Done />
+                                          </IconButton>
+                                        </Tooltip>
+                                      )}
+                                  </>
+                                );
+                              })()}
                             </Box>
                           </ListItemSecondaryAction>
                         </ListItem>
@@ -1318,51 +1404,169 @@ export default function DeanDashboard() {
                         </Typography>
                       </TableCell>
                       <TableCell>
-                        <Box sx={{ display: 'flex', gap: 1 }}>
-                          <IconButton
-                            onClick={() => {
-                              setSelectedComplaint(complaint)
-                              setViewDialogOpen(true)
-                            }}
-                            size="small"
-                            sx={{
-                              '&:focus': {
-                                outline: 'none',
-                                boxShadow: 'none'
-                              },
-                              '&:hover': {
-                                backgroundColor: isDarkMode ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.04)'
-                              }
-                            }}
-                          >
-                            <Visibility />
-                          </IconButton>
-                          {/* Show Forward to External button for all complaints */}
-                          {!complaint.externalForward?.isForwarded && (
-                            <Tooltip title="Forward to External Department">
-                              <IconButton
-                                onClick={() => {
-                                  setSelectedComplaint(complaint)
-                                  setSelectedExternalDepartment('')
-                                  setForwardReason('')
-                                  setExternalForwardDialogOpen(true)
-                                }}
-                                disabled={complaint.status.toLowerCase() === 'resolved' || complaint.status.toLowerCase() === 'rejected'}
-                                size="small"
-                                sx={{
-                                  '&:focus': {
-                                    outline: 'none',
-                                    boxShadow: 'none'
-                                  },
-                                  '&:hover': {
-                                    backgroundColor: isDarkMode ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.04)'
-                                  }
-                                }}
-                              >
-                                <Forward />
-                              </IconButton>
-                            </Tooltip>
-                          )}
+                        <Box sx={{ display: 'flex', gap: 0.5, flexWrap: 'wrap' }}>
+                          {(() => {
+                            const isForwardedExternal = complaint.externalForward?.isForwarded;
+                            const isRejected = complaint.status.toLowerCase() === 'rejected';
+                            const isResolved = complaint.status.toLowerCase() === 'resolved' || complaint.status.toLowerCase() === 'closed';
+                            const isDisabled = isForwardedExternal || isRejected || isResolved;
+
+                            return (
+                              <>
+                                {/* View button */}
+                                <Tooltip title="View Details">
+                                  <IconButton
+                                    onClick={() => {
+                                      setSelectedComplaint(complaint)
+                                      setViewDialogOpen(true)
+                                    }}
+                                    size="small"
+                                    sx={{
+                                      '&:focus': {
+                                        outline: 'none',
+                                        boxShadow: 'none'
+                                      },
+                                      '&:hover': {
+                                        backgroundColor: isDarkMode ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.04)'
+                                      }
+                                    }}
+                                  >
+                                    <Visibility />
+                                  </IconButton>
+                                </Tooltip>
+                                {/* Add Comment button */}
+                                <Tooltip title={
+                                  isForwardedExternal
+                                    ? 'Cannot operate on forwarded complaints'
+                                    : isResolved || isRejected
+                                      ? 'Cannot comment on resolved/rejected complaints'
+                                      : 'Add Comment'
+                                }>
+                                  <span>
+                                    <IconButton
+                                      onClick={() => {
+                                        setSelectedComplaint(complaint)
+                                        setCommentDialogOpen(true)
+                                      }}
+                                      disabled={isDisabled}
+                                      size="small"
+                                      sx={{
+                                        '&:focus': {
+                                          outline: 'none',
+                                          boxShadow: 'none'
+                                        },
+                                        '&:hover': {
+                                          backgroundColor: isDarkMode ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.04)'
+                                        }
+                                      }}
+                                    >
+                                      <Comment />
+                                    </IconButton>
+                                  </span>
+                                </Tooltip>
+                                {/* Quick Resolve button */}
+                                {!isForwardedExternal && !isResolved && !isRejected && (
+                                  <Tooltip title="Mark as Resolved">
+                                    <IconButton
+                                      onClick={() => handleStatusUpdate(complaint._id, 'Resolved')}
+                                      size="small"
+                                      sx={{
+                                        color: 'success.main',
+                                        '&:focus': {
+                                          outline: 'none',
+                                          boxShadow: 'none'
+                                        },
+                                        '&:hover': {
+                                          backgroundColor: isDarkMode ? 'rgba(76, 175, 80, 0.1)' : 'rgba(76, 175, 80, 0.04)'
+                                        }
+                                      }}
+                                    >
+                                      <CheckCircle />
+                                    </IconButton>
+                                  </Tooltip>
+                                )}
+                                {/* Quick Reject button */}
+                                {!isForwardedExternal && !isResolved && !isRejected && (
+                                  <Tooltip title="Mark as Rejected">
+                                    <IconButton
+                                      onClick={() => handleStatusUpdate(complaint._id, 'Rejected')}
+                                      size="small"
+                                      sx={{
+                                        color: 'error.main',
+                                        '&:focus': {
+                                          outline: 'none',
+                                          boxShadow: 'none'
+                                        },
+                                        '&:hover': {
+                                          backgroundColor: isDarkMode ? 'rgba(244, 67, 54, 0.1)' : 'rgba(244, 67, 54, 0.04)'
+                                        }
+                                      }}
+                                    >
+                                      <Cancel />
+                                    </IconButton>
+                                  </Tooltip>
+                                )}
+                                {/* Show Forward to External button */}
+                                {!isForwardedExternal && (
+                                  <Tooltip title={
+                                    isResolved || isRejected
+                                      ? 'Cannot forward resolved/rejected complaints'
+                                      : 'Forward to External Department'
+                                  }>
+                                    <span>
+                                      <IconButton
+                                        onClick={() => {
+                                          setSelectedComplaint(complaint)
+                                          setSelectedExternalDepartment('')
+                                          setForwardReason('')
+                                          setExternalForwardDialogOpen(true)
+                                        }}
+                                        disabled={isResolved || isRejected}
+                                        size="small"
+                                        sx={{
+                                          '&:focus': {
+                                            outline: 'none',
+                                            boxShadow: 'none'
+                                          },
+                                          '&:hover': {
+                                            backgroundColor: isDarkMode ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.04)'
+                                          }
+                                        }}
+                                      >
+                                        <Forward />
+                                      </IconButton>
+                                    </span>
+                                  </Tooltip>
+                                )}
+                                {/* Show Close button when external department has acknowledged */}
+                                {complaint.externalForward?.isForwarded &&
+                                  complaint.externalForward?.acknowledged &&
+                                  complaint.status.toLowerCase() !== 'closed' && (
+                                    <Tooltip title="Close Complaint">
+                                      <IconButton
+                                        onClick={() => {
+                                          setSelectedComplaint(complaint)
+                                          setCloseDialogOpen(true)
+                                        }}
+                                        size="small"
+                                        sx={{
+                                          color: 'success.main',
+                                          '&:focus': {
+                                            outline: 'none',
+                                            boxShadow: 'none'
+                                          },
+                                          '&:hover': {
+                                            backgroundColor: isDarkMode ? 'rgba(76, 175, 80, 0.1)' : 'rgba(76, 175, 80, 0.04)'
+                                          }
+                                        }}
+                                      >
+                                        <Done />
+                                      </IconButton>
+                                    </Tooltip>
+                                  )}
+                              </>
+                            );
+                          })()}
                         </Box>
                       </TableCell>
                     </TableRow>
