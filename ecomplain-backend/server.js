@@ -150,6 +150,10 @@ app.use('/api/dashboard', cacheMiddleware(2 * 60 * 1000));
 // Cache admin lists for 5 minutes
 app.use('/api/admin/additional-hods', cacheMiddleware(5 * 60 * 1000));
 app.use('/api/admin/deans', cacheMiddleware(5 * 60 * 1000));
+// Cache super-admin overview for 1 minute (frequently updated)
+app.use('/api/super-admin/overview', cacheMiddleware(1 * 60 * 1000));
+// Cache super-admin analytics for 5 minutes (heavy aggregations)
+app.use('/api/super-admin/analytics', cacheMiddleware(5 * 60 * 1000));
 
 // Logging middleware removed to suppress console logs
 
