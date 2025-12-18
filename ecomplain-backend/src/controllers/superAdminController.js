@@ -355,7 +355,7 @@ const updateAdmin = asyncHandler(async (req, res) => {
     console.error('Error updating admin:', error);
     res.status(500).json({
       success: false,
-      message: 'Failed to update admin'
+      message: error.message || 'Failed to update admin'
     });
   }
 });

@@ -504,13 +504,13 @@ export default function CoordinatorDashboard() {
 
   const colors = ['#1976d2', '#f57c00', '#2e7d32', '#d32f2f', '#7b1fa2', '#00acc1']
 
-const statsCardLayout = {
-  minHeight: { xs: '180px', sm: '200px', md: '220px' },
-  contentPadding: { xs: 2, sm: 2.5, md: 3 },
-  iconSize: { xs: 40, sm: 46, md: 56 },
-  valueSize: { xs: '2rem', sm: '2.35rem', md: '2.8rem' },
-  labelSize: { xs: '0.85rem', sm: '0.95rem', md: '1.05rem' }
-}
+  const statsCardLayout = {
+    minHeight: { xs: '180px', sm: '200px', md: '220px' },
+    contentPadding: { xs: 2, sm: 2.5, md: 3 },
+    iconSize: { xs: 40, sm: 46, md: 56 },
+    valueSize: { xs: '2rem', sm: '2.35rem', md: '2.8rem' },
+    labelSize: { xs: '0.85rem', sm: '0.95rem', md: '1.05rem' }
+  }
 
   return (
     <>
@@ -843,8 +843,14 @@ const statsCardLayout = {
                   <List>
                     {complaints.map((complaint, index) => (
                       <React.Fragment key={complaint._id}>
-                        <ListItem sx={{ py: 3, px: 3 }}>
-                          <ListItemIcon sx={{ minWidth: 48 }}>
+                        <ListItem sx={{
+                          py: { xs: 2, sm: 3 },
+                          px: { xs: 1.5, sm: 3 },
+                          flexDirection: { xs: 'column', sm: 'row' },
+                          alignItems: 'flex-start',
+                          position: 'relative'
+                        }}>
+                          <ListItemIcon sx={{ minWidth: { xs: 36, sm: 48 }, display: { xs: 'none', sm: 'flex' } }}>
                             <Avatar sx={{ bgcolor: getStatusColor(complaint.status) + '.light' }}>
                               <Assignment />
                             </Avatar>
@@ -927,8 +933,15 @@ const statsCardLayout = {
                               </Box>
                             }
                           />
-                          <ListItemSecondaryAction>
-                            <Box sx={{ display: 'flex', gap: 1 }}>
+                          <ListItemSecondaryAction sx={{
+                            position: { xs: 'relative', sm: 'absolute' },
+                            right: { xs: 0, sm: 16 },
+                            top: { xs: 'auto', sm: '50%' },
+                            transform: { xs: 'none', sm: 'translateY(-50%)' },
+                            mt: { xs: 2, sm: 0 },
+                            width: { xs: '100%', sm: 'auto' }
+                          }}>
+                            <Box sx={{ display: 'flex', gap: { xs: 0.5, sm: 1 }, flexWrap: 'wrap', justifyContent: { xs: 'flex-start', sm: 'flex-end' } }}>
                               <Tooltip title="View Details">
                                 <IconButton
                                   onClick={() => {

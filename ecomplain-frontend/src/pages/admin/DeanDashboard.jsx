@@ -839,8 +839,14 @@ export default function DeanDashboard() {
                     <List>
                       {filteredComplaints.map((complaint, index) => (
                         <React.Fragment key={complaint._id}>
-                          <ListItem sx={{ py: 3, px: 3 }}>
-                            <ListItemIcon sx={{ minWidth: 48 }}>
+                          <ListItem sx={{
+                            py: { xs: 2, sm: 3 },
+                            px: { xs: 1.5, sm: 3 },
+                            flexDirection: { xs: 'column', sm: 'row' },
+                            alignItems: 'flex-start',
+                            position: 'relative'
+                          }}>
+                            <ListItemIcon sx={{ minWidth: { xs: 36, sm: 48 }, display: { xs: 'none', sm: 'flex' } }}>
                               <Avatar sx={{ bgcolor: getStatusColor(complaint.status) + '.light' }}>
                                 <SupervisorAccount />
                               </Avatar>
@@ -904,8 +910,15 @@ export default function DeanDashboard() {
                                 </Box>
                               }
                             />
-                            <ListItemSecondaryAction>
-                              <Box sx={{ display: 'flex', gap: 1 }}>
+                            <ListItemSecondaryAction sx={{
+                              position: { xs: 'relative', sm: 'absolute' },
+                              right: { xs: 0, sm: 16 },
+                              top: { xs: 'auto', sm: '50%' },
+                              transform: { xs: 'none', sm: 'translateY(-50%)' },
+                              mt: { xs: 2, sm: 0 },
+                              width: { xs: '100%', sm: 'auto' }
+                            }}>
+                              <Box sx={{ display: 'flex', gap: { xs: 0.5, sm: 1 }, flexWrap: 'wrap', justifyContent: { xs: 'flex-start', sm: 'flex-end' } }}>
                                 <Tooltip title="View Details">
                                   <IconButton
                                     onClick={() => {
@@ -1121,8 +1134,14 @@ export default function DeanDashboard() {
                   <List>
                     {escalatedComplaints.map((complaint, index) => (
                       <React.Fragment key={complaint._id}>
-                        <ListItem sx={{ py: 3, px: 3 }}>
-                          <ListItemIcon sx={{ minWidth: 48 }}>
+                        <ListItem sx={{
+                          py: { xs: 2, sm: 3 },
+                          px: { xs: 1.5, sm: 3 },
+                          flexDirection: { xs: 'column', sm: 'row' },
+                          alignItems: 'flex-start',
+                          position: 'relative'
+                        }}>
+                          <ListItemIcon sx={{ minWidth: { xs: 36, sm: 48 }, display: { xs: 'none', sm: 'flex' } }}>
                             <Avatar sx={{ bgcolor: 'warning.light' }}>
                               <Forward />
                             </Avatar>
@@ -1184,8 +1203,15 @@ export default function DeanDashboard() {
                               </Box>
                             }
                           />
-                          <ListItemSecondaryAction>
-                            <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
+                          <ListItemSecondaryAction sx={{
+                            position: { xs: 'relative', sm: 'absolute' },
+                            right: { xs: 0, sm: 16 },
+                            top: { xs: 'auto', sm: '50%' },
+                            transform: { xs: 'none', sm: 'translateY(-50%)' },
+                            mt: { xs: 2, sm: 0 },
+                            width: { xs: '100%', sm: 'auto' }
+                          }}>
+                            <Box sx={{ display: 'flex', gap: { xs: 0.5, sm: 1 }, flexWrap: 'wrap', justifyContent: { xs: 'flex-start', sm: 'flex-end' } }}>
                               <Tooltip title="View Details">
                                 <IconButton
                                   onClick={() => {

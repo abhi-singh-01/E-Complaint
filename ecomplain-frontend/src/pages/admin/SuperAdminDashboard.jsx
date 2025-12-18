@@ -244,7 +244,12 @@ function SuperAdminDashboard() {
   const handleAdminSubmit = async () => {
     try {
       if (editingAdmin) {
-        await api.put(`/api/super-admin/admins/${editingAdmin._id}`, adminForm)
+        // Remove empty password from update payload to avoid validation errors
+        const updatePayload = { ...adminForm }
+        if (!updatePayload.password || updatePayload.password.trim() === '') {
+          delete updatePayload.password
+        }
+        await api.put(`/api/super-admin/admins/${editingAdmin._id}`, updatePayload)
         setSuccess('Admin updated successfully')
       } else {
         await api.post('/api/super-admin/admins', adminForm)
