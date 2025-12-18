@@ -940,7 +940,11 @@ function SuperAdminDashboard() {
                         {admin.role !== 'super_admin' && (
                           <Tooltip title="Delete">
                             <IconButton
-                              onClick={() => handleDeleteAdmin(admin._id)}
+                              onClick={(e) => {
+                                e.stopPropagation()
+                                console.log('Delete button clicked for:', admin._id, admin.email)
+                                handleDeleteAdmin(admin._id)
+                              }}
                               color="error"
                             >
                               <Delete />
