@@ -748,27 +748,6 @@ function SuperAdminDashboard() {
                   }}
                   sx={{ width: 300 }}
                 />
-                <Button
-                  variant="contained"
-                  startIcon={<Add />}
-                  onClick={() => {
-                    setEditingStudent(null)
-                    setStudentForm({
-                      firstName: '',
-                      lastName: '',
-                      email: '',
-                      libraryId: '',
-                      rollNo: '',
-                      department: '',
-                      year: '',
-                      password: ''
-                    })
-                    setStudentDialogOpen(true)
-                  }}
-                  sx={{ fontWeight: 'bold' }}
-                >
-                  Add Student
-                </Button>
               </Box>
             </Box>
 
@@ -1462,7 +1441,7 @@ function SuperAdminDashboard() {
                   <MenuItem value="Electrical">Electrical</MenuItem>
                 </Select>
               </FormControl>
-              <FormControl fullWidth>
+              <FormControl fullWidth key={`year-${studentForm.department}`}>
                 <InputLabel>Year</InputLabel>
                 <Select
                   value={studentForm.year}
