@@ -274,20 +274,14 @@ function SuperAdminDashboard() {
 
   // Handle admin deletion
   const handleDeleteAdmin = async (adminId) => {
-    console.log('handleDeleteAdmin called with ID:', adminId)
     if (window.confirm('Are you sure you want to delete this admin?')) {
-      console.log('User confirmed deletion')
       try {
         await api.delete(`/api/super-admin/admins/${adminId}`)
-        console.log('Delete API call successful')
         setSuccess('Admin deleted successfully')
         loadDashboardData()
       } catch (err) {
-        console.error('Delete API error:', err)
         setError(err.response?.data?.message || 'Failed to delete admin')
       }
-    } else {
-      console.log('User cancelled deletion')
     }
   }
 
@@ -805,7 +799,8 @@ function SuperAdminDashboard() {
                       <TableCell>
                         <Tooltip title="Edit">
                           <IconButton
-                            onClick={() => {
+                            onClick={(e) => {
+                              e.stopPropagation()
                               setEditingStudent(student)
                               setStudentForm({
                                 firstName: student.firstName,
@@ -825,7 +820,8 @@ function SuperAdminDashboard() {
                         </Tooltip>
                         <Tooltip title="Reset Password">
                           <IconButton
-                            onClick={() => {
+                            onClick={(e) => {
+                              e.stopPropagation()
                               setStudentPasswordReset({ id: student._id, newPassword: '' })
                               setStudentPasswordResetDialog(true)
                             }}
@@ -836,7 +832,10 @@ function SuperAdminDashboard() {
                         </Tooltip>
                         <Tooltip title="Delete">
                           <IconButton
-                            onClick={() => handleDeleteStudent(student._id)}
+                            onClick={(e) => {
+                              e.stopPropagation()
+                              handleDeleteStudent(student._id)
+                            }}
                             color="error"
                           >
                             <Delete />
@@ -910,7 +909,8 @@ function SuperAdminDashboard() {
                       <TableCell>
                         <Tooltip title="Edit">
                           <IconButton
-                            onClick={() => {
+                            onClick={(e) => {
+                              e.stopPropagation()
                               setEditingAdmin(admin)
                               setAdminForm({
                                 firstName: admin.firstName,
@@ -928,7 +928,8 @@ function SuperAdminDashboard() {
                         </Tooltip>
                         <Tooltip title="Reset Password">
                           <IconButton
-                            onClick={() => {
+                            onClick={(e) => {
+                              e.stopPropagation()
                               setAdminPasswordReset({ id: admin._id, newPassword: '' })
                               setAdminPasswordResetDialog(true)
                             }}
@@ -942,7 +943,6 @@ function SuperAdminDashboard() {
                             <IconButton
                               onClick={(e) => {
                                 e.stopPropagation()
-                                console.log('Delete button clicked for:', admin._id, admin.email)
                                 handleDeleteAdmin(admin._id)
                               }}
                               color="error"
