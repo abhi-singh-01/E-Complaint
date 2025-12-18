@@ -1439,7 +1439,14 @@ function SuperAdminDashboard() {
                 <Select
                   value={studentForm.department}
                   label="Department"
-                  onChange={(e) => setStudentForm({ ...studentForm, department: e.target.value })}
+                  onChange={(e) => {
+                    const newDept = e.target.value
+                    // Reset year if switching to 2-year program and current year > 2
+                    const isTwoYearProgram = ['MCA', 'MBA'].includes(newDept)
+                    const currentYear = parseInt(studentForm.year)
+                    const newYear = (isTwoYearProgram && currentYear > 2) ? '2' : studentForm.year
+                    setStudentForm({ ...studentForm, department: newDept, year: newYear })
+                  }}
                 >
                   <MenuItem value="MCA">MCA</MenuItem>
                   <MenuItem value="MBA">MBA</MenuItem>
