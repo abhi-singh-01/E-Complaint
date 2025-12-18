@@ -21,8 +21,8 @@ const adminSchema = new mongoose.Schema({
     lowercase: true,
     trim: true,
     match: [
-      /^[a-zA-Z0-9._%+-]+@university\.edu$/i,
-      'Please provide a valid university email address (@university.edu)'
+      /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/i,
+      'Please provide a valid email address'
     ]
   },
   password: {
@@ -35,8 +35,8 @@ const adminSchema = new mongoose.Schema({
     type: String,
     required: [true, 'Role is required'],
     enum: {
-      values: ['coordinator', 'additional_hod', 'dean', 'super_admin', 'accounts', 'librarian', 'maintenance'],
-      message: 'Role must be one of coordinator, additional_hod, dean, super_admin, accounts, librarian, or maintenance'
+      values: ['coordinator', 'additional_hod', 'dean', 'super_admin', 'accounts', 'librarian', 'maintenance', 'external'],
+      message: 'Role must be one of coordinator, additional_hod, dean, super_admin, accounts, librarian, maintenance, or external'
     },
     default: 'additional_hod'
   },
@@ -44,11 +44,19 @@ const adminSchema = new mongoose.Schema({
     type: String,
     required: function () {
       return this.role === 'coordinator' || this.role === 'additional_hod' || this.role === 'dean' ||
-        this.role === 'accounts' || this.role === 'librarian' || this.role === 'maintenance';
+        this.role === 'accounts' || this.role === 'librarian' || this.role === 'maintenance' || this.role === 'external';
     },
-    enum: {
-      values: ['MCA', 'MBA', 'CSE', 'Electronics', 'Mechanical', 'Civil', 'Electrical', 'General', 'Accounts', 'Librarian', 'Maintenance'],
-      message: 'Please select a valid department'
+    validate: {
+      validator: function (value) {
+        // For external role, allow any department name
+        if (this.role === 'external') {
+          return value && value.trim().length > 0;
+        }
+        // For other roles, validate against allowed values
+        const allowedDepartments = ['MCA', 'MBA', 'CSE', 'Electronics', 'Mechanical', 'Civil', 'Electrical', 'General', 'Accounts', 'Librarian', 'Maintenance'];
+        return allowedDepartments.includes(value);
+      },
+      message: 'Please enter a valid department name'
     }
   },
   permissions: {
@@ -129,7 +137,8 @@ adminSchema.virtual('displayRole').get(function () {
     'super_admin': 'Super Administrator',
     'accounts': 'Accounts Department',
     'librarian': 'Librarian',
-    'maintenance': 'Maintenance Department'
+    'maintenance': 'Maintenance Department',
+    'external': 'External Department'
   };
   return roleMap[this.role] || this.role;
 });
@@ -200,6 +209,7 @@ adminSchema.pre('save', function (next) {
       case 'accounts':
       case 'librarian':
       case 'maintenance':
+      case 'external':
         this.permissions = {
           canManageComplaints: true,
           canManageStudents: false,
@@ -207,7 +217,7 @@ adminSchema.pre('save', function (next) {
           canViewReports: true,
           canExportData: false
         };
-        // Set department based on role
+        // Set department based on role (only for predefined roles, not external)
         if (this.role === 'accounts') {
           this.department = 'Accounts';
         } else if (this.role === 'librarian') {
@@ -215,6 +225,7 @@ adminSchema.pre('save', function (next) {
         } else if (this.role === 'maintenance') {
           this.department = 'Maintenance';
         }
+        // For 'external' role, department is set manually from form
         break;
     }
   }

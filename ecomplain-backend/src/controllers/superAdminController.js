@@ -310,7 +310,7 @@ const createAdmin = asyncHandler(async (req, res) => {
     console.error('Error creating admin:', error);
     res.status(500).json({
       success: false,
-      message: 'Failed to create admin'
+      message: error.message || 'Failed to create admin'
     });
   }
 });

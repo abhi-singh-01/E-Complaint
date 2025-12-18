@@ -475,6 +475,7 @@ function SuperAdminDashboard() {
       case 'accounts': return 'success'
       case 'librarian': return 'secondary'
       case 'maintenance': return 'default'
+      case 'external': return 'primary'
       default: return 'default'
     }
   }
@@ -1322,7 +1323,7 @@ function SuperAdminDashboard() {
               <Select
                 value={adminForm.role}
                 label="Role"
-                onChange={(e) => setAdminForm({ ...adminForm, role: e.target.value })}
+                onChange={(e) => setAdminForm({ ...adminForm, role: e.target.value, department: '' })}
               >
                 <MenuItem value="coordinator">Coordinator</MenuItem>
                 <MenuItem value="additional_hod">Additional HOD</MenuItem>
@@ -1331,7 +1332,18 @@ function SuperAdminDashboard() {
               </Select>
             </FormControl>
 
-            {(adminForm.role !== 'super_admin' && adminForm.role !== 'external') && (
+            {adminForm.role === 'external' ? (
+              <TextField
+                label="Department Name"
+                value={adminForm.department}
+                onChange={(e) => setAdminForm({ ...adminForm, department: e.target.value })}
+                fullWidth
+                required
+                sx={{ mt: 2 }}
+                placeholder="e.g., Accounts, Lab, Registrar, Library"
+                helperText="Enter the name of the external department"
+              />
+            ) : adminForm.role !== 'super_admin' && (
               <FormControl fullWidth sx={{ mt: 2 }}>
                 <InputLabel>Department</InputLabel>
                 <Select
