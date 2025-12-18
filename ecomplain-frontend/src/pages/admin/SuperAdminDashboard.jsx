@@ -308,7 +308,12 @@ function SuperAdminDashboard() {
   const handleStudentSubmit = async () => {
     try {
       if (editingStudent) {
-        await api.put(`/api/super-admin/students/${editingStudent._id}`, studentForm)
+        // Remove empty password from update payload to avoid validation errors
+        const updatePayload = { ...studentForm }
+        if (!updatePayload.password || updatePayload.password.trim() === '') {
+          delete updatePayload.password
+        }
+        await api.put(`/api/super-admin/students/${editingStudent._id}`, updatePayload)
         setSuccess('Student updated successfully')
       } else {
         await api.post('/api/super-admin/students', studentForm)
