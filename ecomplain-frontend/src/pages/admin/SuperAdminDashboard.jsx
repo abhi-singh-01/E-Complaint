@@ -793,7 +793,7 @@ function SuperAdminDashboard() {
                                 libraryId: student.libraryId,
                                 rollNo: student.rollNo,
                                 department: student.department,
-                                year: student.year,
+                                year: String(student.year || ''),
                                 password: ''
                               })
                               setStudentDialogOpen(true)
