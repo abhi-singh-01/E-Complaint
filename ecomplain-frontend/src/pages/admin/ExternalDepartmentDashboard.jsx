@@ -49,7 +49,8 @@ import {
   ZoomIn,
   Close,
   Download,
-  OpenInNew
+  OpenInNew,
+  TrendingUp
 } from '@mui/icons-material'
 
 export default function ExternalDepartmentDashboard() {
@@ -324,6 +325,7 @@ export default function ExternalDepartmentDashboard() {
               }
             }}>
               <CardContent sx={{ textAlign: 'center', p: { xs: 2, sm: 2.5 } }}>
+                <Assignment sx={{ fontSize: { xs: 40, sm: 48, md: 56 }, color: isDarkMode ? '#60a5fa' : '#1976d2', mb: 1 }} />
                 <Typography variant="h4" sx={{ fontWeight: 'bold', color: isDarkMode ? '#60a5fa' : 'primary.main', fontSize: { xs: '1.75rem', sm: '2rem', md: '2.25rem' } }}>
                   {stats.total}
                 </Typography>
@@ -351,6 +353,7 @@ export default function ExternalDepartmentDashboard() {
               }
             }}>
               <CardContent sx={{ textAlign: 'center', p: { xs: 2, sm: 2.5 } }}>
+                <TrendingUp sx={{ fontSize: { xs: 40, sm: 48, md: 56 }, color: isDarkMode ? '#22d3d1' : '#00acc1', mb: 1 }} />
                 <Typography variant="h4" sx={{ fontWeight: 'bold', color: isDarkMode ? '#22d3d1' : 'info.main', fontSize: { xs: '1.75rem', sm: '2rem', md: '2.25rem' } }}>
                   {stats.inProgress}
                 </Typography>
@@ -378,6 +381,7 @@ export default function ExternalDepartmentDashboard() {
               }
             }}>
               <CardContent sx={{ textAlign: 'center', p: { xs: 2, sm: 2.5 } }}>
+                <CheckCircle sx={{ fontSize: { xs: 40, sm: 48, md: 56 }, color: isDarkMode ? '#22c55e' : '#2e7d32', mb: 1 }} />
                 <Typography variant="h4" sx={{ fontWeight: 'bold', color: isDarkMode ? '#22c55e' : 'success.main', fontSize: { xs: '1.75rem', sm: '2rem', md: '2.25rem' } }}>
                   {stats.resolved}
                 </Typography>
